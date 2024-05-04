@@ -130,7 +130,8 @@ class CTD():
             raise CTDError(self._filename, self._NO_SAMPLES_ERROR)
         try:
             self._ctd_array = self._ctd_array.assign(latitude=location_data[0],
-                                                     longitude=location_data[1])
+                                                     longitude=location_data[1],
+                                                     filename=location_data[2])
         except Exception:
             self._ctd_array.loc['latitude'] = None
             self._ctd_array.loc['longitude'] = None
