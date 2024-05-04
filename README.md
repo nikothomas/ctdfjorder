@@ -102,7 +102,7 @@ for file in CTDFjorder.get_rsk_filenames_in_dir(os.getcwd()):
 
 ## Contributing
 
-Contributions to CTDFjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com).
+Contributions to CTDFjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
 
 ## License
 
