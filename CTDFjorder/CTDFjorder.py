@@ -59,6 +59,7 @@ class CTD():
     _filename = None
     _calculator = None
     _cwd = None
+    _cached_master_sheet = None
     master_sheet_path = "FjordPhyto MASTER SHEET.xlsx"
     _NO_SAMPLES_ERROR = "No samples in file."
     _NO_LOCATION_ERROR = "No location could be found."
@@ -632,8 +633,13 @@ class CTD():
                     return None
                 return abs((target_hour * 60 + target_minute) - (df_hour * 60 + df_minute))
 
-            # Load the master sheet
-            master_df = pd.read_excel(master_sheet_path)
+            # Check if the master sheet is already cached
+            if CTD._cached_master_sheet is None:
+                # Load the master sheet and cache it
+                CTD._cached_master_sheet = pd.read_excel(master_sheet_path)
+
+            # Use the cached master sheet data
+            master_df = CTD._cached_master_sheet
             # Get date and time components from the filename
             year, month, day, time = get_date_from_string(filename)
             if year is None:
@@ -1252,7 +1258,7 @@ class CTDError(Exception):
         super().__init__(self.message)
 
 
-def run_default(plot=False, working_dir = None):
+def run_default(plot=False):
     _reset_file_environment()
     CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
     rsk_files_list = get_rsk_filenames_in_dir(_get_cwd())
@@ -1392,12 +1398,6 @@ def main():
         run_default(True)
         print("Default processing completed successfully.")
 
-    elif command == "electron":
-        os.chdir(sys.argv[2])
-        print(sys.argv[2])
-        run_default(True, sys.argv[2])
-        print("Default processing completed successfully")
-
     else:
         print(f"Unknown command: {command}")
         print("Usage: ctdfjorder <command> [arguments]")
@@ -1410,6 +1410,5 @@ def main():
         print(_get_cwd())
         sys.exit(1)
 
-
-if __name__ == "main":
+if __name__ == "__main__":
     main()
