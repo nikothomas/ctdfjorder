@@ -1395,7 +1395,9 @@ def main():
         print("Default processing completed successfully.")
 
     elif command == "electron":
-        run_default(working_dir= sys.argv[2])
+        os.chdir(sys.argv[2])
+        print(sys.argv[2])
+        run_default(True, sys.argv[2])
         print("Default processing completed successfully")
 
     else:
