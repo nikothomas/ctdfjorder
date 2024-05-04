@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="CTDFjorder-git",
+    name="CTDFjorder",
     version="0.0.15",
     author="Nikolas Yanek-Chrones",
     author_email="nikojb1001@gmail.com",
