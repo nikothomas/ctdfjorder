@@ -1,0 +1,10 @@
+README.md
+setup.py
+CTDFjorder/CTDFjorder.py
+CTDFjorder/__init__.py
+CTDFjorder_git.egg-info/PKG-INFO
+CTDFjorder_git.egg-info/SOURCES.txt
+CTDFjorder_git.egg-info/dependency_links.txt
+CTDFjorder_git.egg-info/entry_points.txt
+CTDFjorder_git.egg-info/requires.txt
+CTDFjorder_git.egg-info/top_level.txt
