@@ -1254,8 +1254,6 @@ class CTDError(Exception):
 
 def run_default(plot=False, working_dir = None):
     _reset_file_environment()
-    if working_dir:
-        os.chdir(f'[{working_dir}]')
     CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
     rsk_files_list = get_rsk_filenames_in_dir(_get_cwd())
     for file in rsk_files_list:
