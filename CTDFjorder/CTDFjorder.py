@@ -639,7 +639,7 @@ class CTD():
                 CTD._cached_master_sheet = pd.read_excel(master_sheet_path)
 
             # Use the cached master sheet data
-            master_df = CTD._cached_master_sheet
+            master_df = CTD._cached_master_sheet.copy()
             # Get date and time components from the filename
             year, month, day, time = get_date_from_string(filename)
             if year is None:
