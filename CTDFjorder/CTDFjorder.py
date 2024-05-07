@@ -59,7 +59,7 @@ class CTD():
     _filename = None
     _calculator = None
     _cwd = None
-    _cached_master_sheet = None
+    _cached_master_sheet = pandas.DataFrame()
     master_sheet_path = "FjordPhyto MASTER SHEET.xlsx"
     _NO_SAMPLES_ERROR = "No samples in file."
     _NO_LOCATION_ERROR = "No location could be found."
@@ -166,6 +166,14 @@ class CTD():
                     self._ctd_array = self.Utility.remove_rows_with_negative_density(self._ctd_array)
         if self.Utility.no_values_in_object(self._ctd_array):
             raise CTDError(self._filename, self._REMOVE_NEGATIVES_ERROR)
+
+    def remove_duplicate_depths(self):
+        """
+        Removes depths within 0.1 meters of each other.
+        """
+        if self.Utility.no_values_in_object(self._ctd_array):
+            raise CTDError(self._filename, self._NO_SAMPLES_ERROR)
+        self._ctd_array = self.Utility.remove_duplicate_depths(self._ctd_array.copy())
 
     def clean(self, feature, method='salinitydiff'):
         """
@@ -400,9 +408,8 @@ class CTD():
                 f"\n(Higher density fluid lies above lower density fluid)")
         else:
             plt.title(
-                f"{filename}\n Depth vs. Salinity and Density with LOESS Transform "
-                f"\n THIS IS AN UNSTABLE WATER COLUMN "
-                f"\n(Higher density fluid lies above lower density fluid)")
+                f"{filename}\n Depth vs. Salinity and Density with LOESS Transform ")
+
         ax1.grid(True)
         lines, labels = ax1.get_legend_handles_labels()
         ax2_legend = ax2.get_legend_handles_labels()
@@ -466,9 +473,8 @@ class CTD():
                 f"\n(Higher density fluid lies above lower density fluid)")
         else:
             plt.title(
-                f"{filename}\n Depth vs. Salinity and Density "
-                f"\n THIS IS AN UNSTABLE WATER COLUMN "
-                f"\n(Higher density fluid lies above lower density fluid)")
+                f"{filename}\n Depth vs. Salinity and Density ")
+
         ax1.grid(True)
         lines, labels = ax1.get_legend_handles_labels()
         ax2_legend = ax2.get_legend_handles_labels()
@@ -527,9 +533,7 @@ class CTD():
                 f"(Higher density fluid lies above lower density fluid)")
         else:
             plt.title(
-                f"{filename}\n Depth vs. Temperature \n "
-                f"THIS IS AN UNSTABLE WATER COLUMN \n"
-                f"(Higher density fluid lies above lower density fluid)")
+                f"{filename}\n Depth vs. Temperature \n ")
         ax1.grid(True)
         lines, labels = ax1.get_legend_handles_labels()
         ax1.legend(lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3)
@@ -635,12 +639,10 @@ class CTD():
                 return abs((target_hour * 60 + target_minute) - (df_hour * 60 + df_minute))
 
             # Check if the master sheet is already cached
-            if CTD._cached_master_sheet is None:
+            if CTD._cached_master_sheet.empty:
                 # Load the master sheet and cache it
                 CTD._cached_master_sheet = pd.read_excel(master_sheet_path)
-
-            # Use the cached master sheet data
-            master_df = CTD._cached_master_sheet.copy()
+            master_df = CTD._cached_master_sheet
             # Get date and time components from the filename
             year, month, day, time = get_date_from_string(filename)
             if year is None:
@@ -880,6 +882,39 @@ class CTD():
             if self.no_values_in_object(df):
                 return None
             return df.copy()
+        def remove_duplicate_depths(self, df):
+            """
+            Removes rows from the given DataFrame where the 'depth' value is within 0.1 meters of another depth value,
+            prioritizes depths with lower timestamps.
+
+            Parameters
+            ----------
+            df: DataFrame
+                The DataFrame to process.
+
+            Returns
+            -------
+            DataFrame
+                The updated DataFrame with rows containing duplicate depths removed.
+            """
+            if self.no_values_in_object(df):
+                return None
+            if 'depth_00' in df.columns and 'timestamp' in df.columns:
+                # Sort by timestamp to ensure earlier records are prioritized
+                df = df.sort_values(by='timestamp')
+                # Round the depth values to the nearest 0.1 meters
+                df['rounded_depth'] = df['depth_00'].round(decimals=1)
+                # Drop duplicates based on the rounded depth values
+                df = df.drop_duplicates(subset='rounded_depth', keep='first')
+                # Reset index after removing duplicates
+                df = df.reset_index(drop=True)
+                # Remove the temporary 'rounded_depth' column
+                df.drop(columns=['rounded_depth'], inplace=True)
+            else:
+                return None
+            if self.no_values_in_object(df):
+                return None
+            return df.copy()
             
             
 class Calculate:
@@ -942,7 +977,7 @@ class Calculate:
         return in_funnel
 
     @staticmethod
-    def calculate_and_drop_salinity_spikes(df):
+    def calculate_and_drop_salinity_spikes_slow(df):
         """
         Calculates and removes salinity spikes from the CTD data based on predefined thresholds for acceptable
         changes in salinity with depth.
@@ -979,7 +1014,7 @@ class Calculate:
             print("Insufficient depth range to calculate.")
             return df
 
-        def recursively_drop(df, depth_range, acceptable_delta, i):
+        def recursively_drop(df, acceptable_delta, depth_range, i):
             try:
                 num_points = int((max_depth - min_depth) / depth_range)  # Calculate number of points
             except:
@@ -999,6 +1034,41 @@ class Calculate:
 
         for i, deltas in enumerate(acceptable_delta_salinity_per_depth):
             df = recursively_drop(df, deltas[0], deltas[1], i)
+        return df
+
+    @staticmethod
+    def calculate_and_drop_salinity_spikes(df):
+        if df.empty:
+            return None
+
+        df['depth_00'] = pd.to_numeric(df['depth_00'], errors='coerce')
+        df['salinity_00'] = pd.to_numeric(df['salinity_00'], errors='coerce')
+        df = df.dropna(subset=['depth_00', 'salinity_00'])
+
+        min_depth = df['depth_00'].min()
+        max_depth = df['depth_00'].max()
+        if min_depth == max_depth:
+            print("Insufficient depth range to calculate.")
+            return df
+
+        acceptable_delta_salinity_per_depth = [
+            (0.0005, 0.001),
+            (0.005, 0.01),
+            (0.05, 0.1),
+            (0.5, 1),
+            (1, 2),
+
+        ]
+
+        for acceptable_delta, depth_range in acceptable_delta_salinity_per_depth:
+            num_points = int((max_depth - min_depth) / depth_range)
+            bins = np.linspace(min_depth, max_depth, num=num_points)
+            indices = np.digitize(df['depth_00'], bins)
+
+            # Group by indices and filter
+            grouped = df.groupby(indices)
+            df = grouped.filter(lambda x: abs(x['salinity_00'].max() - x['salinity_00'].min()) <= acceptable_delta)
+
         return df
 
     @staticmethod
@@ -1262,6 +1332,7 @@ class CTDError(Exception):
 def run_default(plot=False):
     _reset_file_environment()
     CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
+    CTD._cached_master_sheet = pandas.read_excel(CTD.master_sheet_path)
     rsk_files_list = get_rsk_filenames_in_dir(_get_cwd())
     for file in rsk_files_list:
         try:
@@ -1269,7 +1340,9 @@ def run_default(plot=False):
             my_data.add_filename_to_table()
             my_data.save_to_csv("output.csv")
             my_data.add_location_to_table()
+            my_data.remove_upcasts()
             my_data.remove_non_positive_samples()
+            my_data.remove_duplicate_depths()
             my_data.clean("practicalsalinity", 'salinitydiff')
             my_data.add_absolute_salinity()
             my_data.add_density()
@@ -1288,6 +1361,7 @@ def run_default(plot=False):
 
 def merge_all_in_folder():
     CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
+    CTD._cached_master_sheet = pandas.read_excel(CTD.master_sheet_path)
     rsk_files_list = get_rsk_filenames_in_dir(_get_cwd())
     for file in rsk_files_list:
         try:
@@ -1331,8 +1405,9 @@ def _get_filename(filepath):
 
 def _reset_file_environment():
     CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
+    CTD._cached_master_sheet = pandas.read_excel(CTD.master_sheet_path)
     output_file_csv = "output.csv"
-    output_file_csv_clean = "output_clean.csv"
+    output_file_csv_clean = "outputclean.csv"
     output_plots_dir = "plots"
     cwd = _get_cwd()
     CTD.master_sheet_path = os.path.join(cwd, CTD.master_sheet_path)
@@ -1376,6 +1451,7 @@ def main():
             ctd.save_to_csv("output.csv")
             ctd.add_location_to_table()
             ctd.remove_non_positive_samples()
+            ctd.remove_upcasts()
             ctd.clean("practicalsalinity", 'salinitydiff')
             ctd.add_absolute_salinity()
             ctd.add_density()
@@ -1412,4 +1488,5 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    run_default(True)
     main()
