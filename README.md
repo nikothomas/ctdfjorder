@@ -15,9 +15,11 @@ GUI Wrapper: [ctdfjorder-lite](https://github.com/nikothomas/ctdfjorder-lite)
 
 ## Installation
 
-To install CTDFjorder, you can use pip:
+To install CTDFjorder, you can use conda and pip:
 
 ```shell
+conda create --name ctdfjorder -c conda-forge python=3.11
+conda activate testenv
 pip install ctdfjorder
 ```
 
