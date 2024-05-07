@@ -14,12 +14,14 @@ GUI Wrapper: [ctdfjorder-lite](https://github.com/nikothomas/ctdfjorder-lite)
 - Command-line interface (CLI) for easy processing and merging of RSK files
 
 ## Installation
-
-To install CTDFjorder, you can use conda and pip:
-
+It's recommended that you create a new environment just for CTDFjorder. This can be done in conda with the following
+command.
 ```shell
 conda create --name ctdfjorder -c conda-forge python=3.11
 conda activate ctdfjorder
+```
+To install CTDFjorder you can use pip:
+```shell
 pip install ctdfjorder
 ```
 
