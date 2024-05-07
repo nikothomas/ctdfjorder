@@ -1428,7 +1428,6 @@ def _reset_file_environment():
 
 
 def main():
-    run_default(True)
     if len(sys.argv) < 2:
         print("Usage: ctdfjorder <command> [arguments]")
         print("Commands:")
