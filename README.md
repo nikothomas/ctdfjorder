@@ -19,7 +19,7 @@ To install CTDFjorder, you can use conda and pip:
 
 ```shell
 conda create --name ctdfjorder -c conda-forge python=3.11
-conda activate testenv
+conda activate ctdfjorder
 pip install ctdfjorder
 ```
 
