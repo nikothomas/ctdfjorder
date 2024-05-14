@@ -1,7 +1,7 @@
 # CTDFjorder
 
 CTDFjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
-Documentation: [Read the docs](https://nikothomas.github.io/CTDFjorder/CTDFjorder/CTDFjorder.html)
+Documentation: [Read the docs](https://nikothomas.github.io/docs/CTDFjorder.html)
 GUI Wrapper: [ctdfjorder-lite](https://github.com/nikothomas/ctdfjorder-lite)
 
 ## Features
