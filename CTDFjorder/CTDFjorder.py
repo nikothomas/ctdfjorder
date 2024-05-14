@@ -60,7 +60,7 @@ class CTD():
     _calculator = None
     _cwd = None
     _cached_master_sheet = pandas.DataFrame()
-    master_sheet_path = "FjordPhyto MASTER SHEET.xlsx"
+    master_sheet_path = None
     _NO_SAMPLES_ERROR = "No samples in file."
     _NO_LOCATION_ERROR = "No location could be found."
     _DENSITY_CALCULATION_ERROR = "Could not calculate density on this dataset."
@@ -85,6 +85,22 @@ class CTD():
         self._ctd_array = pd.DataFrame(self._ctd_array)
         self.Utility = self.Utility(self._filename)
         self._cwd = _get_cwd()
+        self.master_sheet_path = self.find_xlsx_file()
+    def find_xlsx_file(self):
+        """
+        Function to find the master sheet path.
+
+        Returns
+        _______
+        str
+            Absolute path to an excel file in the current working directory.
+        """
+        cwd = _get_cwd()
+        xlsx_files = [file for file in os.listdir(cwd) if file.endswith(".xlsx")]
+        if len(xlsx_files) > 0:
+            return os.path.abspath(xlsx_files[0])
+        else:
+            return None
 
     def view_table(self):
         """
@@ -567,7 +583,7 @@ class CTD():
                 The filename of the RSK file.
             """
             self.filename = filename
-            self.mastersheet = os.path.join(_get_cwd(), CTD.master_sheet_path)
+            self.mastersheet = CTD.master_sheet_path
 
         def no_values_in_object(self, object_to_check):
             """
@@ -1331,8 +1347,6 @@ class CTDError(Exception):
 
 def run_default(plot=False):
     _reset_file_environment()
-    CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
-    CTD._cached_master_sheet = pandas.read_excel(CTD.master_sheet_path)
     rsk_files_list = get_rsk_filenames_in_dir(_get_cwd())
     for file in rsk_files_list:
         try:
@@ -1360,8 +1374,6 @@ def run_default(plot=False):
 
 
 def merge_all_in_folder():
-    CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
-    CTD._cached_master_sheet = pandas.read_excel(CTD.master_sheet_path)
     rsk_files_list = get_rsk_filenames_in_dir(_get_cwd())
     for file in rsk_files_list:
         try:
@@ -1404,8 +1416,6 @@ def _get_filename(filepath):
     return '_'.join(filepath.split("/")[-1].split("_")[0:3]).split('.rsk')[0]
 
 def _reset_file_environment():
-    CTD.master_sheet_path = os.path.join(_get_cwd(), "FjordPhyto MASTER SHEET.xlsx")
-    CTD._cached_master_sheet = pandas.read_excel(CTD.master_sheet_path)
     output_file_csv = "output.csv"
     output_file_csv_clean = "outputclean.csv"
     output_plots_dir = "plots"
