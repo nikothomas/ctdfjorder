@@ -2,11 +2,10 @@
 
 CTDFjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
 Documentation: [Read the docs](https://nikothomas.github.io/docs/CTDFjorder.html)
-GUI Wrapper: [ctdfjorder-lite](https://github.com/nikothomas/ctdfjorder-lite)
 
 ## Features
 
-- Read RSK files and extract CTD data
+- Read RSK (.rsk) and Castaway (.csv) files and extract CTD data
 - Process CTD data, including removing non-positive samples and cleaning data
 - Calculate derived quantities such as absolute salinity, density, and overturns
 - Determine mixed layer depth (MLD) using different methods
@@ -81,11 +80,11 @@ ctdfjorder-cli default
 
 - Write your own script:
 ```
-from CTDFjorder import CTDFjorder
+import CTDFjorder
 import os
-for file in CTDFjorder.get_rsk_filenames_in_dir(os.getcwd()):
+for file in get_rsk_filenames_in_dir(os.getcwd()):
     try:
-        my_data = CTDFjorder.CTD(file)
+        my_data = CTD(file)
         my_data.add_filename_to_table()
         my_data.save_to_csv("output.csv")
         my_data.add_location_to_table()

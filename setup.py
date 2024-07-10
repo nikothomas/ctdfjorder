@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="CTDFjorder",
+    name="ctdfjorder",
     version="0.0.43",
     author="Nikolas Yanek-Chrones",
     author_email="nikojb1001@gmail.com",
@@ -30,12 +30,15 @@ setup(
         "tabulate>=0.9.0",
         "pyrsktools==0.1.9",
         "openpyxl>=3.1.2",
+        "tensorflow",
+        "scikit-learn",
+        "keras"
         "setuptools"
     ],
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'ctdfjorder-cli=CTDFjorder.CTDFjorder:main',
+            'ctdfjorder-cli=ctdfjorder:main',
         ],
     },
 )
