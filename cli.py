@@ -7,8 +7,8 @@ from contextlib import ExitStack
 import argparse
 import polars as pl
 import loggersetup
-import ctdfjorder
-from ctdfjorder import CTDError
+import CTD
+from CTD import CTDError
 import signal
 import psutil
 import os
