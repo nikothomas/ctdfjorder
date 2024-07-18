@@ -15,6 +15,7 @@ import os
 import enlighten
 import pandas as pd
 
+
 def handler(signal_received, frame):
     if signal_received == signal.SIGINT:
         return
@@ -54,6 +55,7 @@ def _process_ctd_file(file, plot=False, cached_master_sheet=pl.DataFrame(), mast
 
 
 def _run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0):
+    df = None
     logger = loggersetup.setup_logging(verbosity)
     # Retrieve and slice the first 10 items of each list
     rsk_files = _get_rsk_filenames_in_dir(get_cwd())
@@ -62,10 +64,11 @@ def _run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0)
     # Initialize the ctd_files_list and extend it with the sliced lists
     ctd_files_list = rsk_files
     ctd_files_list.extend(csv_files)
-    cached_master_sheet = pl.read_excel(master_sheet_path, infer_schema_length=None, schema_overrides={"time_local": pl.String,
-                                                                                                       "date_local": pl.String,
-                                                                                                       "time (UTC)": pl.String,
-                                                                                                       "date (UTC)": pl.String})
+    cached_master_sheet = pl.read_excel(master_sheet_path, infer_schema_length=None,
+                                        schema_overrides={"time_local": pl.String,
+                                                          "date_local": pl.String,
+                                                          "time (UTC)": pl.String,
+                                                          "date (UTC)": pl.String})
     cached_master_sheet = ctdfjorder.CTD.Utility.load_master_sheet(cached_master_sheet)
     total_files = len(ctd_files_list)
     bar_format = u'{desc}{desc_pad}{percentage:3.0f}%|{bar}| ' + \
@@ -75,7 +78,7 @@ def _run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0)
     success = manager.counter(total=total_files, desc='Processing Files', unit='Files',
                               color='green', bar_format=bar_format)
     errors = success.add_subcounter('red')
-    executor = ProcessPoolExecutor(max_workers=max_workers)
+    executor = ProcessPoolExecutor(max_workers=max_workers, max_tasks_per_child=1)
     results: list[pl.DataFrame] = []
     if not ctd_files_list:
         logger.debug("No files to process")
@@ -92,12 +95,12 @@ def _run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0)
                                        verbosity=verbosity): file for file in ctd_files_list}
             for future in as_completed(futures):
                 result = future.result()
-                if type(result) is type(pl.DataFrame()):
+                if type(result) is pl.DataFrame:
                     results.append(result)
                     success.update(1)
                 else:
                     errors.update(1)
-            df = pl.concat(results, how='diagonal_relaxed')
+            df = pl.concat(results, how='diagonal')
             ctdfjorder.CTD.Utility.save_to_csv(df, 'outputclean.csv')
         except KeyboardInterrupt:
             loggersetup.setup_logging(0)
