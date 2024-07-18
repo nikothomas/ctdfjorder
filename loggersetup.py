@@ -3,7 +3,7 @@ import traceback
 import logging
 
 formatter = colorlog.ColoredFormatter(
-    '%(log_color)s%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)',
+    '%(log_color)s%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d) - %(name)s',
     datefmt="%H:%M",
     reset=True,
     log_colors={
