@@ -15,13 +15,11 @@ from sqlite3 import OperationalError
 from os import path
 import numpy as np
 import polars as pl
-import pandas as pd
 from pyrsktools import RSK, Geo
 from pyrsktools import Region
 import gsw
 import matplotlib.pyplot as plt
 import statsmodels.api
-from matplotlib.ticker import ScalarFormatter
 import logging
 from typing import Generator
 from typing import Any
@@ -30,7 +28,6 @@ from typing import Tuple
 import warnings
 
 warnings.filterwarnings('ignore')
-import loggersetup
 
 mixed_precision.set_global_policy('float64')
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
@@ -52,20 +49,37 @@ class CTD:
     master_sheet_path : str
         Path to the mastersheet.
 
-    Usage
-    -----
-    To create a CTD object for custom pipelines use the following method:
+    Examples
+    --------
+    - Removing non positive samples from data:
 
-    >>> my_data = CTD('example.rsk')
+    >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
+    >>> ctd_data.remove_non_positive_samples()
+    >>> output = ctd_data.get_df()
+    >>> print(output)
+    shape: (211, 13)
+    ┌──────────────┬───────────┬─────────────┬──────────────┬───┬────────────┬───────────────────────────────┬────────────┬────────────┐
+    │ sea_pressure ┆ depth     ┆ temperature ┆ conductivity ┆ … ┆ profile_id ┆ filename                      ┆ latitude   ┆ longitude  │
+    │ ---          ┆ ---       ┆ ---         ┆ ---          ┆   ┆ ---        ┆ ---                           ┆ ---        ┆ ---        │
+    │ f64          ┆ f64       ┆ f64         ┆ f64          ┆   ┆ i32        ┆ str                           ┆ f64        ┆ f64        │
+    ╞══════════════╪═══════════╪═════════════╪══════════════╪═══╪════════════╪═══════════════════════════════╪════════════╪════════════╡
+    │ 0.15         ┆ 0.148676  ┆ 0.32895     ┆ 28413.735648 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 0.45         ┆ 0.446022  ┆ 0.316492    ┆ 28392.966662 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 0.75         ┆ 0.743371  ┆ 0.310613    ┆ 28386.78011  ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 1.05         ┆ 1.040721  ┆ 0.313872    ┆ 28384.476814 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 1.35         ┆ 1.338071  ┆ 0.315598    ┆ 28390.40998  ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ …            ┆ …         ┆ …           ┆ …            ┆ … ┆ …          ┆ …                             ┆ …          ┆ …          │
+    │ 61.95        ┆ 61.38701  ┆ -0.038431   ┆ 28328.05502  ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 62.25        ┆ 61.684222 ┆ -0.024517   ┆ 28314.380275 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 62.55        ┆ 61.981438 ┆ -0.029567   ┆ 28306.955354 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 62.85        ┆ 62.27865  ┆ -0.040929   ┆ 28316.792935 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    │ 63.04367     ┆ 62.470514 ┆ -0.065708   ┆ 28333.41071  ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
+    └──────────────┴───────────┴─────────────┴──────────────┴───┴────────────┴───────────────────────────────┴────────────┴────────────┘
 
-    You can then run a CTD command on it like removing non-postive sample rows and then viewing your table
-
-    >>> my_data.remove_non_positive_samples()
-    >>> my_data.view_table()
 
     Notes
     -----
-    - Filenames must match a correct date in instances where the mastersheet must be consulted.
+    - A mastersheet is not necessary, but if your files are missing location data then many functions will not work
     """
     # Column labels for internal use
     _TIMESTAMP_LABEL: str = 'timestamp'
@@ -92,9 +106,10 @@ class CTD:
     _PROFILE_ID_LABEL: str = 'profile_id'
     _BV_LABEL: str = 'brunt_vaisala_frequency_squared'
     _P_MID_LABEL: str = 'p_mid'
+    _SECCHI_DEPTH_LABEL: str = 'secchi_depth'
 
     # Column label mapping from rsk to internal
-    rskLabels_to_labelInternal: dict[str, str] = {
+    _rskLabels_to_labelInternal: dict[str, str] = {
         'temperature_00': _TEMPERATURE_LABEL,
         'chlorophyll_00': _CHLOROPHYLL_LABEL,
         'seapressure_00': _SEA_PRESSURE_LABEL,
@@ -107,27 +122,21 @@ class CTD:
     }
 
     # Column label mapping from castaway to internal
-    csvLabels_to_labelInternal: dict[str, str] = {
-        "Pressure (Decibar)": "sea_pressure",
-        "Depth (Meter)": "depth",
-        "Temperature (Celsius)": "temperature",
-        "Conductivity (MicroSiemens per Centimeter)": "conductivity",
-        "Specific conductance (MicroSiemens per Centimeter)": "specific_conductivity",
-        "Salinity (Practical Salinity Scale)": "salinity",
-        "Sound velocity (Meters per Second)": "speed_of_sound",
-        "Density (Kilograms per Cubic Meter)": "density"
+    _csvLabels_to_labelInternal: dict[str, str] = {
+        "Pressure (Decibar)": _SEA_PRESSURE_LABEL,
+        "Depth (Meter)": _DEPTH_LABEL,
+        "Temperature (Celsius)": _TEMPERATURE_LABEL,
+        "Conductivity (MicroSiemens per Centimeter)": _CONDUCTIVITY_LABEL,
+        "Specific conductance (MicroSiemens per Centimeter)": _SPECIFIC_CONDUCTIVITY_LABEL,
+        "Salinity (Practical Salinity Scale)": _SALINITY_LABEL,
+        "Sound velocity (Meters per Second)": _SPEED_OF_SOUND_LABEL,
+        "Density (Kilograms per Cubic Meter)": _DENSITY_LABEL
     }
-    # Column labels mastersheet
-
+    # Column labels of master sheet
     _MASTER_SHEET_TIME_LOCAL_LABEL = 'time_local'
     _MASTER_SHEET_DATE_LOCAL_LABEL = 'date_local'
     _MASTER_SHEET_DATETIME_LABEL = 'datetime'
-    # Column label mapping from master sheet to internal dtype
-    _masterSheetLabels_to_dtypeInternal: dict[str, pl.DataType] = {"time_local": pl.String,
-                                                                   "date_local": pl.String,
-                                                                   "time (UTC)": pl.String,
-                                                                   "date (UTC)": pl.String
-                                                                   }
+    _MASTER_SHEET_SECCHI_DEPTH_LABEL = 'secchi depth'
 
     # Time string constants
     _TIME_ZONE: str = 'UTC'
@@ -182,7 +191,7 @@ class CTD:
     _num_profiles: int = 0
     _mld_col_labels: list[str] = []
 
-    def __init__(self, ctd_file_path='', cached_master_sheet=pl.DataFrame(), master_sheet_path='',
+    def __init__(self, ctd_file_path, cached_master_sheet: pl.DataFrame = None, master_sheet_path='',
                  add_unique_id=False):
         """
         Initialize a new CTD object.
@@ -191,12 +200,26 @@ class CTD:
         ----------
         ctd_file_path : str
             The file path to the RSK or Castaway file.
+        cached_master_sheet : pl.Dataframe, default pl.DataFrame()
+            Polars dataframe representation of a master sheet.
+        master_sheet_path : str, default ''
+            Path to master sheet.
+        add_unique_id : bool, default False
+            If true adds unique id and secchi depth from master sheet.
+
+        Raises
+        ------
+        CTDError
+            For ctdfjorder related errors
         """
-        rsk_file_flag = False
         self._filename = path.basename(ctd_file_path)
-        self._cached_master_sheet = cached_master_sheet
+        if type(self._cached_master_sheet) is type(None):
+            self._cached_master_sheet = pl.DataFrame()
+        else:
+            self._cached_master_sheet = cached_master_sheet
         self.master_sheet_path = master_sheet_path
         self._cwd = CTD.Utility.get_cwd()
+
         def _process_rsk_profile(lf: pl.DataFrame, geo: Generator[Geo, Any, None]) -> pl.DataFrame:
             lf = lf.with_columns(pl.lit(self._filename + self._FILENAME_CM_ENDING).alias(self._FILENAME_LABEL))
             try:
@@ -207,7 +230,7 @@ class CTD:
                 )
             except StopIteration:
                 CTDLogger(filename=self._filename, message=self._DEBUG_FILE_LACKS_LOCATION, level='debug')
-                _lat, _long, _ = self._process_master_sheet(lf)
+                _lat, _long, _, _ = self._process_master_sheet(lf)
                 return lf.with_columns(
                     pl.lit(_lat).alias(self._LATITUDE_LABEL),
                     pl.lit(_long).alias(self._LONGITUDE_LABEL),
@@ -232,26 +255,27 @@ class CTD:
                 rsk_numpy_array = np.array(_rsk.npsamples(endpoints.start_time, endpoints.end_time))
                 for x, timestamp in enumerate(rsk_numpy_array[self._TIMESTAMP_LABEL]):
                     rsk_numpy_array[self._TIMESTAMP_LABEL][x] = timestamp.strftime(self._TIME_FORMAT)
-                profile = pl.DataFrame(rsk_numpy_array).rename(self.rskLabels_to_labelInternal).drop_nulls()
+                profile = pl.DataFrame(rsk_numpy_array).rename(self._rskLabels_to_labelInternal).drop_nulls()
                 geodata = _rsk.geodata(endpoints.start_time, endpoints.end_time)
                 processed_profile = _process_profile(profile, geodata)
                 if processed_profile is not None:
                     self._data = pl.concat([processed_profile, self._data], how=self._CONCAT_HOW)
                     self._num_profiles += 1
                 else:
-                    raise CTDWarning(filename=self._filename, message=self._WARNING_DROPPED_PROFILE + str(self._num_profiles))
+                    CTDLogger(filename=self._filename,
+                              message=self._WARNING_DROPPED_PROFILE + str(self._num_profiles), level='warning')
             if self._data.is_empty():
                 rsk_numpy_array = np.array(_rsk.npsamples())
                 for x, timestamp in enumerate(rsk_numpy_array[self._TIMESTAMP_LABEL]):
                     rsk_numpy_array[self._TIMESTAMP_LABEL][x] = timestamp.strftime(self._TIME_FORMAT)
-                profile = pl.DataFrame(rsk_numpy_array).rename(self.rskLabels_to_labelInternal).drop_nulls()
+                profile = pl.DataFrame(rsk_numpy_array).rename(self._rskLabels_to_labelInternal).drop_nulls()
                 geodata = _rsk.geodata()
                 processed_profile = _process_profile(profile, geodata)
                 if processed_profile is not None:
                     self._data = pl.concat([processed_profile, self._data], how=self._CONCAT_HOW)
                     self._num_profiles += 1
                 else:
-                    raise CTDError(message=self._ERROR_NO_SAMPLES, filename=self._filename)
+                    CTDLogger(message=self._ERROR_NO_SAMPLES, filename=self._filename, level='warning')
 
         def _load_castaway_file():
             with open(ctd_file_path) as file:
@@ -267,14 +291,15 @@ class CTD:
                 start_time = profile.select(pl.col(self._CASTAWAY_DATETIME_LABEL).first()).item()
             else:
                 start_time = CTD.Utility.extract_utc_cast_time(ctd_file_path)
-            timestamps = pd.date_range(start_time, periods=profile.height, freq='200ms').tz_localize(self._TIME_ZONE)
+            timestamps = [start_time + timedelta(milliseconds=200 * i) for i in range(profile.height)]
             profile = profile.with_columns(
-                pl.Series(timestamps).dt.replace_time_zone(self._TIME_ZONE).dt.cast_time_unit(self._TIME_UNIT).alias(self._TIMESTAMP_LABEL)
+                pl.Series(timestamps).dt.replace_time_zone(self._TIME_ZONE).dt.cast_time_unit(self._TIME_UNIT).alias(
+                    self._TIMESTAMP_LABEL)
             )
-            for header, maps_to in self.csvLabels_to_labelInternal.items():
+            for header, maps_to in self._csvLabels_to_labelInternal.items():
                 if header in profile.columns:
                     profile = profile.rename({header: maps_to})
-            profile = profile.drop(self._CASTAWAY_FILE_ID_LABEL, None).with_columns(
+            profile = profile.drop(self._CASTAWAY_FILE_ID_LABEL, strict=False).with_columns(
                 (pl.col(self._SEA_PRESSURE_LABEL) + 10.1325).alias(self._PRESSURE_LABEL),
                 pl.lit(0).alias(self._PROFILE_ID_LABEL),
                 pl.lit(self._filename).alias(self._FILENAME_LABEL)
@@ -310,16 +335,18 @@ class CTD:
             raise CTDError(message=self._ERROR_LOCATION_DATA_INVALID, filename=self._filename)
 
         if add_unique_id:
-            self._data = self._data.with_columns(pl.lit(None, dtype=pl.String).alias(self._UNIQUE_ID_LABEL))
+            self._data = self._data.with_columns(pl.lit(None, dtype=pl.String).alias(self._UNIQUE_ID_LABEL),
+                                                 pl.lit(None, dtype=pl.String).alias(self._SECCHI_DEPTH_LABEL))
             for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(keep='first').to_series().to_list():
                 profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
-                _, _, unique_id = self._process_master_sheet(profile, for_id=True)
-                profile = profile.with_columns(pl.lit(unique_id, dtype=pl.String).alias(self._UNIQUE_ID_LABEL))
+                _, _, unique_id, secchi_depth = self._process_master_sheet(profile, for_id=True)
+                profile = profile.with_columns(pl.lit(unique_id, dtype=pl.String).alias(self._UNIQUE_ID_LABEL),
+                                               pl.lit(secchi_depth, dtype=pl.String).alias(self._SECCHI_DEPTH_LABEL))
                 self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id).vstack(profile)
 
         CTDLogger(filename=self._filename, message=self._INFO_CTD_OBJECT_INITITALIZED, level='info')
 
-    def find_master_sheet_file(self) -> None:
+    def _find_master_sheet_file(self) -> None:
         """
         Function to find and the master sheet path. Uses the first xlsx file in the current working directory.
         """
@@ -334,7 +361,7 @@ class CTD:
 
         Parameters
         ----------
-        pandas : bool, optional
+        pandas : bool, default False
             If True returns a pandas df, if False returns a polars DataFrame. Defaults to False.
 
         Returns
@@ -353,13 +380,9 @@ class CTD:
             raise CTDError(filename=self._filename, message=f"No valid samples in file after running {func}")
         return True
 
-    def remove_upcasts(self):
+    def remove_upcasts(self) -> None:
         """
-        Removes upcasts based on the rate of change of pressure over time.
-        This function calculates the vertical speed of the system through the water
-        using the change of pressure with respect to time. It filters out data
-        collected in the air or while stationary at the surface or bottom, and
-        separates the downcasts from upcasts.
+        Removes upcasts by dropping rows where pressure decreases from one sampling event to the next.
         """
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
                 keep='first').to_series().to_list():
@@ -369,10 +392,9 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.remove_upcasts.__name__)
 
-    def remove_non_positive_samples(self):
+    def remove_non_positive_samples(self) -> None:
         """
-        Iterates through the columns of the CTD data table and removes rows with non-positive values
-        for depth, pressure, salinity, absolute salinity, or density.
+        Removes rows with non-positive values for depth, pressure, practical salinity, absolute salinity, or density.
         """
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
                 keep='first').to_series().to_list():
@@ -381,14 +403,16 @@ class CTD:
                          self._DENSITY_LABEL}.intersection(
                 profile.collect_schema().names()))
             for col in cols:
-                profile = profile.filter(pl.col(col) > 0.0)
+                profile = profile.filter(pl.col(col) > 0.0,
+                                         ~pl.col(col).is_null(),
+                                         pl.col(col).is_not_nan())
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.remove_non_positive_samples.__name__)
 
-    def remove_invalid_salinity_values(self):
+    def remove_invalid_salinity_values(self) -> None:
         """
-        Removes rows with invalid values (<10) for practical salinity.
+        Removes rows with practical salinity values <= 10.
         """
         # if len(self._data) < 1:
         # raise CTDError(filename=self._filename, message=self._NO_SAMPLES_ERROR)
@@ -400,16 +424,20 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.remove_invalid_salinity_values.__name__)
 
-    def clean(self, method='salinity_ai'):
+    def clean(self, method='salinity_ai') -> None:
         """
         Applies data cleaning methods to the specified feature using the selected method.
-        Currently supports cleaning practical salinity using 'salinity_diff' or 'salinity_ai' methods.
+        Currently supports cleaning practical salinity using 'salinity_ai' method.
 
         Parameters
         ----------
-        method : str, optional
-            The cleaning method to apply, defaults to 'salinity_ai'.
-            Options are 'salinity_diff', 'salinity_ai'.
+        method : str, default 'salinity_ai'
+            The cleaning method to apply.
+
+        Raises
+        ------
+        CTDError
+            When the cleaning method is invalid.
         """
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
                 keep='first').to_series().to_list():
@@ -420,29 +448,18 @@ class CTD:
                 profile = self.clean_salinity_ai(profile, profile_id)
             else:
                 CTDError(message="Method invalid for clean.", filename=self._filename)
-            profile = profile.select(pl.col(self._TIMESTAMP_LABEL),
-                                     pl.col(self._CONDUCTIVITY_LABEL),
-                                     pl.col(self._TEMPERATURE_LABEL),
-                                     pl.col(self._PRESSURE_LABEL),
-                                     pl.col(self._CHLOROPHYLL_LABEL),
-                                     pl.col(self._SEA_PRESSURE_LABEL),
-                                     pl.col(self._DEPTH_LABEL),
-                                     pl.col(self._SALINITY_LABEL),
-                                     pl.col(self._SPEED_OF_SOUND_LABEL),
-                                     pl.col(self._SPECIFIC_CONDUCTIVITY_LABEL),
-                                     pl.col(self._PROFILE_ID_LABEL),
-                                     pl.col(self._FILENAME_LABEL),
-                                     pl.col(self._LATITUDE_LABEL),
-                                     pl.col(self._LONGITUDE_LABEL),
-                                     pl.col(self._UNIQUE_ID_LABEL))
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
-            self._data = self._data.vstack(profile)
+            self._data = pl.concat([self._data, profile], how=self._CONCAT_HOW)
         self._is_profile_empty(CTD.clean.__name__)
 
-    def add_absolute_salinity(self):
+    def add_absolute_salinity(self) -> None:
         """
-        Calculates absolute salinity from practical salinity, pressure,
-        and geographical coordinates using the TEOS-10 salinity conversion formulas.
+        Calculates and adds absolute salinity to the CTD data using the TEOS-10 salinity conversion formula.
+
+        Notes
+        -----
+        * gsw.conversions.SA_from_SP used to calculate absolute salinity using TEOS-10 standards.
+        * More info on the gsw function can be found here https://www.teos-10.org/pubs/gsw/html/gsw_SA_from_SP.html
         """
         self._data = self._data.with_columns(pl.lit(None, dtype=pl.Float64).alias(self._SALINITY_ABS_LABEL))
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
@@ -455,21 +472,27 @@ class CTD:
             salinity_abs_list = gsw.conversions.SA_from_SP(s, p, lat, long)
             salinity_abs = pl.Series(np.array(salinity_abs_list).flatten(), dtype=pl.Float64, strict=False).to_frame(
                 self._SALINITY_ABS_LABEL)
+            profile = profile.with_columns(salinity_abs)
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.add_absolute_salinity.__name__)
 
     def add_density(self):
         """
-        Calculates the density using the TEOS-10 equations and adds it as a new column to the CTD
-        data table. If absolute salinity is not present, it is calculated first.
+        Calculates and adds density to CTD data using the TEOS-10 formula.
+        If absolute salinity is not present it is calculated first.
+
+        Notes
+        -----
+        * gsw.density.rho_t_exact used to calculate absolute density using TEOS-10 standards.
+        * More info on the gsw function can be found here https://www.teos-10.org/pubs/gsw/html/gsw_rho_t_exact.html
         """
+        if self._SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
         self._data = self._data.with_columns(pl.lit(None, dtype=pl.Float64).alias(self._DENSITY_LABEL))
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
                 keep='first').to_series().to_list():
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
-            if self._SALINITY_ABS_LABEL not in profile.collect_schema().names():
-                self.add_absolute_salinity()
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy()
             t = profile.select(pl.col(self._TEMPERATURE_LABEL)).to_numpy()
             p = profile.select(pl.col(self._SEA_PRESSURE_LABEL)).to_numpy()
@@ -482,28 +505,48 @@ class CTD:
 
     def add_potential_density(self):
         """
-        Calculates potential density from the CTD data using the TEOS-10 equations,
-        ensuring all data points are within the valid oceanographic funnel.
+        Calculates and adds potential density to the CTD data using the TEOS-10 formula.
+        If absolute salinity is not present it is calculated first.
+
+        Notes
+        -----
+        * gsw.sigma0 used to calculate absolute density using TEOS-10 standards.
+        * More info on the gsw function can be found here https://www.teos-10.org/pubs/gsw/html/gsw_sigma0.html
         """
         self._data = self._data.with_columns(pl.lit(None, dtype=pl.Float64).alias(self._POTENTIAL_DENSITY_LABEL))
+        if self._SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
                 keep='first').to_series().to_list():
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy()
             t = profile.select(pl.col(self._TEMPERATURE_LABEL)).to_numpy()
-            p = profile.select(pl.col(self._SEA_PRESSURE_LABEL)).to_numpy()
-            ct = gsw.CT_from_t(sa, t, p)
             potential_density = pl.Series(np.array(gsw.sigma0(sa, t)).flatten()).to_frame(self._POTENTIAL_DENSITY_LABEL)
             profile = profile.with_columns(pl.Series(potential_density))
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.add_potential_density.__name__)
 
-    def add_surface_salinity_temp_meltwater(self, start=10.0, end=15.0):
+    def add_surface_salinity_temp_meltwater(self, start=10.1325, end=12.1325):
         """
-        Calculates the surface salinity and meltwater fraction of a CTD profile.
-        Reports the mean salinity of the first 2 meters of the profile by finding the minimum salinity, and reports
-        meltwater fraction as given by (-0.021406 * surface_salinity + 0.740392) * 100.
+        Calculates the surface salinity, surface temperature and meltwater fraction of a CTD profile.
+        Adds these values to the CTD data.
+
+        Parameters
+        ----------
+        start : float, default 10.1325
+            Upper bound of surface pressure.
+        end : float, default 12.1325
+            Lower bound of surface pressure.
+
+        Notes
+        -----
+        * Surface temperature is the mean temperature from pressure start to end.
+        * Surface salinity calculated as the salinity value at the lowest pressure.
+        Meltwater fraction equation:
+            * S₀ is surface salinity
+            * .. math::
+                (-0.021406 * S₀ + 0.740392) * 100
         """
         self._data = self._data.with_columns(pl.lit(None, dtype=pl.Float64).alias(self._SURFACE_SALINITY_LABEL),
                                              pl.lit(None, dtype=pl.Float64).alias(self._SURFACE_TEMPERATURE_LABEL),
@@ -529,17 +572,22 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
 
-    def add_mean_surface_density(self, start=0.0, end=100.0):
+    def add_mean_surface_density(self, start=10.1325, end=12.1325):
         """
         Calculates the mean surface density from the density values and adds it as a new column
         to the CTD data table.
+        Requires absolute salinity and absolute density to be calculated first.
 
         Parameters
         ----------
-        start : float, optional
-            Upper pressure bound, defaults to 0.
-        end : float, optional
-            Lower pressure bound, default to 1.
+        start : float, default 10.1325
+            Upper bound of surface pressure.
+        end : float, default 12.1325
+            Lower bound of surface pressure.
+
+        Notes
+        -----
+        * Mean surface density calculated as the mean of density from pressure start to end.
         """
         # Filtering data within the specified pressure range
         for profile_id in self._data.select(self._PROFILE_ID_LABEL).unique(
@@ -553,23 +601,31 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.add_mean_surface_density.__name__)
 
-    def add_mld(self, reference: int, method="potential_density_avg"):
+    def add_mld(self, reference: int, method='potential_density_avg', delta=0.05):
         """
-        Calculates the mixed layer depth (MLD) using the density threshold method.
-        Reference density calculated as the average density up to the reference depth.
-        MLD is the depth at which the density exceeds the reference density
-        by a predefined amount delta, which defaults to (0.05 kg/m³).
+        Calculates and adds the mixed layer depth (MLD) using the density threshold method.
 
         Parameters
         ----------
         reference : int
             The reference depth for MLD calculation.
-        method : str
-            The MLD calculation method options are "abs_density" or "potential_density_avg"
+        method : str, default "potential_density_avg"
+            The MLD calculation method options are "abs_density_avg" or "potential_density_avg".
              (default: "potential_density_avg").
+        delta : float, default 0.05
+            The change in density or potential density from the reference that would define the MLD.
+
+        Notes
+        -----
+        MLD equation:
+            * Dᵣ is the reference density, defined as the mean density up to the reference depth
+            * D is all densities
+            * ∆ is a constant
+            * .. math::
+                min(D + ∆ > Dᵣ)
         """
         supported_methods = [
-            'abs_density',
+            'abs_density_avg',
             'potential_density_avg'
         ]
         self._mld_col_labels.append(f'MLD {reference}')
@@ -581,10 +637,10 @@ class CTD:
             df_filtered = profile.filter(pl.col(CTD._DEPTH_LABEL) <= reference)
             if method == supported_methods[0]:
                 reference_density = df_filtered.select(pl.col(CTD._DENSITY_LABEL).mean()).item()
-                df_filtered = profile.filter(pl.col(CTD._DENSITY_LABEL) >= reference_density + reference)
+                df_filtered = profile.filter(pl.col(CTD._DENSITY_LABEL) >= reference_density + delta)
             elif method == supported_methods[1]:
                 reference_density = df_filtered.select(pl.col(CTD._POTENTIAL_DENSITY_LABEL).mean()).item()
-                df_filtered = profile.filter(pl.col(CTD._POTENTIAL_DENSITY_LABEL) >= reference_density + reference)
+                df_filtered = profile.filter(pl.col(CTD._POTENTIAL_DENSITY_LABEL) >= reference_density + delta)
             else:
                 raise CTDError(message=f"add_mld: Invalid method \"{method}\" not in {supported_methods}",
                                filename=self._filename)
@@ -594,16 +650,15 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.add_mld.__name__)
 
-    def add_stratification(self, depth_range=20):
+    def add_bf_squared(self):
         """
-        Calculates the SI (stratification index) up to the specified depth.
-        Adds the SI to the CTD data table.
+        Calculates buoyancy frequency squared and adds to the CTD data.
         Requires potential density to be calculated first.
 
-        Parameters
-        ----------
-        depth_range : int
-            The depth range to calculate SI.
+        Notes
+        -----
+        * gsw.sigma0 used to calculate absolute density using TEOS-10 standards.
+        * More info on the gsw function can be found here https://www.teos-10.org/pubs/gsw/html/gsw_Nsquared.html
         """
         self._data = self._data.with_columns(pl.lit(None, dtype=pl.Float64).alias(self._BV_LABEL),
                                              pl.lit(None, dtype=pl.Float64).alias(self._P_MID_LABEL))
@@ -627,9 +682,6 @@ class CTD:
     def plot(self, measurement, plot_type='scatter'):
         """
         Generates a plot of depth vs. specified measurement (salinity, density, temperature).
-        Adds horizontal lines indicating the mixed layer depth (MLD) if present.
-        Allows for both scatter and line plot types.
-        Saves the plot as an image file.
 
         Parameters
         ----------
@@ -637,6 +689,12 @@ class CTD:
             Options are self._SALINITY_LABEL, self._DENSITY_LABEL, 'potential_density, or self._TEMPERATURE_LABEL.
         plot_type : str
             Options are 'scatter' or 'line'.
+
+        Notes
+        -----
+        * Adds horizontal lines indicating the mixed layer depth (MLD) if present.
+        * Allows for both scatter and line plot types.
+        * Saves the plot as an image file.
         """
         plt.rcParams.update({'font.size': 16})
         plot_folder = os.path.join(self._cwd, "plots")
@@ -682,7 +740,8 @@ class CTD:
             plt.savefig(plot_path)
             plt.close(fig)
 
-    def _process_master_sheet(self, lf: pl.DataFrame = pl.DataFrame(), for_id=False) -> Tuple[Any, Any, str]:
+    def _process_master_sheet(self, cached_master_sheet: pl.DataFrame = pl.DataFrame(), for_id=False) -> Tuple[
+        Any, Any, str, float | None]:
         """
         Extracts the date and time components from the filename and compares them with the data
         in the master sheet. Calculates the absolute differences between the dates and times to
@@ -691,32 +750,38 @@ class CTD:
 
         Parameters
         ----------
-        lf : DataFrame
+        cached_master_sheet : pl.DataFrame, default pl.DataFrame()
             CTD profile
 
-        for_id : bool
+        for_id : bool, default False
             Flag for logging purposes, indicates if we processed for location or id.
 
         Returns
         -------
         tuple
-            A tuple containing the estimated latitude, longitude, and updated filename.
+            A tuple containing the estimated latitude, longitude, unique id, and secchi depth.
+
+        Raises
+        ------
+        CTDError
+            When there is no timestamp data in the master sheet and/or CTD file.
         """
         if self._cached_master_sheet.is_empty():
-            self._cached_master_sheet = pl.read_excel(self.master_sheet_path, infer_schema_length=None,
-                                                      schema_overrides=self._masterSheetLabels_to_dtypeInternal)
-            self._cached_master_sheet = CTD.Utility.load_master_sheet(self._cached_master_sheet)
-        if self._TIMESTAMP_LABEL not in lf.collect_schema().names():
+            self._cached_master_sheet = CTD.Utility.load_master_sheet(self.master_sheet_path)
+        if self._TIMESTAMP_LABEL not in cached_master_sheet.collect_schema().names():
             raise CTDError(message=self._ERROR_NO_TIMESTAMP_IN_FILE, filename=self._filename)
         if 'datetime' not in self._cached_master_sheet.collect_schema().names():
             raise CTDError(message=self._ERROR_NO_TIMESTAMP_IN_MASTER_SHEET, filename=self._filename)
-        timestamp_highest = lf.select(pl.last(self._TIMESTAMP_LABEL).dt.datetime()).item()
+        timestamp_highest = cached_master_sheet.select(pl.last(self._TIMESTAMP_LABEL).dt.datetime()).item()
         closest_row_overall = self._cached_master_sheet.select(
             pl.all().sort_by((pl.col('datetime') - timestamp_highest).abs()))
         latitude = closest_row_overall.select(pl.col(self._LATITUDE_LABEL).first()).item()
         longitude = closest_row_overall.select(pl.col(self._LONGITUDE_LABEL).first()).item()
         distance = closest_row_overall.select(pl.col('datetime').first()).item() - timestamp_highest
         unique_id = closest_row_overall.select(pl.col('UNIQUE ID CODE ').first()).item()
+        secchi_depth = None
+        if for_id:
+            secchi_depth = closest_row_overall.select(pl.col(self._MASTER_SHEET_SECCHI_DEPTH_LABEL).first()).item()
         # Extract days, hours, and minutes from the time difference
         days = abs(distance.days)
         hours, remainder = divmod(distance.seconds, 3600)
@@ -728,20 +793,30 @@ class CTD:
             message = (f"Guessed Unique ID : Matched to unique ID '{unique_id}' with "
                        f"distance {days} days and time difference {hours}:{minutes}")
         if abs(days) > 2:
-            CTDWarning(filename=self._filename, message=message)
+            CTDLogger(filename=self._filename, message=message, level='warning')
         else:
             CTDLogger(filename=self._filename, message=message, level='info')
-        return latitude, longitude, unique_id
+        return latitude, longitude, unique_id, secchi_depth
 
-    def clean_salinity_ai(self, profile: pl.DataFrame, profile_id: int):
+    def clean_salinity_ai(self, profile: pl.DataFrame, profile_id: int) -> pl.DataFrame:
         """
         Cleans salinity using a GRU ML model.
-        Warning: This process will bin the data every 0.5 dbar of pressure.
 
+        Parameters
+        ----------
+        profile : pl.DataFrame
+            Single profile of CTD data
+        profile_id : int
+            
         Returns
         -------
-        DataFrame
+        pl.DataFrame
             CTD data with clean salinity values.
+
+        Notes
+        -----
+        * This process will bin the data every 0.5 dbar of pressure.
+        * Uses a 16 width GRU layer with a loss function to penalize decreasing salinity values w.r.t. pressure
         """
 
         def loss_function(y_true, y_pred):
@@ -827,12 +902,17 @@ class CTD:
             ----------
             data : DataFrame
                 CTD dataframe
-            show_plots : bool
-                False to not save plots, True to save plots.
+            show_plots : bool, default False
+                True saves plots in working directory within the plots folder.
             Returns
             -------
             DataFrame
                 CTD data with clean salinity values.
+
+            Raises
+            ------
+            CTDError
+                When there are not enough values to train on.
             """
             filtered_data = data.filter(pl.col(self._DEPTH_LABEL) > 1)
             filtered_data = filtered_data.with_columns(
@@ -855,7 +935,8 @@ class CTD:
                 "latitude": pl.first("latitude"),
                 "unique_id": pl.first("unique_id"),
                 "filename": pl.first("filename"),
-                "profile_id": pl.first("profile_id")
+                "profile_id": pl.first("profile_id"),
+                "secchi_depth": pl.first("secchi_depth")
             }
             available_columns = {col: agg_func for col, agg_func in column_agg_dict.items() if col in data.columns}
             data_binned = filtered_data.group_by('pressure_bin', maintain_order=True).agg(
@@ -863,7 +944,7 @@ class CTD:
             data_binned = data_binned.rename({"pressure_bin": self._PRESSURE_LABEL})
             scaler = MinMaxScaler(feature_range=(-1, 1))
             if data.limit(4).height < 2:
-                raise CTDError(message="Not enough values to run the autoencoder on this data",
+                raise CTDError(message="Not enough values to run the GRU on this data",
                                filename=self._filename)
             logger.debug(f"{self._filename} - About to scale salinity")
             salinity = np.array(data_binned.select(pl.col(self._SALINITY_LABEL)).to_numpy())
@@ -895,12 +976,16 @@ class CTD:
     def save_to_csv(self, output_file: str):
         """
         Renames the columns of the CTD data table based on a predefined mapping and saves the
-        data to the specified CSV file. If the file already exists, the data is appended to it.
+        data to the specified CSV file.
 
         Parameters
         ----------
         output_file : str
             The output CSV file path.
+
+        Notes
+        -----
+        * Will overwrite exisiting files of the same name
         """
         self.Utility.save_to_csv(self._data, output_file=output_file)
 
@@ -915,11 +1000,11 @@ class CTD:
         def save_to_csv(data: pl.DataFrame | pl.DataFrame, output_file: str):
             """
             Renames the columns of the CTD data table based on a predefined mapping and saves the
-            data to the specified CSV file. If the file already exists, the data is appended to it.
+            data to the specified CSV file.
 
             Parameters
             ----------
-            data : DataFrame
+            data : pl.DataFrame
                 The output CSV file path.
             output_file : str
                 The output CSV file path.
@@ -1032,11 +1117,20 @@ class CTD:
             return latitude, longitude
 
         @staticmethod
-        def load_master_sheet(df: pl.DataFrame):
+        def load_master_sheet(master_sheet_path: str, secchi_depth: bool = False) -> pl.DataFrame:
+            _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {"time_local": pl.String,
+                                                                               "date_local": pl.String,
+                                                                               "time (UTC)": pl.String,
+                                                                               "date (UTC)": pl.String,
+                                                                               "secchi depth": pl.String}
+            df = pl.read_excel(master_sheet_path, infer_schema_length=None,
+                               schema_overrides=_masterSheetLabels_to_dtypeInternal)
             df = df.drop_nulls('time_local')
             df = df.filter(~pl.col('time_local').eq('-999'))
             df = df.filter(~pl.col('time_local').eq('NA'))
             df = df.filter(~pl.col('date_local').eq('NA'))
+            if secchi_depth:
+                df = df.with_columns(pl.col('secchi depth').cast(pl.Float64, strict=False))
             df = df.with_columns(
                 pl.col('date_local').str.strptime(format='%Y-%m-%d %H:%M:%S%.3f', dtype=pl.Date, strict=False))
             df = df.drop_nulls('date_local')
@@ -1066,22 +1160,10 @@ class CTDError(Exception):
 
     Parameters
     ----------
-    filename: input dataset which caused the error
-    message: message -- explanation of the error
-    """
-
-    def __init__(self, message, filename=None):
-        super().__init__(filename + ' - ' + message)
-
-
-class CTDWarning(Warning):
-    """
-    Warnings raised for CTD related warnings.
-
-    Parameters
-    ----------
-    filename: input dataset which caused the warning
-    message: message -- explanation of the warning
+    filename : str, default None
+        Input dataset which caused the error.
+    message : str
+        Explanation of the error.
     """
 
     def __init__(self, message, filename=None):
@@ -1094,8 +1176,10 @@ class CTDLogger:
     
     Parameters
     ----------
-    filename: input dataset which caused the warning
-    message: message -- explanation of the warning
+    filename : str
+        Input dataset which caused the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, filename=None, level='info'):
@@ -1103,3 +1187,9 @@ class CTDLogger:
             logger.info(filename + ' - ' + message)
         if level == 'debug':
             logger.debug(filename + ' - ' + message)
+        if level == 'warning':
+            logger.warning(filename + ' - ' + message)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

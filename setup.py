@@ -22,18 +22,21 @@ setup(
     keywords=["CTD"],
     python_requires=">=3.11",
     install_requires=[
-        "numpy>=1.26.4",
-        "pandas>=2.2.1",
-        "gsw>=3.6.17",
-        "matplotlib>=3.8.4",
-        "statsmodels>=0.14.0",
-        "tabulate>=0.9.0",
-        "pyrsktools==0.1.9",
-        "openpyxl>=3.1.2",
-        "tensorflow",
-        "scikit-learn",
-        "keras"
-        "setuptools"
+        "polars~=1.1.0",
+        "psutil~=6.0.0",
+        "enlighten~=1.12.4",
+        "pandas~=2.2.2",
+        "setuptools~=70.3.0",
+        "openpyxl~=3.1.4",
+        "tensorflow~=2.17.0",
+        "numpy~=1.26.4",
+        "gsw~=3.6.18",
+        "matplotlib~=3.9.1",
+        "statsmodels~=0.14.2",
+        "keras~=3.4.1",
+        "scikit-learn~=1.5.1",
+        "pyrsktools~=0.1.9",
+        "colorlog~=6.8.2"
     ],
     packages=find_packages(),
     entry_points={
