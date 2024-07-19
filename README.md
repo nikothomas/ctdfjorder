@@ -35,11 +35,11 @@ ctdfjorder-cli default -r -v -v -m "FjordPhyto MASTERSHEET.xlsx" -w 4
 
 ## Contributing
 
-Contributions to CTDFjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
+Contributions to ctdfjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
 
 ## License
 
-CTDFjorder is released under the MIT License.
+ctdfjorder is released under the MIT License.
 
 ## Acknowledgments
 
