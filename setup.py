@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ctdfjorder",
-    version="0.1.8",
+    version="0.1.9",
     author="Nikolas Yanek-Chrones",
     author_email="research@icarai.io",
     description="A package for processing and analyzing CTD data.",
@@ -43,7 +43,7 @@ setup(
     packages=find_packages(".."),
     entry_points={
         "console_scripts": [
-            "ctdfjorder-cli=cli:main",
+            "ctdfjorder-cli=ctdfjorder.cli:main",
         ],
     },
 )
