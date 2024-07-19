@@ -16,7 +16,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 It's recommended that you create a new environment just for ctdfjorder. This can be done in conda with the following
 command.
 ```shell
-conda create --name ctdfjorder -c conda-forge python=3.11
+conda create --name ctdfjorder python=3.11
 conda activate ctdfjorder
 ```
 To install ctdfjorder you can use pip:
