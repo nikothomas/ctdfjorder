@@ -29,7 +29,7 @@ pip install ctdfjorder
 CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data. Here are the available commands:
 
 ```shell
-ctdfjorder-cli default -r -v
+ctdfjorder-cli default -r -v -v
 ```
 
 This command runs the default processing pipeline on all RSK files found in the current folder.
