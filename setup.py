@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ctdfjorder",
-    version="0.1.1",
+    version="0.1.2",
     author="Nikolas Yanek-Chrones",
     author_email="research@icarai.io",
     description="A package for processing and analyzing CTD data.",
