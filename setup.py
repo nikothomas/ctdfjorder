@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ctdfjorder",
-    version="0.1.4",
+    version="0.1.5",
     author="Nikolas Yanek-Chrones",
     author_email="research@icarai.io",
     description="A package for processing and analyzing CTD data.",
@@ -40,7 +40,7 @@ setup(
         "pyarrow~=17.0.0",
         "fastexcel~=0.10.4"
     ],
-    packages=find_packages(),
+    packages=['ctdfjorder, cli, loggersetup', ],
     entry_points={
         "console_scripts": [
             "ctdfjorder-cli=cli:main",
