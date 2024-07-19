@@ -27,10 +27,10 @@ pip install ctdfjorder
 ## Usage
 
 CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data.
-This command runs the default processing pipeline on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
+This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
 
 ```shell
-ctdfjorder-cli default -r -v -v -m "FjordPhyto MASTERSHEET.xlsx" -w 4
+ctdfjorder-cli default -r -v -v -m -p "FjordPhyto MASTERSHEET.xlsx" -w 4
 ```
 
 ## Contributing
