@@ -33,7 +33,7 @@ def setup_logging(verbosity):
     console.setFormatter(formatter)
     console.setLevel(loglevel)
 
-    file_log = logging.FileHandler("ctdfjorder.log")
+    file_log = logging.FileHandler("../ctdfjorder.log")
     file_log.setLevel(loglevel)
 
     logger.addHandler(console)

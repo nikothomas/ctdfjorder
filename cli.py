@@ -4,9 +4,9 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 import argparse
 import polars as pl
-import loggersetup
-from ctdfjorder import CTD
-from ctdfjorder import CTDError
+from ctdfjorder import loggersetup
+from ctdfjorder.ctdfjorder import CTD
+from ctdfjorder.ctdfjorder import CTDError
 import signal
 import psutil
 import os

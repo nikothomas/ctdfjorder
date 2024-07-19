@@ -54,7 +54,7 @@ class CTD:
     --------
     Removing non positive samples from data:
 
-    >>> from ctdfjorder import CTD
+    >>> from ctdfjorder.ctdfjorder import CTD
     >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
     >>> ctd_data.remove_non_positive_samples()
     >>> output = ctd_data.get_df()
@@ -219,8 +219,8 @@ class CTD:
         --------
         Castaway CTD profile with valid data
 
-        >>> from ctdfjorder import CTD
-        >>> from ctdfjorder import CTDError
+        >>> from ctdfjorder.ctdfjorder import CTD
+        >>> from ctdfjorder.ctdfjorder import CTDError
         >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
         >>> output = ctd_data.get_df()
         >>> print(output.head(3))
@@ -237,7 +237,7 @@ class CTD:
 
         Castaway CTD profile with no data
 
-        >>> from ctdfjorder import CTD
+        >>> from ctdfjorder.ctdfjorder import CTD
         >>> ctd_data = CTD('CC1627007_20191220_195931.csv') # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
@@ -484,7 +484,7 @@ class CTD:
         --------
         Accessing CTD data as a polars dataframe
 
-        >>> from ctdfjorder import CTD
+        >>> from ctdfjorder.ctdfjorder import CTD
         >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
         >>> ctd_data.remove_non_positive_samples()
         >>> output = ctd_data.get_df()
@@ -502,7 +502,7 @@ class CTD:
 
         Accessing CTD data as a pandas dataframe
 
-        >>> from ctdfjorder import CTD
+        >>> from ctdfjorder.ctdfjorder import CTD
         >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
         >>> ctd_data.remove_non_positive_samples()
         >>> output = ctd_data.get_df(pandas=True)
@@ -1212,7 +1212,7 @@ class CTD:
             plt.ylabel("Depth (m)")
             plt.title(f"Original Salinity vs. Depth - {filename}")
             plt.grid(True)
-            plt.savefig(os.path.join("plots", f"{filename}_original.png"))
+            plt.savefig(os.path.join("../plots", f"{filename}_original.png"))
             xlim = plt.xlim()
             ylim = plt.ylim()
             # plt.show()
@@ -1229,7 +1229,7 @@ class CTD:
             plt.grid(True)
             plt.xlim((xlim[0], xlim[1]))
             plt.ylim((ylim[0], ylim[1]))
-            plt.savefig(os.path.join("plots", f"{filename}_predicted.png"))
+            plt.savefig(os.path.join("../plots", f"{filename}_predicted.png"))
             # plt.show()
             plt.close()
 
