@@ -15,7 +15,7 @@ jobs:
       id-token: write
     steps:
     - name: Install theme
-      run: sudo pip3 install pydata_sphinx_theme
+      run: sudo pip3 install pydata-sphinx-theme
     - id: deployment
       uses: sphinx-notes/pages@v3
       with:
