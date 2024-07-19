@@ -38,6 +38,7 @@ def _process_ctd_file(
     try:
         my_data = CTD(
             file,
+            plot=plot,
             cached_master_sheet=cached_master_sheet,
             master_sheet_path=master_sheet_path,
             add_unique_id=add_unique_id,

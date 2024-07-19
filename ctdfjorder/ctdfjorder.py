@@ -193,6 +193,7 @@ class CTD:
     _add_unique_id: bool = False
     _num_profiles: int = 0
     _mld_col_labels: list[str] = []
+    _plot = False
 
     def __init__(
         self,
@@ -200,6 +201,7 @@ class CTD:
         cached_master_sheet: pl.DataFrame = None,
         master_sheet_path=None,
         add_unique_id=False,
+        plot=False
     ):
         """
         Initialize a new CTD object.
@@ -214,6 +216,8 @@ class CTD:
             Path to master sheet.
         add_unique_id : bool, default False
             If true adds unique id and secchi depth from master sheet.
+        plots : bool, default False
+            If true saves plots to 'plots' folder in working directory.
 
         Examples
         --------
@@ -256,7 +260,7 @@ class CTD:
             self._cached_master_sheet = cached_master_sheet
         self.master_sheet_path = master_sheet_path
         self._cwd = CTD.Utility.get_cwd()
-
+        self._plot = plot
         def _process_rsk_profile(
             lf: pl.DataFrame, geo: Generator[Geo, Any, None]
         ) -> pl.DataFrame:
@@ -1233,7 +1237,7 @@ class CTD:
             # plt.show()
             plt.close()
 
-        def run_gru(data: pl.DataFrame, show_plots=False):
+        def run_gru(data: pl.DataFrame, show_plots=self._plot):
             """
             Runs the GRU.
 
@@ -1396,6 +1400,7 @@ class CTD:
                     "Unique_ID": "Unique_ID",
                     "buoyancy_frequency": "Brunt_Vaisala_Frequency_Squared",
                     "p_mid": "Mid_Pressure_Used_For_BV_Calc",
+                    "sechhi_depth": "Secchi_Depth_(m)"
                 }
                 if label in data_label_mapping.keys():
                     return data_label_mapping[label]
