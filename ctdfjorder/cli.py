@@ -220,10 +220,10 @@ def _reset_file_environment():
         os.remove(output_file_csv_clean)
     if os.path.isfile(output_log):
         os.remove(output_log)
-    if os.path.isdir("./plots"):
-        shutil.rmtree("./plots")
-    if not os.path.isdir("./plots"):
-        os.mkdir("./plots")
+    if os.path.isdir("../plots"):
+        shutil.rmtree("../plots")
+    if not os.path.isdir("../plots"):
+        os.mkdir("../plots")
 
 
 def main():

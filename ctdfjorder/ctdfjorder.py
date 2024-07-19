@@ -1289,7 +1289,7 @@ class CTD:
             ).agg(list(available_columns.values()))
             data_binned = data_binned.rename({"pressure_bin": self._PRESSURE_LABEL})
             scaler = MinMaxScaler(feature_range=(-1, 1))
-            if data.limit(4).height < 2:
+            if data_binned.limit(4).height < 2:
                 raise CTDError(
                     message="Not enough values to run the GRU on this data",
                     filename=self._filename,
