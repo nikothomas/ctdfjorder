@@ -40,7 +40,7 @@ setup(
         "pyarrow~=17.0.0",
         "fastexcel~=0.10.4"
     ],
-    packages=['ctdfjorder, cli, loggersetup', ],
+    packages=find_packages("."),
     entry_points={
         "console_scripts": [
             "ctdfjorder-cli=cli:main",
