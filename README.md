@@ -21,7 +21,7 @@ conda activate ctdfjorder
 ```
 To install ctdfjorder you can use pip:
 ```shell
-pip install ctdfjorder
+pip install ctdfjorder==0.2.1
 ```
 
 ## Usage
@@ -30,7 +30,7 @@ CTDFjorder provides a command-line interface (CLI) for processing and analyzing 
 This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
 
 ```shell
-ctdfjorder-cli default -r -v -v -m -p "FjordPhyto MASTERSHEET.xlsx" -w 4
+ctdfjorder-cli default -r -v -m -p "FjordPhyto MASTERSHEET.xlsx" -w 4 --add_unique_id 
 ```
 
 ## Contributing
