@@ -2,19 +2,19 @@ from setuptools import setup, find_packages
 
 setup(
     name="ctdfjorder",
-    version="0.1.0",
+    version="0.1.1",
     author="Nikolas Yanek-Chrones",
-    author_email="nikojb1001@gmail.com",
+    author_email="research@icarai.io",
     description="A package for processing and analyzing CTD data.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/nikothomas/CTDFjorder",
+    url="https://github.com/nikothomas/ctdfjorder",
     project_urls={
-        "Homepage": "https://github.com/nikothomas/CTDFjorder",
-        "Issues": "https://github.com/nikothomas/CTDFjorder/issues"
+        "Homepage": "https://github.com/nikothomas/ctdfjorder",
+        "Issues": "https://github.com/nikothomas/ctdfjorder/issues",
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
@@ -35,13 +35,15 @@ setup(
         "statsmodels~=0.14.2",
         "keras~=3.4.1",
         "scikit-learn~=1.5.1",
-        "pyrsktools~=0.1.9",
-        "colorlog~=6.8.2"
+        "pyrsktools==0.1.9",
+        "colorlog~=6.8.2",
+        "pyarrow~=17.0.0",
+        "fastexcel~=0.10.4"
     ],
     packages=find_packages(),
     entry_points={
-        'console_scripts': [
-            'ctdfjorder-cli=ctdfjorder:main',
+        "console_scripts": [
+            "ctdfjorder-cli=cli:main",
         ],
     },
 )

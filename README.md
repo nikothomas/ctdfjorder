@@ -1,25 +1,25 @@
 # CTDFjorder
 
-CTDFjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
+ctdfjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
 Documentation: [Read the docs](https://nikothomas.github.io/docs/CTDFjorder.html)
 
 ## Features
 
 - Read RSK (.rsk) and Castaway (.csv) files and extract CTD data
 - Process CTD data, including removing non-positive samples and cleaning data
-- Calculate derived quantities such as absolute salinity, density, and overturns
+- Calculate derived quantities such as absolute salinity, density, and potential density
 - Determine mixed layer depth (MLD) using different methods
 - Generate plots for visualizing CTD profiles and derived quantities
 - Command-line interface (CLI) for easy processing and merging of RSK files
 
 ## Installation
-It's recommended that you create a new environment just for CTDFjorder. This can be done in conda with the following
+It's recommended that you create a new environment just for ctdfjorder. This can be done in conda with the following
 command.
 ```shell
 conda create --name ctdfjorder -c conda-forge python=3.11
 conda activate ctdfjorder
 ```
-To install CTDFjorder you can use pip:
+To install ctdfjorder you can use pip:
 ```shell
 pip install ctdfjorder
 ```
@@ -28,29 +28,11 @@ pip install ctdfjorder
 
 CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data. Here are the available commands:
 
-### Process a single RSK file
-
-```shell
-ctdfjorder-cli process <file>
-```
-
-This command processes a single RSK file specified by `<file>`. It performs various steps like adding filename to the CTD data table, saving data to a CSV file, adding location information, removing non-positive samples, etc.
-
-### Merge all RSK files in the current folder
-
-```shell
-ctdfjorder-cli merge
-```
-
-This command merges all RSK files found in the current folder. It adds filename and location information to the data table and saves the data to a CSV file.
-
-### Run the default processing pipeline
-
 ```shell
 ctdfjorder-cli default
 ```
 
-This command runs the default processing pipeline on all RSK files found in the current folder. It performs the same steps as the `process` command for each RSK file.
+This command runs the default processing pipeline on all RSK files found in the current folder.
 
 ## Configuration
 
