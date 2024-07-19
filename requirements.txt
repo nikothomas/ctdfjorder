@@ -11,7 +11,7 @@ matplotlib~=3.9.1
 statsmodels~=0.14.2
 keras~=3.4.1
 scikit-learn~=1.5.1
-pyrsktools~=0.1.9
+pyrsktools==0.1.9
 colorlog~=6.8.2
 sphinx>=7.0.0
 pydata-sphinx-theme>=0.15.4
