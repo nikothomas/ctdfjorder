@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import tensorflow as tf
+from argparse import ArgumentParser
+import torch
+import torch.nn as nn
+import torch.optim as optim
 import pandas as pd
-from keras.api.models import Model
-from keras.api.layers import Input, Dense, TimeDistributed, GRU
-from keras.api.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
-from keras import mixed_precision
 import os
 import sys
 from datetime import datetime
@@ -24,7 +23,10 @@ from typing import Any
 from typing import Literal
 from typing import Tuple
 import warnings
-import argparse
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+import rich_argparse
 import shutil
 import signal
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -33,10 +35,10 @@ import enlighten
 import psutil
 import colorlog
 import logging
+from torch.utils.data import DataLoader, TensorDataset
 
 manager = enlighten.get_manager()
 warnings.filterwarnings("ignore")
-mixed_precision.set_global_policy("float64")
 logger = logging.getLogger("ctdfjorder")
 logger.propagate = 0
 
@@ -201,12 +203,12 @@ class CTD:
     _plot = False
 
     def __init__(
-            self,
-            ctd_file_path: str,
-            cached_master_sheet: pl.DataFrame = None,
-            master_sheet_path=None,
-            add_unique_id=False,
-            plot=False,
+        self,
+        ctd_file_path: str,
+        cached_master_sheet: pl.DataFrame = None,
+        master_sheet_path=None,
+        add_unique_id=False,
+        plot=False,
     ):
         """
         Initialize a new CTD object.
@@ -268,7 +270,7 @@ class CTD:
         self._plot = plot
 
         def _process_rsk_profile(
-                lf: pl.DataFrame, geo: Generator[Geo, Any, None]
+            lf: pl.DataFrame, geo: Generator[Geo, Any, None]
         ) -> pl.DataFrame:
             lf = lf.with_columns(
                 pl.lit(self._filename + self._FILENAME_CM_ENDING).alias(
@@ -446,10 +448,10 @@ class CTD:
                 pl.lit(None, dtype=pl.String).alias(self._SECCHI_DEPTH_LABEL),
             )
             for profile_id in (
-                    self._data.select(self._PROFILE_ID_LABEL)
-                            .unique(keep="first")
-                            .to_series()
-                            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                .unique(keep="first")
+                .to_series()
+                .to_list()
             ):
                 profile = self._data.filter(
                     pl.col(self._PROFILE_ID_LABEL) == profile_id
@@ -556,10 +558,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter((pl.col(self._PRESSURE_LABEL).diff()) > 0.0)
@@ -573,10 +575,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             cols = list(
@@ -604,10 +606,10 @@ class CTD:
         # if len(self._data) < 1:
         # raise CTDError(filename=self._filename, message=self._NO_SAMPLES_ERROR)
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter(pl.col(self._SALINITY_LABEL) > 10)
@@ -632,10 +634,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             if method == "clean_salinity_ai":
@@ -662,10 +664,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._SALINITY_ABS_LABEL)
         )
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             s = profile.select(pl.col(self._SALINITY_LABEL)).to_numpy()
@@ -698,10 +700,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._DENSITY_LABEL)
         )
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy()
@@ -734,10 +736,10 @@ class CTD:
         if self._SALINITY_ABS_LABEL not in self._data.columns:
             self.add_absolute_salinity()
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy()
@@ -776,10 +778,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._MELTWATER_FRACTION_LABEL),
         )
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -830,10 +832,10 @@ class CTD:
         """
         # Filtering data within the specified pressure range
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -878,10 +880,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._mld_col_labels[-1])
         )
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             unpack = None
@@ -907,7 +909,7 @@ class CTD:
                     filename=self._filename,
                 )
             mld = df_filtered.select(pl.col(CTD._DEPTH_LABEL).first()).item()
-            CTDLogger(filename=self._filename, message=f"MLD: {mld}", level='debug')
+            CTDLogger(filename=self._filename, message=f"MLD: {mld}", level="debug")
             profile = profile.with_columns(pl.lit(mld).alias(self._mld_col_labels[-1]))
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
@@ -929,10 +931,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._P_MID_LABEL),
         )
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy().flatten()
@@ -978,10 +980,10 @@ class CTD:
         plot_folder = os.path.join(self._cwd, "plots")
         os.makedirs(plot_folder, exist_ok=True)
         for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(self._PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             fig, ax1 = plt.subplots(figsize=(18, 18))
@@ -1055,7 +1057,7 @@ class CTD:
             plt.close(fig)
 
     def _process_master_sheet(
-            self, profile: pl.DataFrame = None, for_id=False
+        self, profile: pl.DataFrame = None, for_id=False
     ) -> Tuple[Any, Any, str, float | None]:
         """
         Extracts the date and time components from the filename and compares them with the data
@@ -1080,8 +1082,8 @@ class CTD:
 
         """
         if (
-                type(self._cached_master_sheet) is type(None)
-                or self._cached_master_sheet.is_empty()
+            type(self._cached_master_sheet) is type(None)
+            or self._cached_master_sheet.is_empty()
         ):
             if self.master_sheet_path:
                 self._cached_master_sheet = CTD.Utility.load_master_sheet(
@@ -1117,10 +1119,10 @@ class CTD:
             pl.col(self._LONGITUDE_LABEL).first()
         ).item()
         distance = (
-                closest_row_overall.select(
-                    pl.col(self._MASTER_SHEET_DATETIME_LABEL).first()
-                ).item()
-                - timestamp_highest
+            closest_row_overall.select(
+                pl.col(self._MASTER_SHEET_DATETIME_LABEL).first()
+            ).item()
+            - timestamp_highest
         )
         unique_id = closest_row_overall.select(pl.col("UNIQUE ID CODE ").first()).item()
         secchi_depth = None
@@ -1171,6 +1173,17 @@ class CTD:
 
         """
 
+        class GRUModel(nn.Module):
+            def __init__(self, input_shape):
+                super(GRUModel, self).__init__()
+                self.gru = nn.GRU(input_shape[1], 16, batch_first=True)
+                self.output_layer = nn.Linear(16, input_shape[1])
+
+            def forward(self, x):
+                gru_out, _ = self.gru(x)
+                output = self.output_layer(gru_out)
+                return output
+
         def loss_function(y_true, y_pred):
             """
             MAE loss with additional term to penalize salinity predictions that increase with pressure.
@@ -1196,33 +1209,26 @@ class CTD:
             delta_sal_pred = salinity_pred[:, 1:] - salinity_pred[:, :-1]
 
             # Penalize predictions where salinity decreases while pressure increases
-            penalties = tf.where(delta_sal_pred < 0, -tf.minimum(delta_sal_pred, 0), 0)
+            penalties = torch.where(
+                delta_sal_pred < 0,
+                -torch.min(
+                    delta_sal_pred, torch.tensor(0.0, device=delta_sal_pred.device)
+                ),
+                torch.tensor(0.0, device=delta_sal_pred.device),
+            )
 
             # Calculate mean absolute error
-            mae = tf.reduce_mean(tf.abs(y_true - y_pred))
+            mae = torch.mean(torch.abs(y_true - y_pred))
 
             # Add penalties
-            return mae + 6.0 * tf.reduce_mean(
+            return mae + 6.0 * torch.mean(
                 penalties
             )  # Adjust weighting of penalty as needed
 
         def build_gru(input_shape):
-            """
-            GRU architecture.
-
-            """
-            inputs = Input(shape=(input_shape[0], input_shape[1]), name="inputs")
-            gru1 = GRU(16, activation="tanh", return_sequences=True)(inputs)
-            output = TimeDistributed(
-                Dense(input_shape[1], activation="linear"), name="output"
-            )(gru1)
-
-            gru = Model(inputs, output)
-            optimizer = Adam(learning_rate=0.01)
-            gru.compile(
-                optimizer=optimizer, loss=loss_function
-            )  # Specify your loss function here
-            return gru
+            model = GRUModel(input_shape)
+            optimizer = optim.Adam(model.parameters(), lr=0.01)
+            return model, optimizer
 
         def plot_original_data(salinity, depths, filename):
             plt.figure(figsize=(10, 6))
@@ -1318,17 +1324,30 @@ class CTD:
             salinity = np.array(
                 data_binned.select(pl.col(self._SALINITY_LABEL)).to_numpy()
             )
+            scaler = MinMaxScaler()
             scaled_sequence = scaler.fit_transform(salinity)
             scaled_seq = np.expand_dims(scaled_sequence, axis=0)
             min_pres = data_binned.select(pl.min(self._DEPTH_LABEL)).item()
             max_pres = data_binned.select(pl.max(self._DEPTH_LABEL)).item()
             pres_range = max_pres - min_pres
             epochs = int(pres_range * 16)
-            autoencoder = build_gru(scaled_seq.shape[1:])
-            autoencoder.fit(
-                scaled_seq, scaled_seq, epochs=epochs, verbose=0, batch_size=4
-            )
-            X_pred = autoencoder.predict(scaled_seq, verbose=None)
+            input_shape = scaled_seq.shape[1:]
+            model, optimizer = build_gru(input_shape)
+            criterion = loss_function
+            tensor_data = torch.tensor(scaled_seq, dtype=torch.float32)
+            dataset = TensorDataset(tensor_data, tensor_data)
+            data_loader = DataLoader(dataset, batch_size=4, shuffle=False)
+            for epoch in range(epochs):
+                model.train()
+                for x_batch, y_batch in data_loader:
+                    optimizer.zero_grad()
+                    y_pred = model(x_batch)
+                    loss = criterion(y_batch, y_pred)
+                    loss.backward()
+                    optimizer.step()
+            model.eval()
+            with torch.no_grad():
+                X_pred = model(tensor_data).numpy()
             predicted_seq = np.array(scaler.inverse_transform(X_pred[0])).flatten()
             if show_plots:
                 xlim, ylim = plot_original_data(
@@ -1499,7 +1518,7 @@ class CTD:
 
         @staticmethod
         def load_master_sheet(
-                master_sheet_path: str, secchi_depth: bool = False
+            master_sheet_path: str, secchi_depth: bool = False
         ) -> pl.DataFrame:
             _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {
                 CTD._MASTER_SHEET_TIME_LOCAL_LABEL: pl.String,
@@ -1514,9 +1533,11 @@ class CTD:
                 schema_overrides=_masterSheetLabels_to_dtypeInternal,
             )
             df = df.drop_nulls(CTD._MASTER_SHEET_TIME_LOCAL_LABEL)
-            df = df.filter(~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("-999"),
-                           ~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("NA"),
-                           ~pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).eq("NA"))
+            df = df.filter(
+                ~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("-999"),
+                ~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("NA"),
+                ~pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).eq("NA"),
+            )
 
             df = df.with_columns(
                 pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).str.strptime(
@@ -1527,7 +1548,7 @@ class CTD:
                 ),
                 pl.col(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL).cast(
                     pl.Float64, strict=False
-                )
+                ),
             )
             df = df.drop_nulls(CTD._MASTER_SHEET_DATE_LOCAL_LABEL)
             df = df.drop_nulls(CTD._MASTER_SHEET_TIME_LOCAL_LABEL)
@@ -1539,7 +1560,11 @@ class CTD:
                 )
                 .alias(CTD._MASTER_SHEET_DATETIME_LABEL)
                 .cast(pl.Datetime)
-                .dt.replace_time_zone(CTD._TIME_ZONE)
+                .dt.replace_time_zone(CTD._TIME_ZONE),
+                pl.when(pl.col(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL) == -999)
+                .then(None)
+                .otherwise(pl.col(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL))
+                .alias(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL),
             )
             return df
 
@@ -1592,12 +1617,12 @@ def CTDLogger(message, filename=None, level="info"):
 
 
 def _process_ctd_file(
-        file,
-        plot=False,
-        cached_master_sheet=None,
-        master_sheet_path=None,
-        verbosity=0,
-        add_unique_id=False,
+    file,
+    plot=False,
+    cached_master_sheet=None,
+    master_sheet_path=None,
+    verbosity=0,
+    add_unique_id=False,
 ):
     logger = _setup_logging(verbosity)
     try:
@@ -1629,14 +1654,14 @@ def _process_ctd_file(
 
 
 def _run_default(
-        plot=False,
-        master_sheet_path=None,
-        max_workers=1,
-        verbosity=0,
-        output_file=None,
-        add_unique_id=False,
-        plot_secchi_chla_flag=False,
-        debug_run=False,
+    plot=False,
+    master_sheet_path=None,
+    max_workers=1,
+    verbosity=0,
+    output_file=None,
+    add_unique_id=False,
+    plot_secchi_chla_flag=False,
+    debug_run=False,
 ):
     df = None
     logger = _setup_logging(verbosity)
@@ -1656,10 +1681,10 @@ def _run_default(
         cached_master_sheet = None
     total_files = len(ctd_files_list)
     bar_format = (
-            "{desc}{desc_pad}{percentage:3.0f}%|{bar}| "
-            + "S:{count_0:{len_total}d} "
-            + "E:{count_1:{len_total}d} "
-            + "[{elapsed}<{eta}, {rate:.2f}{unit_pad}{unit}/s]"
+        "{desc}{desc_pad}{percentage:3.0f}%|{bar}| "
+        + "S:{count_0:{len_total}d} "
+        + "E:{count_1:{len_total}d} "
+        + "[{elapsed}<{eta}, {rate:.2f}{unit_pad}{unit}/s]"
     )
     success = manager.counter(
         total=total_files,
@@ -1711,9 +1736,10 @@ def _run_default(
             for proc in psutil.process_iter():
                 if proc.name().startswith("python"):
                     proc.kill()
+            sys.exit(1)
         finally:
             executor.shutdown(wait=True, cancel_futures=True)
-
+            sys.exit(1)
 
 def _plot_secchi_chla(df: pl.DataFrame):
     df = df.filter(
@@ -1723,7 +1749,7 @@ def _plot_secchi_chla(df: pl.DataFrame):
         pl.first("secchi_depth"), pl.max("chlorophyll")
     )
     secchi_depths = data_secchi_chla.select(pl.col("secchi_depth")).to_series()
-    chlas = data_secchi_chla.select(pl.col("secchi_depth")).to_series()
+    chlas = data_secchi_chla.select(pl.col("chlorophyll")).to_series()
     # Calculate log10 of the values
     log_secchi_depth = np.array(secchi_depths.to_numpy())
     log_chla = np.array(chlas.to_numpy())
@@ -1838,16 +1864,27 @@ def _handler(signal_received, frame):
         raise KeyboardInterrupt
 
 
-def _main():
-    parser = argparse.ArgumentParser(
+def _cli():
+    console = Console()
+    console.print(
+        Panel(
+            "CTD Fjorder Processing Script",
+            title="CTD Fjorder",
+            subtitle="Processing Script",
+        )
+    )
+
+    parser = ArgumentParser(
         description="CTD Fjorder Processing Script",
-        formatter_class=argparse.RawTextHelpFormatter,
+        formatter_class=rich_argparse.RichHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Subparser for the 'default' command
     parser_default = subparsers.add_parser(
-        "default", help="Run the default processing pipeline"
+        "default",
+        help="Run the default processing pipeline",
+        formatter_class=rich_argparse.RichHelpFormatter,
     )
     parser_default.add_argument(
         "-p",
@@ -1861,7 +1898,7 @@ def _main():
         action="count",
         dest="verbosity",
         default=0,
-        help="verbose output (repeat for increased verbosity)",
+        help="Verbose output (repeat for increased verbosity)",
     )
     parser_default.add_argument(
         "-q",
@@ -1907,15 +1944,31 @@ def _main():
         help="Generate plot for secchi depth vs chla",
     )
     parser_default.add_argument(
-        "--debug-run",
-        help="Runs 20 files total for testing",
-        action="store_true",
+        "--debug-run", help="Runs 20 files total for testing", action="store_true"
     )
     args = parser.parse_args()
 
     if args.command == "default":
         if args.reset:
             _reset_file_environment()
+
+        # Display the arguments in a rich table for better visualization
+        table = Table(title="Default Processing Pipeline Arguments")
+        table.add_column("Argument", style="cyan", no_wrap=True)
+        table.add_column("Value", style="magenta")
+
+        table.add_row("Plot", str(args.plot))
+        table.add_row("Verbosity", str(args.verbosity))
+        table.add_row("Reset", str(args.reset))
+        table.add_row("Output File", args.output)
+        table.add_row("Master Sheet Path", str(args.mastersheet))
+        table.add_row("Max Workers", str(args.workers))
+        table.add_row("Add Unique ID", str(args.add_unique_id))
+        table.add_row("Plot Secchi Chla Flag", str(args.plot_secchi_chla))
+        table.add_row("Debug Run", str(args.debug_run))
+
+        console.print(table)
+
         _run_default(
             plot=args.plot,
             master_sheet_path=args.mastersheet,
@@ -1926,7 +1979,3 @@ def _main():
             plot_secchi_chla_flag=args.plot_secchi_chla,
             debug_run=args.debug_run,
         )
-
-
-if __name__ == "main":
-    _main()
