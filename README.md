@@ -30,7 +30,7 @@ CTDFjorder provides a command-line interface (CLI) for processing and analyzing 
 This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
 
 ```shell
-ctdfjorder-cli default -r -v -m -p "FjordPhyto MASTERSHEET.xlsx" -w 4 --add-unique-id --plot_secchi_chla
+ctdfjorder-cli default -r -v -p -m "FjordPhyto MASTERSHEET.xlsx" -w 4 --add-unique-id --plot_secchi_chla
 ```
 
 ## Contributing
