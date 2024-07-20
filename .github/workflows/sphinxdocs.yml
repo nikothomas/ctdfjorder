@@ -24,5 +24,3 @@ jobs:
           pip install build
       - id: deployment
         uses: sphinx-notes/pages@v3
-        with:
-          python-version: '3.12-dev'
