@@ -162,7 +162,8 @@ class CTD:
         "No timestamp in master sheet, could not get location"
     )
     _ERROR_MLD_DEPTH_RANGE: str = "Insufficient depth range to calculate MLD"
-    _ERROR_GRU_INSUFFICIENT_DATA = "Not enough values to run the GRU on this data"
+    _ERROR_GRU_INSUFFICIENT_DATA: str = "Not enough values to run the GRU on this data"
+    _ERROR_CASTAWAY_START_TIME: str = "Castaway file has no time data"
     # Warning messages
     _WARNING_DROPPED_PROFILE: str = "No samples in profile number "
 
@@ -200,7 +201,7 @@ class CTD:
     _add_unique_id: bool = False
     _num_profiles: int = 0
     _mld_col_labels: list[str] = []
-    _plot = False
+    _plot: bool = False
 
     def __init__(
         self,
@@ -388,6 +389,8 @@ class CTD:
                 ).item()
             else:
                 start_time = CTD.Utility.extract_utc_cast_time(ctd_file_path)
+            if type(start_time) == type(None):
+                CTDError(filename=self._filename, message=self._ERROR_CASTAWAY_START_TIME)
             timestamps = [
                 start_time + timedelta(milliseconds=200 * i)
                 for i in range(profile.height)
