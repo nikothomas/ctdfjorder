@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import itertools
-import openpyxl
 import tensorflow as tf
 import pandas as pd
 from keras.api.models import Model
@@ -21,19 +19,24 @@ from pyrsktools import Region
 import gsw
 import matplotlib.pyplot as plt
 import statsmodels.api
-import logging
 from typing import Generator
 from typing import Any
 from typing import Literal
 from typing import Tuple
 import warnings
+import argparse
+import shutil
+import signal
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from contextlib import ExitStack
+import enlighten
+import psutil
+import colorlog
+import logging
 
+manager = enlighten.get_manager()
 warnings.filterwarnings("ignore")
-
 mixed_precision.set_global_policy("float64")
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
-logging.getLogger("matplotlib").setLevel(logging.ERROR)
-logging.getLogger("sklearn").setLevel(logging.CRITICAL)
 logger = logging.getLogger("ctdfjorder")
 logger.propagate = 0
 
@@ -162,12 +165,12 @@ class CTD:
     _WARNING_DROPPED_PROFILE: str = "No samples in profile number "
 
     # Info messages
-    _INFO_CTD_OBJECT_INITITALIZED: str = "New CTD object initialized from file"
     _INFO_CTD_SURFACE_MEASUREMENT: str = (
         "First measurment lies below {end} dbar, cannot compute surface measurements"
     )
     # Debug messages
     _DEBUG_FILE_LACKS_LOCATION: str = "File lacks native location data"
+    _DEBUG_CTD_OBJECT_INITITALIZED: str = "New CTD object initialized from file"
 
     # Filename constants
     _FILENAME_GPS_ENDING: str = "_gps"
@@ -198,12 +201,12 @@ class CTD:
     _plot = False
 
     def __init__(
-        self,
-        ctd_file_path: str,
-        cached_master_sheet: pl.DataFrame = None,
-        master_sheet_path=None,
-        add_unique_id=False,
-        plot=False
+            self,
+            ctd_file_path: str,
+            cached_master_sheet: pl.DataFrame = None,
+            master_sheet_path=None,
+            add_unique_id=False,
+            plot=False,
     ):
         """
         Initialize a new CTD object.
@@ -263,8 +266,9 @@ class CTD:
         self.master_sheet_path = master_sheet_path
         self._cwd = CTD.Utility.get_cwd()
         self._plot = plot
+
         def _process_rsk_profile(
-            lf: pl.DataFrame, geo: Generator[Geo, Any, None]
+                lf: pl.DataFrame, geo: Generator[Geo, Any, None]
         ) -> pl.DataFrame:
             lf = lf.with_columns(
                 pl.lit(self._filename + self._FILENAME_CM_ENDING).alias(
@@ -302,9 +306,11 @@ class CTD:
                     time_unit=self._TIME_UNIT,
                 )
                 .cast(pl.Datetime(time_unit=self._TIME_UNIT))
-                .dt.replace_time_zone(self._TIME_ZONE)
+                .dt.convert_time_zone(self._TIME_ZONE)
             )
-            rsk_profile = rsk_profile.with_columns(pl.lit(0).alias(self._PROFILE_ID_LABEL))
+            rsk_profile = rsk_profile.with_columns(
+                pl.lit(0).alias(self._PROFILE_ID_LABEL)
+            )
             if not rsk_profile.is_empty():
                 return _process_rsk_profile(rsk_profile, geodata)
             return None
@@ -386,7 +392,7 @@ class CTD:
             ]
             profile = profile.with_columns(
                 pl.Series(timestamps)
-                .dt.replace_time_zone(self._TIME_ZONE)
+                .dt.convert_time_zone(self._TIME_ZONE)
                 .dt.cast_time_unit(self._TIME_UNIT)
                 .alias(self._TIMESTAMP_LABEL)
             )
@@ -440,10 +446,10 @@ class CTD:
                 pl.lit(None, dtype=pl.String).alias(self._SECCHI_DEPTH_LABEL),
             )
             for profile_id in (
-                self._data.select(self._PROFILE_ID_LABEL)
-                .unique(keep="first")
-                .to_series()
-                .to_list()
+                    self._data.select(self._PROFILE_ID_LABEL)
+                            .unique(keep="first")
+                            .to_series()
+                            .to_list()
             ):
                 profile = self._data.filter(
                     pl.col(self._PROFILE_ID_LABEL) == profile_id
@@ -463,8 +469,8 @@ class CTD:
 
         CTDLogger(
             filename=self._filename,
-            message=self._INFO_CTD_OBJECT_INITITALIZED,
-            level="info",
+            message=self._DEBUG_CTD_OBJECT_INITITALIZED,
+            level="debug",
         )
 
     def _find_master_sheet_file(self) -> None:
@@ -550,10 +556,10 @@ class CTD:
 
         """
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter((pl.col(self._PRESSURE_LABEL).diff()) > 0.0)
@@ -567,10 +573,10 @@ class CTD:
 
         """
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             cols = list(
@@ -598,10 +604,10 @@ class CTD:
         # if len(self._data) < 1:
         # raise CTDError(filename=self._filename, message=self._NO_SAMPLES_ERROR)
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter(pl.col(self._SALINITY_LABEL) > 10)
@@ -626,16 +632,18 @@ class CTD:
 
         """
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             if method == "clean_salinity_ai":
                 profile = self.clean_salinity_ai(profile, profile_id)
             else:
-                raise CTDError(message="Method invalid for clean.", filename=self._filename)
+                raise CTDError(
+                    message="Method invalid for clean.", filename=self._filename
+                )
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = pl.concat([self._data, profile], how=self._CONCAT_HOW)
         self._is_profile_empty(CTD.clean.__name__)
@@ -654,10 +662,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._SALINITY_ABS_LABEL)
         )
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             s = profile.select(pl.col(self._SALINITY_LABEL)).to_numpy()
@@ -690,10 +698,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._DENSITY_LABEL)
         )
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy()
@@ -726,10 +734,10 @@ class CTD:
         if self._SALINITY_ABS_LABEL not in self._data.columns:
             self.add_absolute_salinity()
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy()
@@ -768,10 +776,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._MELTWATER_FRACTION_LABEL),
         )
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -822,10 +830,10 @@ class CTD:
         """
         # Filtering data within the specified pressure range
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -870,13 +878,14 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._mld_col_labels[-1])
         )
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             unpack = None
+            mld = None
             df_filtered = profile.filter(pl.col(CTD._DEPTH_LABEL) <= reference)
             if method == supported_methods[0]:
                 reference_density = df_filtered.select(
@@ -898,6 +907,7 @@ class CTD:
                     filename=self._filename,
                 )
             mld = df_filtered.select(pl.col(CTD._DEPTH_LABEL).first()).item()
+            logger.critical(mld)
             profile = profile.with_columns(pl.lit(mld).alias(self._mld_col_labels[-1]))
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
@@ -919,10 +929,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._P_MID_LABEL),
         )
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(self._SALINITY_ABS_LABEL)).to_numpy().flatten()
@@ -968,10 +978,10 @@ class CTD:
         plot_folder = os.path.join(self._cwd, "plots")
         os.makedirs(plot_folder, exist_ok=True)
         for profile_id in (
-            self._data.select(self._PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(self._PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(self._PROFILE_ID_LABEL) == profile_id)
             fig, ax1 = plt.subplots(figsize=(18, 18))
@@ -1045,7 +1055,7 @@ class CTD:
             plt.close(fig)
 
     def _process_master_sheet(
-        self, cached_master_sheet: pl.DataFrame = pl.DataFrame(), for_id=False
+            self, profile: pl.DataFrame = None, for_id=False
     ) -> Tuple[Any, Any, str, float | None]:
         """
         Extracts the date and time components from the filename and compares them with the data
@@ -1055,9 +1065,6 @@ class CTD:
 
         Parameters
         ----------
-        cached_master_sheet : pl.DataFrame, default pl.DataFrame()
-            CTD profile
-
         for_id : bool, default False
             Flag for logging purposes, indicates if we processed for location or id.
 
@@ -1073,8 +1080,8 @@ class CTD:
 
         """
         if (
-            type(self._cached_master_sheet) is type(None)
-            or self._cached_master_sheet.is_empty()
+                type(self._cached_master_sheet) is type(None)
+                or self._cached_master_sheet.is_empty()
         ):
             if self.master_sheet_path:
                 self._cached_master_sheet = CTD.Utility.load_master_sheet(
@@ -1084,7 +1091,7 @@ class CTD:
                 raise CTDError(
                     message=self._ERROR_NO_MASTER_SHEET, filename=self._filename
                 )
-        if self._TIMESTAMP_LABEL not in cached_master_sheet.collect_schema().names():
+        if self._TIMESTAMP_LABEL not in profile.collect_schema().names():
             raise CTDError(
                 message=self._ERROR_NO_TIMESTAMP_IN_FILE, filename=self._filename
             )
@@ -1093,11 +1100,15 @@ class CTD:
                 message=self._ERROR_NO_TIMESTAMP_IN_MASTER_SHEET,
                 filename=self._filename,
             )
-        timestamp_highest = cached_master_sheet.select(
-            pl.last(self._TIMESTAMP_LABEL).dt.datetime()
+        timestamp_highest = profile.select(
+            pl.last(self._TIMESTAMP_LABEL)
+            .dt.convert_time_zone(self._TIME_ZONE)
+            .cast(pl.Datetime(time_unit=self._TIME_UNIT, time_zone=self._TIME_ZONE))
         ).item()
         closest_row_overall = self._cached_master_sheet.select(
-            pl.all().sort_by((pl.col("datetime") - timestamp_highest).abs())
+            pl.all().sort_by(
+                (pl.col(self._MASTER_SHEET_DATETIME_LABEL) - timestamp_highest).abs()
+            )
         )
         latitude = closest_row_overall.select(
             pl.col(self._LATITUDE_LABEL).first()
@@ -1106,8 +1117,10 @@ class CTD:
             pl.col(self._LONGITUDE_LABEL).first()
         ).item()
         distance = (
-            closest_row_overall.select(pl.col("datetime").first()).item()
-            - timestamp_highest
+                closest_row_overall.select(
+                    pl.col(self._MASTER_SHEET_DATETIME_LABEL).first()
+                ).item()
+                - timestamp_highest
         )
         unique_id = closest_row_overall.select(pl.col("UNIQUE ID CODE ").first()).item()
         secchi_depth = None
@@ -1272,7 +1285,9 @@ class CTD:
                 self._DEPTH_LABEL: pl.mean(self._DEPTH_LABEL),
                 self._SALINITY_LABEL: pl.median(self._SALINITY_LABEL),
                 self._SPEED_OF_SOUND_LABEL: pl.mean(self._SPEED_OF_SOUND_LABEL),
-                self._SPECIFIC_CONDUCTIVITY_LABEL: pl.mean(self._SPECIFIC_CONDUCTIVITY_LABEL),
+                self._SPECIFIC_CONDUCTIVITY_LABEL: pl.mean(
+                    self._SPECIFIC_CONDUCTIVITY_LABEL
+                ),
                 self._CONDUCTIVITY_LABEL: pl.mean(self._CONDUCTIVITY_LABEL),
                 self._DENSITY_LABEL: pl.mean(self._DENSITY_LABEL),
                 self._POTENTIAL_DENSITY_LABEL: pl.mean(self._POTENTIAL_DENSITY_LABEL),
@@ -1401,7 +1416,7 @@ class CTD:
                     CTD._UNIQUE_ID_LABEL: "Unique_ID",
                     CTD._BV_LABEL: "Brunt_Vaisala_Frequency_Squared",
                     CTD._P_MID_LABEL: "Mid_Pressure_Used_For_BV_Calc",
-                    CTD._SECCHI_DEPTH_LABEL: "Secchi_Depth_(m)"
+                    CTD._SECCHI_DEPTH_LABEL: "Secchi_Depth_(m)",
                 }
                 if label in data_label_mapping.keys():
                     return data_label_mapping[label]
@@ -1443,7 +1458,7 @@ class CTD:
                             ].strip()  # Take only the datetime part
                             # Convert the datetime string to ISO format if possible
                             cast_time_utc = datetime.strptime(
-                                cast_time_str, '%Y-%m-%d %H:%M:%S'
+                                cast_time_str, "%Y-%m-%d %H:%M:%S"
                             )
                             break  # Stop reading once the timestamp is found
 
@@ -1487,7 +1502,7 @@ class CTD:
 
         @staticmethod
         def load_master_sheet(
-            master_sheet_path: str, secchi_depth: bool = False
+                master_sheet_path: str, secchi_depth: bool = False
         ) -> pl.DataFrame:
             _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {
                 CTD._MASTER_SHEET_TIME_LOCAL_LABEL: pl.String,
@@ -1502,29 +1517,32 @@ class CTD:
                 schema_overrides=_masterSheetLabels_to_dtypeInternal,
             )
             df = df.drop_nulls(CTD._MASTER_SHEET_TIME_LOCAL_LABEL)
-            df = df.filter(~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("-999"))
-            df = df.filter(~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("NA"))
-            df = df.filter(~pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).eq("NA"))
-            if secchi_depth:
-                df = df.with_columns(
-                    pl.col(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL).cast(pl.Float64, strict=False)
-                )
+            df = df.filter(~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("-999"),
+                           ~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("NA"),
+                           ~pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).eq("NA"))
+
             df = df.with_columns(
                 pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).str.strptime(
-                    format='%Y-%m-%d %H:%M:%S', dtype=pl.Date, strict=False
+                    format="%Y-%m-%d %H:%M:%S", dtype=pl.Date, strict=False
+                ),
+                pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).str.strptime(
+                    format="%Y-%m-%d %H:%M:%S", dtype=pl.Time, strict=False
+                ),
+                pl.col(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL).cast(
+                    pl.Float64, strict=False
                 )
             )
             df = df.drop_nulls(CTD._MASTER_SHEET_DATE_LOCAL_LABEL)
-            df = df.with_columns(
-                pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).str.strptime(
-                    format='%Y-%m-%d %H:%M:%S', dtype=pl.Time, strict=False
-                )
-            )
             df = df.drop_nulls(CTD._MASTER_SHEET_TIME_LOCAL_LABEL)
             df = df.with_columns(
                 (
-                    pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).dt.combine(pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).cast(pl.Time))
-                ).alias(CTD._MASTER_SHEET_DATETIME_LABEL)
+                    pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).dt.combine(
+                        pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).cast(pl.Time)
+                    )
+                )
+                .alias(CTD._MASTER_SHEET_DATETIME_LABEL)
+                .cast(pl.Datetime)
+                .dt.replace_time_zone(CTD._TIME_ZONE)
             )
             return df
 
@@ -1557,7 +1575,7 @@ class CTDError(Exception):
         super().__init__(filename + " - " + message)
 
 
-class CTDLogger:
+def CTDLogger(message, filename=None, level="info"):
     """
     Wrapper for logger.
 
@@ -1568,16 +1586,350 @@ class CTDLogger:
     message : str
         Explanation of the warning.
     """
-
-    def __init__(self, message, filename=None, level="info"):
-        if level == "info":
-            logger.info(filename + " - " + message)
-        if level == "debug":
-            logger.debug(filename + " - " + message)
-        if level == "warning":
-            logger.warning(filename + " - " + message)
+    if level == "info":
+        logger.info(filename + " - " + message)
+    if level == "debug":
+        logger.debug(filename + " - " + message)
+    if level == "warning":
+        logger.warning(filename + " - " + message)
 
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+def _process_ctd_file(
+        file,
+        plot=False,
+        cached_master_sheet=None,
+        master_sheet_path=None,
+        verbosity=0,
+        add_unique_id=False,
+):
+    logger = _setup_logging(verbosity)
+    try:
+        my_data = CTD(
+            file,
+            plot=plot,
+            cached_master_sheet=cached_master_sheet,
+            master_sheet_path=master_sheet_path,
+            add_unique_id=add_unique_id,
+        )
+        my_data.remove_upcasts()
+        my_data.remove_non_positive_samples()
+        my_data.remove_invalid_salinity_values()
+        my_data.clean("clean_salinity_ai")
+        my_data.add_surface_salinity_temp_meltwater()
+        my_data.add_absolute_salinity()
+        my_data.add_density()
+        my_data.add_potential_density()
+        my_data.add_mld(20, "potential_density_avg")
+        my_data.add_bf_squared()
+        if plot:
+            my_data.plot("potential_density")
+            my_data.plot("salinity")
+        return my_data.get_df()
+    except CTDError as e:
+        logger.error(e)
+    except Exception as e:
+        logger.exception(e)
+
+
+def _run_default(
+        plot=False,
+        master_sheet_path=None,
+        max_workers=1,
+        verbosity=0,
+        output_file=None,
+        add_unique_id=False,
+        plot_secchi_chla_flag=False,
+        debug_run=False,
+):
+    df = None
+    logger = _setup_logging(verbosity)
+    if debug_run:
+        rsk_files = _get_ctd_filenames_in_dir(_get_cwd(), [".rsk"])[:10]
+        csv_files = _get_ctd_filenames_in_dir(_get_cwd(), [".csv"])[:10]
+    else:
+        # Retrieve and slice the first 10 items of each list
+        rsk_files = _get_ctd_filenames_in_dir(_get_cwd(), [".rsk"])
+        csv_files = _get_ctd_filenames_in_dir(_get_cwd(), [".csv"])
+    # Initialize the ctd_files_list and extend it with the sliced lists
+    ctd_files_list = rsk_files
+    ctd_files_list.extend(csv_files)
+    if master_sheet_path:
+        cached_master_sheet = CTD.Utility.load_master_sheet(master_sheet_path)
+    else:
+        cached_master_sheet = None
+    total_files = len(ctd_files_list)
+    bar_format = (
+            "{desc}{desc_pad}{percentage:3.0f}%|{bar}| "
+            + "S:{count_0:{len_total}d} "
+            + "E:{count_1:{len_total}d} "
+            + "[{elapsed}<{eta}, {rate:.2f}{unit_pad}{unit}/s]"
+    )
+    success = manager.counter(
+        total=total_files,
+        desc="Processing Files",
+        unit="Files",
+        color="green",
+        bar_format=bar_format,
+    )
+    errors = success.add_subcounter("red")
+    executor = ProcessPoolExecutor(max_workers=max_workers)
+    results: list[pl.DataFrame] = []
+    if not ctd_files_list:
+        logger.debug("No files to process")
+        return
+    # Process the rest of the files in parallel
+    with ExitStack() as stack:
+        stack.enter_context(executor)
+        stack.enter_context(success)
+        try:
+            futures = {
+                executor.submit(
+                    _process_ctd_file,
+                    file,
+                    plot=plot,
+                    cached_master_sheet=cached_master_sheet,
+                    master_sheet_path=master_sheet_path,
+                    verbosity=verbosity,
+                    add_unique_id=add_unique_id,
+                ): file
+                for file in ctd_files_list
+            }
+            for future in as_completed(futures):
+                result = future.result()
+                if type(result) is pl.DataFrame:
+                    results.append(result)
+                    success.update(1)
+                else:
+                    errors.update(1)
+            df = pl.concat(results, how="diagonal")
+            CTD.Utility.save_to_csv(df, output_file)
+            if plot_secchi_chla_flag:
+                _plot_secchi_chla(df)
+        except KeyboardInterrupt:
+            _setup_logging(0)
+            print()
+            logger.critical(
+                "Received shutdown command from keyboard, flushing logs and killing child processes"
+            )
+            for proc in psutil.process_iter():
+                if proc.name().startswith("python"):
+                    proc.kill()
+        finally:
+            executor.shutdown(wait=True, cancel_futures=True)
+
+
+def _plot_secchi_chla(df: pl.DataFrame):
+    df = df.filter(
+        pl.col("secchi_depth").is_not_null(), pl.col("chlorophyll").is_not_null()
+    )
+    data_secchi_chla = df.group_by("unique_id", maintain_order=True).agg(
+        pl.first("secchi_depth"), pl.max("chlorophyll")
+    )
+    secchi_depths = data_secchi_chla.select(pl.col("secchi_depth")).to_series()
+    chlas = data_secchi_chla.select(pl.col("secchi_depth")).to_series()
+    # Calculate log10 of the values
+    log_secchi_depth = np.array(secchi_depths.to_numpy())
+    log_chla = np.array(chlas.to_numpy())
+
+    # Plotting
+    fig = plt.figure(figsize=(10, 6))
+    plt.scatter(log_secchi_depth, log_chla, color="b", label="Data Points")
+    plt.plot(log_secchi_depth, log_chla, color="b")
+
+    # Adding titles and labels
+    plt.title("Log10 of Secchi Depth vs Log10 of Chlorophyll-a")
+    plt.xlabel("Log10 of Secchi Depth (m)")
+    plt.ylabel("Log10 of Chlorophyll-a (mg/m³)")
+    plt.grid(True)
+    plt.legend()
+    fig.savefig(os.path.join(_get_cwd(), "plots", "secchi_depth_vs_chla.png"))
+    plt.close(fig)
+
+
+def _get_ctd_filenames_in_dir(working_directory, types):
+    ctd_files_list = []
+    for filename in os.listdir(working_directory):
+        for type in types:
+            if filename.endswith(type):
+                file_path = os.path.join(working_directory, filename)
+                ctd_files_list.append(file_path)
+    return ctd_files_list
+
+
+def _get_cwd():
+    # determine if application is a script file or frozen exe
+    if getattr(sys, "frozen", False):
+        working_directory_path = os.path.dirname(sys.executable)
+    elif __file__:
+        working_directory_path = os.getcwd()
+    else:
+        working_directory_path = os.getcwd()
+    return working_directory_path
+
+
+def _get_filename(filepath):
+    return "_".join(filepath.split("/")[-1].split("_")[0:3]).split(".rsk")[0]
+
+
+def _reset_file_environment():
+    output_file_csv = "output.csv"
+    output_file_csv_clean = "outputclean.csv"
+    output_log = "ctdfjorder.log"
+    cwd = _get_cwd()
+    output_file_csv = os.path.join(cwd, output_file_csv)
+    output_file_csv_clean = os.path.join(cwd, output_file_csv_clean)
+    if cwd is None:
+        raise CTDError("Unknown", "Couldn't get working directory.")
+    if os.path.isfile(output_file_csv):
+        os.remove(output_file_csv)
+    if os.path.isfile(output_file_csv_clean):
+        os.remove(output_file_csv_clean)
+    if os.path.isfile(output_log):
+        os.remove(output_log)
+    if os.path.isdir("plots"):
+        shutil.rmtree("plots")
+    if not os.path.isdir("plots"):
+        os.mkdir("plots")
+
+
+def _setup_logging(verbosity):
+    signal.signal(signal.SIGTERM, _handler)
+    signal.signal(signal.SIGINT, _handler)
+    signal.signal(signal.SIGTSTP, _handler)
+    logging.getLogger("tensorflow").setLevel(logging.ERROR)
+    logging.getLogger("matplotlib").setLevel(logging.ERROR)
+    logging.getLogger("sklearn").setLevel(logging.CRITICAL)
+    formatter = colorlog.ColoredFormatter(
+        "%(log_color)s%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d) - %(name)s",
+        datefmt="%H:%M",
+        reset=True,
+        log_colors={
+            "DEBUG": "white",
+            "INFO": "cyan",
+            "WARNING": "yellow",
+            "ERROR": "red",
+            "CRITICAL": "red,bg_white",
+        },
+        secondary_log_colors={},
+        style="%",
+    )
+    base_loglevel = 30
+    verbosity = min(verbosity, 2)
+    loglevel = base_loglevel - (verbosity * 10)
+    logger = logging.getLogger("ctdfjorder")
+    # Clear existing handlers if they exist
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    logging.basicConfig(level=loglevel)
+    logger.setLevel(loglevel)
+    console = colorlog.StreamHandler()
+    console.setFormatter(formatter)
+    console.setLevel(loglevel)
+
+    file_log = logging.FileHandler("../../ctdfjorder.log")
+    file_log.setLevel(loglevel)
+
+    logger.addHandler(console)
+    logger.addHandler(file_log)
+    return logger
+
+
+def _handler(signal_received, frame):
+    if signal_received == signal.SIGINT:
+        return
+    else:
+        raise KeyboardInterrupt
+
+
+def _main():
+    parser = argparse.ArgumentParser(
+        description="CTD Fjorder Processing Script",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # Subparser for the 'default' command
+    parser_default = subparsers.add_parser(
+        "default", help="Run the default processing pipeline"
+    )
+    parser_default.add_argument(
+        "-p",
+        "--plot",
+        action="store_true",
+        help="Generate plots during the default processing pipeline",
+    )
+    parser_default.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        dest="verbosity",
+        default=0,
+        help="verbose output (repeat for increased verbosity)",
+    )
+    parser_default.add_argument(
+        "-q",
+        "--quiet",
+        action="store_const",
+        const=-1,
+        default=0,
+        dest="verbosity",
+        help="Quiet output (show errors only)",
+    )
+    parser_default.add_argument(
+        "-r",
+        "--reset",
+        help="Resets file environment (DELETES FILES)",
+        action="store_true",
+    )
+    parser_default.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="Path to output file, default output.csv",
+        default="output.csv",
+    )
+    parser_default.add_argument(
+        "-m", "--mastersheet", type=str, help="Path to mastersheet", default=None
+    )
+    parser_default.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        nargs="?",
+        const=1,
+        help="Sets max workers for parallel processing",
+    )
+    parser_default.add_argument(
+        "--add-unique-id",
+        help="Add unique id to CTD data from master sheet",
+        action="store_true",
+    )
+    parser_default.add_argument(
+        "--plot-secchi-chla",
+        action="store_true",
+        help="Generate plot for secchi depth vs chla",
+    )
+    parser_default.add_argument(
+        "--debug-run",
+        help="Runs 20 files total for testing",
+        action="store_true",
+    )
+    args = parser.parse_args()
+
+    if args.command == "default":
+        if args.reset:
+            _reset_file_environment()
+        _run_default(
+            plot=args.plot,
+            master_sheet_path=args.mastersheet,
+            max_workers=args.workers,
+            verbosity=args.verbosity,
+            output_file=args.output,
+            add_unique_id=args.add_unique_id,
+            plot_secchi_chla_flag=args.plot_secchi_chla,
+            debug_run=args.debug_run,
+        )
+
+
+if __name__ == "main":
+    _main()
