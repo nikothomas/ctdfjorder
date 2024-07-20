@@ -907,7 +907,7 @@ class CTD:
                     filename=self._filename,
                 )
             mld = df_filtered.select(pl.col(CTD._DEPTH_LABEL).first()).item()
-            logger.critical(mld)
+            CTDLogger(filename=self._filename, message=f"MLD: {mld}", level='debug')
             profile = profile.with_columns(pl.lit(mld).alias(self._mld_col_labels[-1]))
             self._data = self._data.filter(pl.col(self._PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
@@ -1315,19 +1315,16 @@ class CTD:
                     message=self._ERROR_GRU_INSUFFICIENT_DATA,
                     filename=self._filename,
                 )
-            logger.debug(f"{self._filename} - About to scale salinity")
             salinity = np.array(
                 data_binned.select(pl.col(self._SALINITY_LABEL)).to_numpy()
             )
             scaled_sequence = scaler.fit_transform(salinity)
-            logger.debug(f"{self._filename} - Salinity scaled")
             scaled_seq = np.expand_dims(scaled_sequence, axis=0)
             min_pres = data_binned.select(pl.min(self._DEPTH_LABEL)).item()
             max_pres = data_binned.select(pl.max(self._DEPTH_LABEL)).item()
             pres_range = max_pres - min_pres
             epochs = int(pres_range * 16)
             autoencoder = build_gru(scaled_seq.shape[1:])
-            logger.debug(f"{self._filename} - GRU model built")
             autoencoder.fit(
                 scaled_seq, scaled_seq, epochs=epochs, verbose=0, batch_size=4
             )
