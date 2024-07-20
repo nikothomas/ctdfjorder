@@ -18,5 +18,3 @@ jobs:
       run: sudo pip3 install pydata-sphinx-theme
     - id: deployment
       uses: sphinx-notes/pages@v3
-      with:
-        requirements_path: ./requirements.txt
