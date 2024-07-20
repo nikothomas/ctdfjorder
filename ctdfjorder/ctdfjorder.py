@@ -1218,7 +1218,7 @@ class CTD:
             plt.ylabel("Depth (m)")
             plt.title(f"Original Salinity vs. Depth - {filename}")
             plt.grid(True)
-            plt.savefig(os.path.join("../plots", f"{filename}_original.png"))
+            plt.savefig(os.path.join(self._cwd, "plots", f"{filename}_original.png"))
             xlim = plt.xlim()
             ylim = plt.ylim()
             # plt.show()
@@ -1235,7 +1235,7 @@ class CTD:
             plt.grid(True)
             plt.xlim((xlim[0], xlim[1]))
             plt.ylim((ylim[0], ylim[1]))
-            plt.savefig(os.path.join("../plots", f"{filename}_predicted.png"))
+            plt.savefig(os.path.join(self._cwd, "plots", f"{filename}_predicted.png"))
             # plt.show()
             plt.close()
 
