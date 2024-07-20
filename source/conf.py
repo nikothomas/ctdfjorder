@@ -7,7 +7,13 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import sys
 import os
-sys.path.insert(0, os.path.abspath('../ctdfjorder'))
+_HERE = os.path.dirname(__file__)
+_ROOT_DIR = os.path.abspath(os.path.join(_HERE, '..'))
+_PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, '../ctdfjorder'))
+
+sys.path.insert(0, _ROOT_DIR)
+sys.path.insert(0, _PACKAGE_DIR)
+
 project = 'ctdfjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
