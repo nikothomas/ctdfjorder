@@ -7,11 +7,11 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import sys
 import os
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../ctdfjorder'))
 project = 'ctdfjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.2.1'
+release = '0.2.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

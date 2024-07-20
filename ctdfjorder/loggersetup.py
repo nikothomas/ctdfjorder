@@ -1,5 +1,4 @@
 import colorlog
-import traceback
 import logging
 
 formatter = colorlog.ColoredFormatter(

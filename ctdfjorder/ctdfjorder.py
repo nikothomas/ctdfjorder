@@ -130,6 +130,8 @@ class CTD:
     # Column labels of master sheet
     _MASTER_SHEET_TIME_LOCAL_LABEL = "time_local"
     _MASTER_SHEET_DATE_LOCAL_LABEL = "date_local"
+    _MASTER_SHEET_TIME_UTC_LABEL = "time (UTC)"
+    _MASTER_SHEET_DATE_UTC_LABEL = "date (UTC)"
     _MASTER_SHEET_DATETIME_LABEL = "datetime"
     _MASTER_SHEET_SECCHI_DEPTH_LABEL = "secchi depth"
 
@@ -155,7 +157,7 @@ class CTD:
         "No timestamp in master sheet, could not get location"
     )
     _ERROR_MLD_DEPTH_RANGE: str = "Insufficient depth range to calculate MLD"
-
+    _ERROR_GRU_INSUFFICIENT_DATA = "Not enough values to run the GRU on this data"
     # Warning messages
     _WARNING_DROPPED_PROFILE: str = "No samples in profile number "
 
@@ -1264,24 +1266,24 @@ class CTD:
             )
             # Define the desired columns and their aggregation functions
             column_agg_dict = {
-                "temperature": pl.mean("temperature"),
-                "chlorophyll": pl.mean("chlorophyll"),
-                "sea_pressure": pl.mean("sea_pressure"),
-                "depth": pl.mean("depth"),
-                "salinity": pl.median("salinity"),
-                "speed_of_sound": pl.mean("speed_of_sound"),
-                "specific_conductivity": pl.mean("specific_conductivity"),
-                "conductivity": pl.mean("conductivity"),
-                "density": pl.mean("density"),
-                "potential_density": pl.mean("potential_density"),
-                "salinity_abs": pl.mean("salinity_abs"),
-                "timestamp": pl.first("timestamp"),
-                "longitude": pl.first("longitude"),
-                "latitude": pl.first("latitude"),
-                "unique_id": pl.first("unique_id"),
-                "filename": pl.first("filename"),
-                "profile_id": pl.first("profile_id"),
-                "secchi_depth": pl.first("secchi_depth"),
+                self._TEMPERATURE_LABEL: pl.mean(self._TEMPERATURE_LABEL),
+                self._CHLOROPHYLL_LABEL: pl.mean(self._CHLOROPHYLL_LABEL),
+                self._SEA_PRESSURE_LABEL: pl.mean(self._SEA_PRESSURE_LABEL),
+                self._DEPTH_LABEL: pl.mean(self._DEPTH_LABEL),
+                self._SALINITY_LABEL: pl.median(self._SALINITY_LABEL),
+                self._SPEED_OF_SOUND_LABEL: pl.mean(self._SPEED_OF_SOUND_LABEL),
+                self._SPECIFIC_CONDUCTIVITY_LABEL: pl.mean(self._SPECIFIC_CONDUCTIVITY_LABEL),
+                self._CONDUCTIVITY_LABEL: pl.mean(self._CONDUCTIVITY_LABEL),
+                self._DENSITY_LABEL: pl.mean(self._DENSITY_LABEL),
+                self._POTENTIAL_DENSITY_LABEL: pl.mean(self._POTENTIAL_DENSITY_LABEL),
+                self._SALINITY_ABS_LABEL: pl.mean(self._SALINITY_ABS_LABEL),
+                self._TIMESTAMP_LABEL: pl.first(self._TIMESTAMP_LABEL),
+                self._LONGITUDE_LABEL: pl.first(self._LONGITUDE_LABEL),
+                self._LATITUDE_LABEL: pl.first(self._LATITUDE_LABEL),
+                self._UNIQUE_ID_LABEL: pl.first(self._UNIQUE_ID_LABEL),
+                self._FILENAME_LABEL: pl.first(self._FILENAME_LABEL),
+                self._PROFILE_ID_LABEL: pl.first(self._PROFILE_ID_LABEL),
+                self._SECCHI_DEPTH_LABEL: pl.first(self._SECCHI_DEPTH_LABEL),
             }
             available_columns = {
                 col: agg_func
@@ -1295,7 +1297,7 @@ class CTD:
             scaler = MinMaxScaler(feature_range=(-1, 1))
             if data_binned.limit(4).height < 2:
                 raise CTDError(
-                    message="Not enough values to run the GRU on this data",
+                    message=self._ERROR_GRU_INSUFFICIENT_DATA,
                     filename=self._filename,
                 )
             logger.debug(f"{self._filename} - About to scale salinity")
@@ -1375,32 +1377,31 @@ class CTD:
 
             def relabel_ctd_data(label: str):
                 data_label_mapping = {
-                    "timestamp": "timestamp",
-                    "temperature": "Temperature_(°C)",
-                    "pressure": "Pressure_(dbar)",
-                    "chlorophyll": "Chlorophyll_a_(µg/l)",
-                    "sea_pressure": "Sea Pressure_(dbar)",
-                    "depth": "Depth_(m)",
-                    "salinity": "Salinity_(PSU)",
-                    "speed_of_sound": "Speed of Sound_(m/s)",
-                    "specific_conductivity": "Specific Conductivity_(µS/cm)",
-                    "conductivity": "Conductivity_(mS/cm)",
-                    "density": "Density_(kg/m^3)",
-                    "potential_density": "Potential_Density_(kg/m^3)",
-                    "salinity_abs": "Absolute Salinity_(g/kg)",
-                    "stratification": "Stratification_(J/m^2)",
-                    "mean_surface_density": "Mean_Surface_Density_(kg/m^3)",
-                    "surface_salinity": "Surface_Salinity_(PSU)",
-                    "surface_temperature": "Surface_Temperature_(°C)",
-                    "meltwater_fraction": "Meltwater_Fraction_(%)",
-                    "longitude": "longitude",
-                    "latitude": "latitude",
-                    "filename": "filename",
-                    "Profile_ID": "Profile_ID",
-                    "Unique_ID": "Unique_ID",
-                    "buoyancy_frequency": "Brunt_Vaisala_Frequency_Squared",
-                    "p_mid": "Mid_Pressure_Used_For_BV_Calc",
-                    "sechhi_depth": "Secchi_Depth_(m)"
+                    CTD._TIMESTAMP_LABEL: "timestamp",
+                    CTD._TEMPERATURE_LABEL: "Temperature_(°C)",
+                    CTD._PRESSURE_LABEL: "Pressure_(dbar)",
+                    CTD._CHLOROPHYLL_LABEL: "Chlorophyll_a_(µg/l)",
+                    CTD._SEA_PRESSURE_LABEL: "Sea Pressure_(dbar)",
+                    CTD._DEPTH_LABEL: "Depth_(m)",
+                    CTD._SALINITY_LABEL: "Salinity_(PSU)",
+                    CTD._SPEED_OF_SOUND_LABEL: "Speed of Sound_(m/s)",
+                    CTD._SPECIFIC_CONDUCTIVITY_LABEL: "Specific Conductivity_(µS/cm)",
+                    CTD._CONDUCTIVITY_LABEL: "Conductivity_(mS/cm)",
+                    CTD._DENSITY_LABEL: "Density_(kg/m^3)",
+                    CTD._POTENTIAL_DENSITY_LABEL: "Potential_Density_(kg/m^3)",
+                    CTD._SALINITY_ABS_LABEL: "Absolute Salinity_(g/kg)",
+                    CTD._SURFACE_DENSITY_LABEL: "Mean_Surface_Density_(kg/m^3)",
+                    CTD._SURFACE_SALINITY_LABEL: "Surface_Salinity_(PSU)",
+                    CTD._SURFACE_TEMPERATURE_LABEL: "Surface_Temperature_(°C)",
+                    CTD._MELTWATER_FRACTION_LABEL: "Meltwater_Fraction_(%)",
+                    CTD._LONGITUDE_LABEL: "longitude",
+                    CTD._LATITUDE_LABEL: "latitude",
+                    CTD._FILENAME_LABEL: "filename",
+                    CTD._PROFILE_ID_LABEL: "Profile_ID",
+                    CTD._UNIQUE_ID_LABEL: "Unique_ID",
+                    CTD._BV_LABEL: "Brunt_Vaisala_Frequency_Squared",
+                    CTD._P_MID_LABEL: "Mid_Pressure_Used_For_BV_Calc",
+                    CTD._SECCHI_DEPTH_LABEL: "Secchi_Depth_(m)"
                 }
                 if label in data_label_mapping.keys():
                     return data_label_mapping[label]
@@ -1442,7 +1443,7 @@ class CTD:
                             ].strip()  # Take only the datetime part
                             # Convert the datetime string to ISO format if possible
                             cast_time_utc = datetime.strptime(
-                                cast_time_str, "%Y-%m-%d %H:%M:%S"
+                                cast_time_str, '%Y-%m-%d %H:%M:%S'
                             )
                             break  # Stop reading once the timestamp is found
 
@@ -1489,41 +1490,41 @@ class CTD:
             master_sheet_path: str, secchi_depth: bool = False
         ) -> pl.DataFrame:
             _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {
-                "time_local": pl.String,
-                "date_local": pl.String,
-                "time (UTC)": pl.String,
-                "date (UTC)": pl.String,
-                "secchi depth": pl.String,
+                CTD._MASTER_SHEET_TIME_LOCAL_LABEL: pl.String,
+                CTD._MASTER_SHEET_DATE_LOCAL_LABEL: pl.String,
+                CTD._MASTER_SHEET_TIME_UTC_LABEL: pl.String,
+                CTD._MASTER_SHEET_DATE_UTC_LABEL: pl.String,
+                CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL: pl.String,
             }
             df = pl.read_excel(
                 master_sheet_path,
                 infer_schema_length=None,
                 schema_overrides=_masterSheetLabels_to_dtypeInternal,
             )
-            df = df.drop_nulls("time_local")
-            df = df.filter(~pl.col("time_local").eq("-999"))
-            df = df.filter(~pl.col("time_local").eq("NA"))
-            df = df.filter(~pl.col("date_local").eq("NA"))
+            df = df.drop_nulls(CTD._MASTER_SHEET_TIME_LOCAL_LABEL)
+            df = df.filter(~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("-999"))
+            df = df.filter(~pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).eq("NA"))
+            df = df.filter(~pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).eq("NA"))
             if secchi_depth:
                 df = df.with_columns(
-                    pl.col("secchi depth").cast(pl.Float64, strict=False)
+                    pl.col(CTD._MASTER_SHEET_SECCHI_DEPTH_LABEL).cast(pl.Float64, strict=False)
                 )
             df = df.with_columns(
-                pl.col("date_local").str.strptime(
-                    format="%Y-%m-%d %H:%M:%S%.3f", dtype=pl.Date, strict=False
+                pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).str.strptime(
+                    format='%Y-%m-%d %H:%M:%S', dtype=pl.Date, strict=False
                 )
             )
-            df = df.drop_nulls("date_local")
+            df = df.drop_nulls(CTD._MASTER_SHEET_DATE_LOCAL_LABEL)
             df = df.with_columns(
-                pl.col("time_local").str.strptime(
-                    format="%Y-%m-%d %H:%M:%S%.3f", dtype=pl.Time, strict=False
+                pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).str.strptime(
+                    format='%Y-%m-%d %H:%M:%S', dtype=pl.Time, strict=False
                 )
             )
-            df = df.drop_nulls("time_local")
+            df = df.drop_nulls(CTD._MASTER_SHEET_TIME_LOCAL_LABEL)
             df = df.with_columns(
                 (
-                    pl.col("date_local").dt.combine(pl.col("time_local").cast(pl.Time))
-                ).alias("datetime")
+                    pl.col(CTD._MASTER_SHEET_DATE_LOCAL_LABEL).dt.combine(pl.col(CTD._MASTER_SHEET_TIME_LOCAL_LABEL).cast(pl.Time))
+                ).alias(CTD._MASTER_SHEET_DATETIME_LABEL)
             )
             return df
 
@@ -1579,5 +1580,4 @@ class CTDLogger:
 
 if __name__ == "__main__":
     import doctest
-
     doctest.testmod()

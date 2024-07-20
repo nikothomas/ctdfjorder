@@ -4,14 +4,15 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 import argparse
 import polars as pl
-from ctdfjorder import loggersetup
-from ctdfjorder.ctdfjorder import CTD
-from ctdfjorder.ctdfjorder import CTDError
 import signal
 import psutil
 import os
 import enlighten
-
+import numpy as np
+from matplotlib import pyplot as plt
+import importlib
+from . import ctdfjorder
+from . import loggersetup
 
 def handler(signal_received, frame):
     if signal_received == signal.SIGINT:
@@ -27,16 +28,16 @@ manager = enlighten.get_manager()
 
 
 def _process_ctd_file(
-    file,
-    plot=False,
-    cached_master_sheet=None,
-    master_sheet_path=None,
-    verbosity=0,
-    add_unique_id=False,
+        file,
+        plot=False,
+        cached_master_sheet=None,
+        master_sheet_path=None,
+        verbosity=0,
+        add_unique_id=False,
 ):
     logger = loggersetup.setup_logging(verbosity)
     try:
-        my_data = CTD(
+        my_data = ctdfjorder.CTD(
             file,
             plot=plot,
             cached_master_sheet=cached_master_sheet,
@@ -57,39 +58,44 @@ def _process_ctd_file(
             my_data.plot("potential_density")
             my_data.plot("salinity")
         return my_data.get_df()
-    except CTDError as e:
+    except ctdfjorder.CTDError as e:
         logger.error(e)
     except Exception as e:
         logger.exception(e)
 
 
 def _run_default(
-    plot=False,
-    master_sheet_path=None,
-    max_workers=1,
-    verbosity=0,
-    output_file=None,
-    add_unique_id=False,
+        plot=False,
+        master_sheet_path=None,
+        max_workers=1,
+        verbosity=0,
+        output_file=None,
+        add_unique_id=False,
+        plot_secchi_chla_flag=False,
+        debug_run=False
 ):
     df = None
     logger = loggersetup.setup_logging(verbosity)
-    # Retrieve and slice the first 10 items of each list
-    rsk_files = _get_rsk_filenames_in_dir(get_cwd())
-    csv_files = _get_csv_filenames_in_dir(get_cwd())
-
+    if debug_run:
+        rsk_files = _get_rsk_filenames_in_dir(get_cwd())[:10]
+        csv_files = _get_csv_filenames_in_dir(get_cwd())[:10]
+    else:
+        # Retrieve and slice the first 10 items of each list
+        rsk_files = _get_rsk_filenames_in_dir(get_cwd())
+        csv_files = _get_csv_filenames_in_dir(get_cwd())
     # Initialize the ctd_files_list and extend it with the sliced lists
     ctd_files_list = rsk_files
     ctd_files_list.extend(csv_files)
     if master_sheet_path:
-        cached_master_sheet = CTD.Utility.load_master_sheet(master_sheet_path)
+        cached_master_sheet = ctdfjorder.CTD.Utility.load_master_sheet(master_sheet_path)
     else:
         cached_master_sheet = None
     total_files = len(ctd_files_list)
     bar_format = (
-        "{desc}{desc_pad}{percentage:3.0f}%|{bar}| "
-        + "S:{count_0:{len_total}d} "
-        + "E:{count_1:{len_total}d} "
-        + "[{elapsed}<{eta}, {rate:.2f}{unit_pad}{unit}/s]"
+            "{desc}{desc_pad}{percentage:3.0f}%|{bar}| "
+            + "S:{count_0:{len_total}d} "
+            + "E:{count_1:{len_total}d} "
+            + "[{elapsed}<{eta}, {rate:.2f}{unit_pad}{unit}/s]"
     )
     success = manager.counter(
         total=total_files,
@@ -129,7 +135,9 @@ def _run_default(
                 else:
                     errors.update(1)
             df = pl.concat(results, how="diagonal")
-            CTD.Utility.save_to_csv(df, output_file)
+            ctdfjorder.CTD.Utility.save_to_csv(df, output_file)
+            if plot_secchi_chla_flag:
+                plot_secchi_chla(df)
         except KeyboardInterrupt:
             loggersetup.setup_logging(0)
             print()
@@ -143,18 +151,31 @@ def _run_default(
             executor.shutdown(wait=True, cancel_futures=True)
 
 
-def _merge_all_in_folder():
-    ctd_files_list = _get_rsk_filenames_in_dir(get_cwd())
-    ctd_files_list.extend(_get_csv_filenames_in_dir(get_cwd()))
-    error_out = []
-    for file in ctd_files_list:
-        try:
-            my_data = CTD(file)
-            my_data.remove_upcasts()
-            my_data.remove_non_positive_samples()
-            my_data.save_to_csv("output.csv")
-        except Exception as e:
-            continue
+def plot_secchi_chla(df: pl.DataFrame):
+    df = df.filter(pl.col("secchi_depth").is_not_null(),
+                   pl.col("chlorophyll").is_not_null())
+    data_secchi_chla = df.group_by(
+        "unique_id", maintain_order=True
+    ).agg(pl.first('secchi_depth'), pl.max("chlorophyll"))
+    secchi_depths = data_secchi_chla.select(pl.col('secchi_depth')).to_series()
+    chlas = data_secchi_chla.select(pl.col('secchi_depth')).to_series()
+    # Calculate log10 of the values
+    log_secchi_depth = np.array(secchi_depths.to_numpy())
+    log_chla = np.array(chlas.to_numpy())
+
+    # Plotting
+    fig = plt.figure(figsize=(10, 6))
+    plt.scatter(log_secchi_depth, log_chla, color='b', label='Data Points')
+    plt.plot(log_secchi_depth, log_chla, color='b')
+
+    # Adding titles and labels
+    plt.title('Log10 of Secchi Depth vs Log10 of Chlorophyll-a')
+    plt.xlabel('Log10 of Secchi Depth (m)')
+    plt.ylabel('Log10 of Chlorophyll-a (mg/m³)')
+    plt.grid(True)
+    plt.legend()
+    fig.savefig(os.path.join(get_cwd(), 'plots', 'secchi_depth_vs_chla.png'))
+    plt.close(fig)
 
 
 def _get_rsk_filenames_in_dir(working_directory):
@@ -214,17 +235,17 @@ def _reset_file_environment():
     output_file_csv = os.path.join(cwd, output_file_csv)
     output_file_csv_clean = os.path.join(cwd, output_file_csv_clean)
     if cwd is None:
-        raise CTDError("Unknown", "Couldn't get working directory.")
+        raise ctdfjorder.CTDError("Unknown", "Couldn't get working directory.")
     if os.path.isfile(output_file_csv):
         os.remove(output_file_csv)
     if os.path.isfile(output_file_csv_clean):
         os.remove(output_file_csv_clean)
     if os.path.isfile(output_log):
         os.remove(output_log)
-    if os.path.isdir("../plots"):
-        shutil.rmtree("../plots")
-    if not os.path.isdir("../plots"):
-        os.mkdir("../plots")
+    if os.path.isdir("../../plots"):
+        shutil.rmtree("../../plots")
+    if not os.path.isdir("../../plots"):
+        os.mkdir("../../plots")
 
 
 def main():
@@ -245,6 +266,11 @@ def main():
         help="Generate plots during the default processing pipeline",
     )
     parser_default.add_argument(
+        "--plot-secchi-chla",
+        action="store_true",
+        help="Generate plot for secchi depth vs chla",
+    )
+    parser_default.add_argument(
         "-v",
         "--verbose",
         action="count",
@@ -259,7 +285,7 @@ def main():
         const=-1,
         default=0,
         dest="verbosity",
-        help="quiet output (show errors only)",
+        help="Quiet output (show errors only)",
     )
     parser_default.add_argument(
         "-r",
@@ -268,7 +294,7 @@ def main():
         action="store_true",
     )
     parser_default.add_argument(
-        "--add_unique_id",
+        "--add-unique-id",
         help="Add unique id to CTD data from master sheet",
         action="store_true",
     )
@@ -278,6 +304,11 @@ def main():
         type=str,
         help="Path to output file, default output.csv",
         default="output.csv",
+    )
+    parser_default.add_argument(
+        "--debug-run",
+        help="Runs 20 files total for testing",
+        action="store_true",
     )
     parser_default.add_argument(
         "-m", "--mastersheet", type=str, help="Path to mastersheet", default=None
@@ -302,8 +333,11 @@ def main():
             verbosity=args.verbosity,
             output_file=args.output,
             add_unique_id=args.add_unique_id,
+            plot_secchi_chla_flag=args.plot_secchi_chla,
+            debug_run=args.debug_run
         )
 
 
-if __name__ == "__main__":
+if __name__ == 'main':
     main()
+    sys.exit()

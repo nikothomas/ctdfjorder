@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ctdfjorder",
-    version="0.2.1",
+    version="0.2.2",
     author="Nikolas Yanek-Chrones",
     author_email="research@icarai.io",
     description="A package for processing and analyzing CTD data.",
@@ -22,13 +22,13 @@ setup(
     keywords=["CTD"],
     python_requires=">=3.11",
     install_requires=[
+        "tensorflow~=2.17.0",
         "polars~=1.1.0",
         "psutil~=6.0.0",
         "enlighten~=1.12.4",
         "pandas~=2.2.2",
         "setuptools~=70.3.0",
         "openpyxl~=3.1.4",
-        "tensorflow",
         "numpy~=1.26.4",
         "gsw~=3.6.18",
         "matplotlib~=3.9.1",
