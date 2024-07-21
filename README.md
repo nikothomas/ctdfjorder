@@ -16,7 +16,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 It's recommended that you create a new environment just for ctdfjorder. This can be done in conda with the following
 command.
 ```shell
-conda create --name ctdfjorder python=3.11
+conda create --name ctdfjorder python=3.12
 conda activate ctdfjorder
 ```
 To install ctdfjorder you can use pip:
@@ -30,7 +30,7 @@ CTDFjorder provides a command-line interface (CLI) for processing and analyzing 
 This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
 
 ```shell
-ctdfjorder-cli default -r -v -p -m "FjordPhyto MASTERSHEET.xlsx" -w 4 --add-unique-id --plot-secchi-chla
+ctdfjorder-cli default -r -p -m "FjordPhyto MASTERSHEET.xlsx" -w 8 --add-unique-id --plot-secchi-chla -v --show-table
 ```
 
 ## Contributing

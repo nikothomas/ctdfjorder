@@ -34,7 +34,6 @@ matplotlib = ">=3.9.1"
 statsmodels = ">=0.14.2"
 keras = ">=3.4.1"
 scikit-learn = ">=1.5.1"
-pyrsktools = "==0.1.9"
 colorlog = ">=6.8.2"
 pyarrow = ">=17.0.0"
 fastexcel = ">=0.10.4"
@@ -46,4 +45,4 @@ homepage = "https://github.com/nikothomas/ctdfjorder"
 issues = "https://github.com/nikothomas/ctdfjorder/issues"
 
 [tool.poetry.scripts]
-ctdfjorder-cli = "ctdfjorder.ctdfjorder:_cli"
+ctdfjorder-cli = "ctdfjorder.cli:cli"
