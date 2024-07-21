@@ -26,7 +26,7 @@ pip install ctdfjorder
 
 ## Map plots
 
-If you want to enable map plotting at the end of the pipeline you'll need a default token from MapBox[https://www.mapbox.com].
+If you want to enable map plotting at the end of the pipeline you'll need a default token from [MapBox](https://www.mapbox.com).
 
 
 ## Usage
