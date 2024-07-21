@@ -79,7 +79,6 @@ class CTD:
         ctd_file_path: str,
         cached_master_sheet: pl.DataFrame = None,
         master_sheet_path=None,
-        add_unique_id=False,
         plot=False,
     ):
         """
@@ -303,7 +302,7 @@ class CTD:
         except pl.exceptions.InvalidOperationError:
             raise CTDError(message=ERROR_LOCATION_DATA_INVALID, filename=self._filename)
 
-        if add_unique_id:
+        if master_sheet_path:
             self._data = self._data.with_columns(
                 pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
                 pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL),
@@ -1073,7 +1072,7 @@ class CTD:
                     data.select(SALINITY_LABEL).to_numpy(),
                     data.select(DEPTH_LABEL).to_numpy(),
                     self._filename + str(profile_id),
-                    plot_path=os.path.join(self._cwd, "plots", f"{self._filename}_original.png")
+                    plot_path=os.path.join(self._cwd, "ctdplots", f"{self._filename}_original.png")
                 )
                 plot_predicted_data(
                     salinity=predicted_seq,
@@ -1081,7 +1080,7 @@ class CTD:
                     filename=self._filename + str(profile_id),
                     xlim=xlim,
                     ylim=ylim,
-                    plot_path=os.path.join(self._cwd, "plots", f"{self._filename}_predicted.png")
+                    plot_path=os.path.join(self._cwd, "ctdplots", f"{self._filename}_predicted.png")
                 )
             data_binned = data_binned.with_columns(
                 pl.Series(predicted_seq, dtype=pl.Float64).alias(SALINITY_LABEL)
@@ -1114,7 +1113,7 @@ class CTD:
         """
 
         @staticmethod
-        def save_to_csv(data: pl.DataFrame | pl.DataFrame, output_file: str):
+        def save_to_csv(data: pl.DataFrame, output_file: str):
             """
             Renames the columns of the CTD data table based on a predefined mapping and saves the
             data to the specified CSV file.
@@ -1122,49 +1121,59 @@ class CTD:
             Parameters
             ----------
             data : pl.DataFrame
-                The output CSV file path.
+                The CTD data table.
             output_file : str
                 The output CSV file path.
             """
-
-            def relabel_ctd_data(label: str):
+            def relabel_ctd_data(label: str) -> str:
                 data_label_mapping = {
-                    TIMESTAMP_LABEL: "timestamp",
-                    TEMPERATURE_LABEL: "Temperature_(°C)",
-                    PRESSURE_LABEL: "Pressure_(dbar)",
-                    CHLOROPHYLL_LABEL: "Chlorophyll_a_(µg/l)",
-                    SEA_PRESSURE_LABEL: "Sea Pressure_(dbar)",
-                    DEPTH_LABEL: "Depth_(m)",
-                    SALINITY_LABEL: "Salinity_(PSU)",
-                    SPEED_OF_SOUND_LABEL: "Speed of Sound_(m/s)",
-                    SPECIFIC_CONDUCTIVITY_LABEL: "Specific Conductivity_(µS/cm)",
-                    CONDUCTIVITY_LABEL: "Conductivity_(mS/cm)",
-                    DENSITY_LABEL: "Density_(kg/m^3)",
-                    POTENTIAL_DENSITY_LABEL: "Potential_Density_(kg/m^3)",
-                    SALINITY_ABS_LABEL: "Absolute Salinity_(g/kg)",
-                    SURFACE_DENSITY_LABEL: "Mean_Surface_Density_(kg/m^3)",
-                    SURFACE_SALINITY_LABEL: "Surface_Salinity_(PSU)",
-                    SURFACE_TEMPERATURE_LABEL: "Surface_Temperature_(°C)",
-                    MELTWATER_FRACTION_LABEL: "Meltwater_Fraction_(%)",
-                    LONGITUDE_LABEL: "longitude",
-                    LATITUDE_LABEL: "latitude",
-                    FILENAME_LABEL: "filename",
-                    PROFILE_ID_LABEL: "Profile_ID",
-                    UNIQUE_ID_LABEL: "Unique_ID",
-                    BV_LABEL: "Brunt_Vaisala_Frequency_Squared",
-                    P_MID_LABEL: "Mid_Pressure_Used_For_BV_Calc",
-                    SECCHI_DEPTH_LABEL: "Secchi_Depth_(m)",
+                    TIMESTAMP_LABEL: EXPORT_TIMESTAMP_LABEL,
+                    TEMPERATURE_LABEL: EXPORT_TEMPERATURE_LABEL,
+                    PRESSURE_LABEL: EXPORT_PRESSURE_LABEL,
+                    CHLOROPHYLL_LABEL: EXPORT_CHLOROPHYLL_LABEL,
+                    SEA_PRESSURE_LABEL: EXPORT_SEA_PRESSURE_LABEL,
+                    DEPTH_LABEL: EXPORT_DEPTH_LABEL,
+                    SALINITY_LABEL: EXPORT_SALINITY_LABEL,
+                    SPEED_OF_SOUND_LABEL: EXPORT_SPEED_OF_SOUND_LABEL,
+                    SPECIFIC_CONDUCTIVITY_LABEL: EXPORT_SPECIFIC_CONDUCTIVITY_LABEL,
+                    CONDUCTIVITY_LABEL: EXPORT_CONDUCTIVITY_LABEL,
+                    DENSITY_LABEL: EXPORT_DENSITY_LABEL,
+                    POTENTIAL_DENSITY_LABEL: EXPORT_POTENTIAL_DENSITY_LABEL,
+                    SALINITY_ABS_LABEL: EXPORT_SALINITY_ABS_LABEL,
+                    SURFACE_DENSITY_LABEL: EXPORT_SURFACE_DENSITY_LABEL,
+                    SURFACE_SALINITY_LABEL: EXPORT_SURFACE_SALINITY_LABEL,
+                    SURFACE_TEMPERATURE_LABEL: EXPORT_SURFACE_TEMPERATURE_LABEL,
+                    MELTWATER_FRACTION_LABEL: EXPORT_MELTWATER_FRACTION_LABEL,
+                    LONGITUDE_LABEL: EXPORT_LONGITUDE_LABEL,
+                    LATITUDE_LABEL: EXPORT_LATITUDE_LABEL,
+                    FILENAME_LABEL: EXPORT_FILENAME_LABEL,
+                    PROFILE_ID_LABEL: EXPORT_PROFILE_ID_LABEL,
+                    UNIQUE_ID_LABEL: EXPORT_UNIQUE_ID_LABEL,
+                    BV_LABEL: EXPORT_BV_LABEL,
+                    P_MID_LABEL: EXPORT_P_MID_LABEL,
+                    SECCHI_DEPTH_LABEL: EXPORT_SECCHI_DEPTH_LABEL,
                 }
-                if label in data_label_mapping.keys():
-                    return data_label_mapping[label]
-                else:
-                    return label
+                return data_label_mapping.get(label, label)
 
-            data = data.rename(relabel_ctd_data)
-            if type(data) is pl.DataFrame:
-                data.write_csv(output_file)
-            elif type(data) is pl.DataFrame:
-                data.write_csv(output_file)
+            # Rename columns
+            renamed_data = data.rename(relabel_ctd_data)
+
+            # Define the desired column order based on the mapping values
+            ordered_columns = [
+                EXPORT_TIMESTAMP_LABEL, EXPORT_TEMPERATURE_LABEL, EXPORT_PRESSURE_LABEL, EXPORT_DEPTH_LABEL, EXPORT_SEA_PRESSURE_LABEL,
+                EXPORT_CHLOROPHYLL_LABEL, EXPORT_SALINITY_LABEL, EXPORT_SPECIFIC_CONDUCTIVITY_LABEL, EXPORT_CONDUCTIVITY_LABEL, EXPORT_DENSITY_LABEL,
+                EXPORT_POTENTIAL_DENSITY_LABEL, EXPORT_SALINITY_ABS_LABEL, EXPORT_SURFACE_DENSITY_LABEL, EXPORT_SPEED_OF_SOUND_LABEL,
+                EXPORT_SURFACE_SALINITY_LABEL, EXPORT_SURFACE_TEMPERATURE_LABEL, EXPORT_MELTWATER_FRACTION_LABEL, EXPORT_BV_LABEL, EXPORT_P_MID_LABEL, EXPORT_SECCHI_DEPTH_LABEL,
+                EXPORT_LONGITUDE_LABEL, EXPORT_LATITUDE_LABEL, EXPORT_FILENAME_LABEL, EXPORT_PROFILE_ID_LABEL, EXPORT_UNIQUE_ID_LABEL,
+            ]
+
+            # Reorder columns if all ordered_columns are present in the DataFrame
+            present_columns = [col for col in ordered_columns if col in renamed_data.columns]
+            reordered_data = renamed_data.select(present_columns)
+
+            # Save to CSV
+            reordered_data.write_csv(output_file)
+            return reordered_data
 
         @staticmethod
         def extract_utc_cast_time(ctd_file_path):

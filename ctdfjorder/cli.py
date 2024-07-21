@@ -16,21 +16,23 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table, box
-from rich.text import Text
 from rich.status import Status
 
 from ctdfjorder.ctdfjorder import CTD, CTDError
 from ctdfjorder.ctdplot import plot_secchi_chla
 from ctdfjorder.ctdplot import plot_depth_vs
+from ctdfjorder.ctdplot import plot_map
 from ctdfjorder.constants import *
 import rich_argparse
 
+console = Console()
 
-def process_ctd_file(file, plot, cached_master_sheet, master_sheet_path, verbosity, add_unique_id, plots_folder):
+
+def process_ctd_file(file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder):
     logger = setup_logging(verbosity)
     steps = [
         ("Load File", lambda: CTD(file, plot=plot, cached_master_sheet=cached_master_sheet,
-                                  master_sheet_path=master_sheet_path, add_unique_id=add_unique_id)),
+                                  master_sheet_path=master_sheet_path)),
         ("Remove Upcasts", lambda data: data.remove_upcasts()),
         ("Remove Negative", lambda data: data.remove_non_positive_samples()),
         ("Remove Invalid Salinity Values", lambda data: data.remove_invalid_salinity_values()),
@@ -61,7 +63,8 @@ def process_ctd_file(file, plot, cached_master_sheet, master_sheet_path, verbosi
                     return step_function(data), status + ["green"]
                 else:
                     step_function(data)
-                if len(warning_list) > warning_list_length and warning_list[-1].category != RuntimeWarning and warning_list[-1].category != ChronoFormatWarning:
+                if len(warning_list) > warning_list_length and warning_list[-1].category != RuntimeWarning and \
+                        warning_list[-1].category != ChronoFormatWarning:
                     warning_list_length = len(warning_list)
                     logger.warning(warning_list[-1])
                     status.append("yellow")
@@ -89,19 +92,21 @@ def generate_status_table(status_table):
 
 
 def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, output_file=None,
-                add_unique_id=False, plot_secchi_chla_flag=False, debug_run=False, table_show=False):
+                debug_run=False, table_show=False, mapbox_access_token=None):
     logger = setup_logging(verbosity)
-    plots_folder = os.path.join(get_cwd(), "plots")
+    plots_folder = os.path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[:20 if debug_run else None]
     if not files:
-        logger.debug("No files to process")
-        return
+        raise CTDError(message="No '.rsk' or '.csv' found in this folder")
     cached_master_sheet = CTD.Utility.load_master_sheet(master_sheet_path) if master_sheet_path else None
     status_table, results = [], []
-    live_console = Console() if table_show else Console(quiet=True)
+    live_console = console if table_show else Console(quiet=True)
     live = Live(generate_status_table(status_table), auto_refresh=False,
                 console=live_console, vertical_overflow="visible")
     executor = ProcessPoolExecutor(max_workers=max_workers)
+    status_spinner_combining = Status("Combining CTD profiles", spinner="earth")
+    status_spinner_cleaning_up = Status("Cleaning up", spinner="earth")
+    status_spinner_map_view = Status("Running interactive map view. To shutdown press CTRL+Z.", spinner="earth")
     error_count = 0
     total_count = len(files)
     with ExitStack() as stack:
@@ -109,7 +114,7 @@ def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, 
         try:
             stack.enter_context(executor)
             futures = {executor.submit(process_ctd_file, file, plot, cached_master_sheet, master_sheet_path,
-                                       verbosity, add_unique_id, plots_folder): file for file in files}
+                                       verbosity, plots_folder): file for file in files}
 
             for future in as_completed(futures):
                 file = futures[future]
@@ -121,25 +126,35 @@ def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, 
                 if table_show:
                     status_table.append((os.path.basename(file), status))
                     live.update(generate_status_table(status_table), refresh=True)
+
         except KeyboardInterrupt:
             live.stop()
             with Status("Shutdown message received, terminating open profile pipelines",
-                                    spinner_style="red") as status_spinner:
+                        spinner_style="red") as status_spinner:
                 status_spinner.start()
                 executor.shutdown(wait=True, cancel_futures=True)
                 status_spinner.stop()
+
         finally:
             live.stop()
-            with Status("Combining CTD processed profiles",
-                                    spinner_style="white") as status_spinner:
-                status_spinner.start()
+            with console.screen():
+                status_spinner_cleaning_up.start()
+                executor.shutdown(wait=True, cancel_futures=True)
+                status_spinner_cleaning_up.stop()
+                status_spinner_combining.start()
                 df = pl.concat(results, how="diagonal")
-                panel = Panel(Pretty(df.describe()), title="Overall stats", subtitle= f"Errors/Total: {error_count}/{total_count}")
+                panel = Panel(Pretty(df.select('pressure', 'salinity', 'temperature').describe()),
+                              title="Overall stats",
+                              subtitle=f"Errors/Total: {error_count}/{total_count}")
                 rich.print(panel)
-                CTD.Utility.save_to_csv(df, output_file)
-                status_spinner.stop()
-                if plot_secchi_chla_flag:
+                df_exported = CTD.Utility.save_to_csv(df, output_file)
+                status_spinner_combining.stop()
+                if plot:
                     plot_secchi_chla(df, plots_folder)
+                    status_spinner_map_view.start()
+                    if mapbox_access_token:
+                        plot_map(df_exported, mapbox_access_token)
+                        status_spinner_map_view.stop()
 
 
 def get_ctd_filenames_in_dir(directory, types):
@@ -152,13 +167,13 @@ def get_cwd():
 
 def _reset_file_environment():
     cwd = get_cwd()
-    for filename in ["output.csv", "outputclean.csv", "ctdfjorder.log"]:
+    for filename in ["output.csv", "ctdfjorder.log"]:
         path = os.path.join(cwd, filename)
         if os.path.isfile(path):
             os.remove(path)
-    if os.path.isdir("plots"):
-        shutil.rmtree("plots")
-    os.mkdir("plots")
+    if os.path.isdir("ctdplots"):
+        shutil.rmtree("ctdplots")
+    os.mkdir("ctdplots")
 
 
 def setup_logging(verbosity):
@@ -166,7 +181,7 @@ def setup_logging(verbosity):
     signal.signal(signal.SIGTERM, handler)
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTSTP, handler)
-    for logger_name in ["tensorflow", "matplotlib", "sklearn"]:
+    for logger_name in ["tensorflow", "matplotlib", "sklearn", "werkzeug", "dash", "flask"]:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
     logger = logging.getLogger("ctdfjorder")
     logger.handlers.clear()
@@ -184,8 +199,8 @@ def handler(signal_received, frame):
 
 
 def cli():
-    console = Console()
-    console.print(Panel("CTDFjorder", title="CTDFjorder", subtitle="Processing Script"))
+    global console
+    console.print(Panel("CTDFjorder", title="CTDFjorder CLI"))
 
     parser = ArgumentParser(description="Default Pipeline", formatter_class=rich_argparse.RichHelpFormatter)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -194,17 +209,16 @@ def cli():
                                            formatter_class=rich_argparse.RichHelpFormatter)
     parser_default.add_argument("-p", "--plot", action="store_true", help="Generate plots")
     parser_default.add_argument("-v", "--verbose", action="count", dest="verbosity", default=0,
-                                help="Verbose output (repeat for increased verbosity)")
+                                help="Verbose logger output to ctdfjorder.log (repeat for increased verbosity)")
     parser_default.add_argument("-q", "--quiet", action="store_const", const=-1, default=0, dest="verbosity",
                                 help="Quiet output (show errors only)")
     parser_default.add_argument("-r", "--reset", action="store_true", help="Reset file environment")
-    parser_default.add_argument("-o", "--output", type=str, default="output.csv", help="Output file path")
     parser_default.add_argument("-t", "--show-table", action="store_true", help="Show live progress table")
+    parser_default.add_argument("-d", "--debug-run", action="store_true", help="Run 20 files for testing")
     parser_default.add_argument("-m", "--mastersheet", type=str, help="Path to mastersheet")
     parser_default.add_argument("-w", "--workers", type=int, nargs="?", const=1, help="Max workers")
-    parser_default.add_argument("--add-unique-id", action="store_true", help="Add unique ID from master sheet")
-    parser_default.add_argument("--plot-secchi-chla", action="store_true", help="Plot secchi depth vs chla")
-    parser_default.add_argument("--debug-run", action="store_true", help="Run 20 files for testing")
+    parser_default.add_argument("--token", type=str, default=None, help="MapBox token to enable interactive map plot")
+    parser_default.add_argument("-o", "--output", type=str, default="output.csv", help="Output file path")
 
     args = parser.parse_args()
 
@@ -220,7 +234,6 @@ def cli():
         console.print(table)
 
         run_default(plot=args.plot, master_sheet_path=args.mastersheet, max_workers=args.workers,
-                    verbosity=args.verbosity, output_file=args.output, add_unique_id=args.add_unique_id,
-                    plot_secchi_chla_flag=args.plot_secchi_chla, debug_run=args.debug_run,
-                    table_show=args.show_table)
+                    verbosity=args.verbosity, output_file=args.output, debug_run=args.debug_run,
+                    table_show=args.show_table, mapbox_access_token=args.token)
         sys.exit()

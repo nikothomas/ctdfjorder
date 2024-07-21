@@ -1,5 +1,6 @@
 # Column labels for internal use
 from typing import Literal
+import os
 
 TIMESTAMP_LABEL: str = "timestamp"
 FILENAME_LABEL: str = "filename"
@@ -19,14 +20,40 @@ SURFACE_DENSITY_LABEL: str = "surface_density"
 MELTWATER_FRACTION_LABEL: str = "meltwater_fraction"
 DENSITY_LABEL: str = "density"
 POTENTIAL_DENSITY_LABEL: str = "potential_density"
+BV_LABEL: str = "brunt_vaisala_frequency_squared"
+P_MID_LABEL: str = "p_mid"
+SECCHI_DEPTH_LABEL: str = "secchi_depth"
 LATITUDE_LABEL: str = "latitude"
 LONGITUDE_LABEL: str = "longitude"
 UNIQUE_ID_LABEL: str = "unique_id"
 PROFILE_ID_LABEL: str = "profile_id"
-BV_LABEL: str = "brunt_vaisala_frequency_squared"
-P_MID_LABEL: str = "p_mid"
-SECCHI_DEPTH_LABEL: str = "secchi_depth"
-PROFILE_ID_LABEL: str = "profile_id"
+
+# Export labels
+EXPORT_TIMESTAMP_LABEL = "timestamp"
+EXPORT_TEMPERATURE_LABEL = "Temperature_(°C)"
+EXPORT_PRESSURE_LABEL = "Pressure_(dbar)"
+EXPORT_DEPTH_LABEL = "Depth_(m)"
+EXPORT_SEA_PRESSURE_LABEL = "Sea_Pressure_(dbar)"
+EXPORT_CHLOROPHYLL_LABEL = "Chlorophyll_a_(µg/l)"
+EXPORT_SALINITY_LABEL = "Salinity_(PSU)"
+EXPORT_SPECIFIC_CONDUCTIVITY_LABEL = "Specific_Conductivity_(µS/cm)"
+EXPORT_CONDUCTIVITY_LABEL = "Conductivity_(mS/cm)"
+EXPORT_DENSITY_LABEL = "Density_(kg/m^3)"
+EXPORT_POTENTIAL_DENSITY_LABEL = "Potential_Density_(kg/m^3)"
+EXPORT_SALINITY_ABS_LABEL = "Absolute_Salinity_(g/kg)"
+EXPORT_SURFACE_DENSITY_LABEL = "Mean_Surface_Density_(kg/m^3)"
+EXPORT_SPEED_OF_SOUND_LABEL = "Speed_of_Sound_(m/s)"
+EXPORT_SURFACE_SALINITY_LABEL = "Surface_Salinity_(PSU)"
+EXPORT_SURFACE_TEMPERATURE_LABEL = "Surface_Temperature_(°C)"
+EXPORT_MELTWATER_FRACTION_LABEL = "Meltwater_Fraction_(%)"
+EXPORT_LONGITUDE_LABEL = "longitude"
+EXPORT_LATITUDE_LABEL = "latitude"
+EXPORT_FILENAME_LABEL = "filename"
+EXPORT_PROFILE_ID_LABEL = "Profile_ID"
+EXPORT_UNIQUE_ID_LABEL = "Unique_ID"
+EXPORT_BV_LABEL = "Brunt_Vaisala_Frequency_Squared"
+EXPORT_P_MID_LABEL = "Mid_Pressure_Used_For_BV_Calc"
+EXPORT_SECCHI_DEPTH_LABEL = "Secchi_Depth_(m)"
 
 # Column label mapping from rsk to internal
 rskLabels_to_labelInternal: dict[str, str] = {

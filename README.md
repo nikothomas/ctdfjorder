@@ -1,6 +1,6 @@
 # CTDFjorder
 
-ctdfjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
+CTDFjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
 Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 
 ## Features
@@ -13,7 +13,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 - Command-line interface (CLI) for easy processing and merging of RSK files
 
 ## Installation
-It's recommended that you create a new environment just for ctdfjorder. This can be done in conda with the following
+It's recommended that you create a new environment just for CTDFjorder. This can be done in conda with the following
 command.
 ```shell
 conda create --name ctdfjorder python=3.12
@@ -30,16 +30,16 @@ CTDFjorder provides a command-line interface (CLI) for processing and analyzing 
 This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
 
 ```shell
-ctdfjorder-cli default -r -p -m "FjordPhyto MASTERSHEET.xlsx" -w 8 --add-unique-id --plot-secchi-chla -v --show-table
+ctdfjorder-cli default -r -p -m "FjordPhyto MASTERSHEET.xlsx" -w 4 --show-table --token 'MATBOX_TOKEN'
 ```
 
 ## Contributing
 
-Contributions to ctdfjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
+Contributions to CTDFjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
 
 ## License
 
-ctdfjorder is released under the MIT License.
+CTDFjorder is released under the MIT License.
 
 ## Acknowledgments
 
