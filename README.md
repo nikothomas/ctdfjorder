@@ -24,13 +24,18 @@ To install ctdfjorder you can use pip:
 pip install ctdfjorder
 ```
 
+## Map plots
+
+If you want to enable map plotting at the end of the pipeline you'll need a default token from MapBox[https://www.mapbox.com].
+
+
 ## Usage
 
-CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data.
+CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data. It is recommended to make your command prompt **fullscreen** before pasting the command.
 This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
 
 ```shell
-ctdfjorder-cli default -r -p -m "FjordPhyto MASTERSHEET.xlsx" -w 4 --show-table --token 'MATBOX_TOKEN'
+ctdfjorder-cli default -r -p -m "FjordPhyto MASTERSHEET.xlsx" -w 4 --show-table --token 'YOUR_MAPBOX_TOKEN'
 ```
 
 ## Contributing
