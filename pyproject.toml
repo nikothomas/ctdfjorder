@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ctdfjorder"
-version = "0.2.8"
+version = "0.2.81"
 description = "A package for processing and analyzing CTD data."
 readme = "README.md"
 authors = ["Nikolas Yanek-Chrones <research@icarai.io>"]
