@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 
+import polars
 import polars as pl
 import rich
 from polars.exceptions import ChronoFormatWarning
@@ -146,15 +147,20 @@ def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, 
                 panel = Panel(Pretty(df.select('pressure', 'salinity', 'temperature').describe()),
                               title="Overall stats",
                               subtitle=f"Errors/Total: {error_count}/{total_count}")
+                pl.Config.set_tbl_rows(-1)
+                df_test = df.unique('filename', keep='first').select(pl.col('filename'), pl.col('unique_id'))
+                df_test.filter(~pl.col('unique_id').is_unique()).write_csv(os.path.join(get_cwd(), "ISUNIQUE.csv"))
                 rich.print(panel)
                 df_exported = CTD.Utility.save_to_csv(df, output_file)
                 status_spinner_combining.stop()
                 if plot:
-                    plot_secchi_chla(df, plots_folder)
+                    if CHLOROPHYLL_LABEL in df.collect_schema():
+                        plot_secchi_chla(df, plots_folder)
                     status_spinner_map_view.start()
                     if mapbox_access_token:
                         plot_map(df_exported, mapbox_access_token)
                         status_spinner_map_view.stop()
+
 
 
 def get_ctd_filenames_in_dir(directory, types):

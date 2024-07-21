@@ -896,6 +896,8 @@ class CTD:
             )
         if abs(days) > 2:
             CTDWarning(filename=self._filename, message=message)
+        if abs(days) > 30:
+            CTDError(filename=self._filename, message=message)
         else:
             CTDLogger(filename=self._filename, message=message, level="info")
         return latitude, longitude, unique_id, secchi_depth
