@@ -1,6 +1,6 @@
 ctdfjorder
 ==========
-.. automodule:: ctdfjorder
+.. automodule:: ctdfjorder.ctdfjorder
     :members:
 
 .. toctree::
