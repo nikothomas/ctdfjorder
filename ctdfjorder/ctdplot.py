@@ -31,49 +31,73 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
             "timestamp": True,
             "filename": True,
             "latitude": True,  # Lat and lon are not included in hover as they are already displayed
-            "longitude": True
+            "longitude": True,
         },
         mapbox_style="dark",
         zoom=5,
-        center={"lat": -62.0, "lon": -60.0}
+        center={"lat": -62.0, "lon": -60.0},
     )
 
     # Update layout with Mapbox access token
-    fig.update_layout(mapbox_accesstoken=mapbox_access_token, margin=dict(l=0, r=0, t=0, b=0))
+    fig.update_layout(
+        mapbox_accesstoken=mapbox_access_token, margin=dict(l=0, r=0, t=0, b=0)
+    )
 
     # App layout with CSS for dark theme and stacking map over table
-    app.layout = html.Div([
-        html.Div(
-            dcc.Graph(id='map', figure=fig),
-            style={'flex': '1', 'height': 'calc(100vh - 50vh)', 'min-height': '50vh'}  # Dynamic height map
-        ),
-        html.Div(
-            id='table-container',
-            style={'flex': '1', 'overflowY': 'auto', 'overflowX': 'auto', 'height': '50vh'}
-            # Scrollable table container
-        ),
-        dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0)
-    ], style={'display': 'flex', 'flexDirection': 'column', 'height': '100vh', 'backgroundColor': '#1e1e1e',
-              'color': '#ffffff'})
+    app.layout = html.Div(
+        [
+            html.Div(
+                dcc.Graph(id="map", figure=fig),
+                style={
+                    "flex": "1",
+                    "height": "calc(100vh - 50vh)",
+                    "min-height": "50vh",
+                },  # Dynamic height map
+            ),
+            html.Div(
+                id="table-container",
+                style={
+                    "flex": "1",
+                    "overflowY": "auto",
+                    "overflowX": "auto",
+                    "height": "50vh",
+                },
+                # Scrollable table container
+            ),
+            dcc.Interval(id="interval-component", interval=1 * 1000, n_intervals=0),
+        ],
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "height": "100vh",
+            "backgroundColor": "#1e1e1e",
+            "color": "#ffffff",
+        },
+    )
 
     # Callback to update table based on clicked point
-    @app.callback(
-        Output('table-container', 'children'),
-        Input('map', 'clickData')
-    )
+    @app.callback(Output("table-container", "children"), Input("map", "clickData"))
     def display_profile_data(clickData):
         if clickData is None:
-            return html.P("Click on a point to see profile data.", style={'color': '#ffffff'})
+            return html.P(
+                "Click on a point to see profile data.", style={"color": "#ffffff"}
+            )
 
-        unique_id = clickData['points'][0]['hovertext']  # Get the unique_id from hovertext
-        filtered_df = df_pd[df_pd['Unique_ID'] == unique_id]
+        unique_id = clickData["points"][0][
+            "hovertext"
+        ]  # Get the unique_id from hovertext
+        filtered_df = df_pd[df_pd["Unique_ID"] == unique_id]
 
         return dash_table.DataTable(
             columns=[{"name": i, "id": i} for i in filtered_df.columns],
-            data=filtered_df.to_dict('records'),
-            style_table={'overflowX': 'auto', 'overflowY': 'auto'},
-            style_header={'backgroundColor': '#333333', 'color': '#ffffff'},
-            style_cell={'backgroundColor': '#1e1e1e', 'color': '#ffffff', 'whiteSpace': 'normal'}
+            data=filtered_df.to_dict("records"),
+            style_table={"overflowX": "auto", "overflowY": "auto"},
+            style_header={"backgroundColor": "#333333", "color": "#ffffff"},
+            style_cell={
+                "backgroundColor": "#1e1e1e",
+                "color": "#ffffff",
+                "whiteSpace": "normal",
+            },
         )
 
     # Open the browser automatically
@@ -81,12 +105,15 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     from threading import Timer
 
     def open_browser():
-        webbrowser.open_new('http://127.0.0.1:8050/')
+        webbrowser.open_new("http://127.0.0.1:8050/")
+
     Timer(1, open_browser).start()
     app.run(debug=False)
 
 
-def plot_depth_vs(df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"):
+def plot_depth_vs(
+    df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
+):
     """
     Generates a plot of depth vs. specified measurement (salinity, density, temperature).
 
@@ -111,10 +138,7 @@ def plot_depth_vs(df: pl.DataFrame, measurement: str, plot_folder: str, plot_typ
     plt.rcParams.update({"font.size": 16})
     os.makedirs(plot_folder, exist_ok=True)
     for profile_id in (
-            df.select(PROFILE_ID_LABEL)
-                    .unique(keep="first")
-                    .to_series()
-                    .to_list()
+        df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
     ):
         profile = df.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
@@ -148,9 +172,7 @@ def plot_depth_vs(df: pl.DataFrame, measurement: str, plot_folder: str, plot_typ
                 profile.select(pl.col(DEPTH_LABEL)).to_numpy(),
             )
         (
-            ax1.plot(
-                x, y, color=color_map[measurement], label=label_map[measurement]
-            )
+            ax1.plot(x, y, color=color_map[measurement], label=label_map[measurement])
             if plot_type == "line"
             else ax1.scatter(
                 x, y, color=color_map[measurement], label=label_map[measurement]

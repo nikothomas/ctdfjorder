@@ -454,7 +454,6 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_profile_empty(CTD.remove_non_positive_samples.__name__)
 
-
     def remove_invalid_salinity_values(self) -> None:
         """
         Removes rows with practical salinity values <= 10.
@@ -873,7 +872,9 @@ class CTD:
         secchi_depth = None
         if for_id:
             secchi_depth = closest_row_overall.select(
-                pl.col(MASTER_SHEET_SECCHI_DEPTH_LABEL).cast(pl.Float32, strict=False).first()
+                pl.col(MASTER_SHEET_SECCHI_DEPTH_LABEL)
+                .cast(pl.Float32, strict=False)
+                .first()
             ).item()
         CTDLogger(
             message=f"Secchi Depth: {secchi_depth}",
@@ -981,7 +982,6 @@ class CTD:
             optimizer = optim.Adam(model.parameters(), lr=0.01)
             return model, optimizer
 
-
         def run_gru(data: pl.DataFrame, show_plots=self._plot):
             """
             Runs the GRU.
@@ -1074,7 +1074,9 @@ class CTD:
                     data.select(SALINITY_LABEL).to_numpy(),
                     data.select(DEPTH_LABEL).to_numpy(),
                     self._filename + str(profile_id),
-                    plot_path=os.path.join(self._cwd, "ctdplots", f"{self._filename}_original.png")
+                    plot_path=os.path.join(
+                        self._cwd, "ctdplots", f"{self._filename}_original.png"
+                    ),
                 )
                 plot_predicted_data(
                     salinity=predicted_seq,
@@ -1082,7 +1084,9 @@ class CTD:
                     filename=self._filename + str(profile_id),
                     xlim=xlim,
                     ylim=ylim,
-                    plot_path=os.path.join(self._cwd, "ctdplots", f"{self._filename}_predicted.png")
+                    plot_path=os.path.join(
+                        self._cwd, "ctdplots", f"{self._filename}_predicted.png"
+                    ),
                 )
             data_binned = data_binned.with_columns(
                 pl.Series(predicted_seq, dtype=pl.Float64).alias(SALINITY_LABEL)
@@ -1127,6 +1131,7 @@ class CTD:
             output_file : str
                 The output CSV file path.
             """
+
             def relabel_ctd_data(label: str) -> str:
                 data_label_mapping = {
                     TIMESTAMP_LABEL: EXPORT_TIMESTAMP_LABEL,
@@ -1162,15 +1167,37 @@ class CTD:
 
             # Define the desired column order based on the mapping values
             ordered_columns = [
-                EXPORT_TIMESTAMP_LABEL, EXPORT_TEMPERATURE_LABEL, EXPORT_PRESSURE_LABEL, EXPORT_DEPTH_LABEL, EXPORT_SEA_PRESSURE_LABEL,
-                EXPORT_CHLOROPHYLL_LABEL, EXPORT_SALINITY_LABEL, EXPORT_SPECIFIC_CONDUCTIVITY_LABEL, EXPORT_CONDUCTIVITY_LABEL, EXPORT_DENSITY_LABEL,
-                EXPORT_POTENTIAL_DENSITY_LABEL, EXPORT_SALINITY_ABS_LABEL, EXPORT_SURFACE_DENSITY_LABEL, EXPORT_SPEED_OF_SOUND_LABEL,
-                EXPORT_SURFACE_SALINITY_LABEL, EXPORT_SURFACE_TEMPERATURE_LABEL, EXPORT_MELTWATER_FRACTION_LABEL, EXPORT_BV_LABEL, EXPORT_P_MID_LABEL, EXPORT_SECCHI_DEPTH_LABEL,
-                EXPORT_LONGITUDE_LABEL, EXPORT_LATITUDE_LABEL, EXPORT_FILENAME_LABEL, EXPORT_PROFILE_ID_LABEL, EXPORT_UNIQUE_ID_LABEL,
+                EXPORT_TIMESTAMP_LABEL,
+                EXPORT_TEMPERATURE_LABEL,
+                EXPORT_PRESSURE_LABEL,
+                EXPORT_DEPTH_LABEL,
+                EXPORT_SEA_PRESSURE_LABEL,
+                EXPORT_CHLOROPHYLL_LABEL,
+                EXPORT_SALINITY_LABEL,
+                EXPORT_SPECIFIC_CONDUCTIVITY_LABEL,
+                EXPORT_CONDUCTIVITY_LABEL,
+                EXPORT_DENSITY_LABEL,
+                EXPORT_POTENTIAL_DENSITY_LABEL,
+                EXPORT_SALINITY_ABS_LABEL,
+                EXPORT_SURFACE_DENSITY_LABEL,
+                EXPORT_SPEED_OF_SOUND_LABEL,
+                EXPORT_SURFACE_SALINITY_LABEL,
+                EXPORT_SURFACE_TEMPERATURE_LABEL,
+                EXPORT_MELTWATER_FRACTION_LABEL,
+                EXPORT_BV_LABEL,
+                EXPORT_P_MID_LABEL,
+                EXPORT_SECCHI_DEPTH_LABEL,
+                EXPORT_LONGITUDE_LABEL,
+                EXPORT_LATITUDE_LABEL,
+                EXPORT_FILENAME_LABEL,
+                EXPORT_PROFILE_ID_LABEL,
+                EXPORT_UNIQUE_ID_LABEL,
             ]
 
             # Reorder columns if all ordered_columns are present in the DataFrame
-            present_columns = [col for col in ordered_columns if col in renamed_data.columns]
+            present_columns = [
+                col for col in ordered_columns if col in renamed_data.columns
+            ]
             reordered_data = renamed_data.select(present_columns)
 
             # Save to CSV
@@ -1255,11 +1282,15 @@ class CTD:
             def parse_date_column(column, formats):
                 for fmt in formats:
                     try:
-                        column = column.str.strptime(pl.Date, format=fmt, strict=False, exact=False)
+                        column = column.str.strptime(
+                            pl.Date, format=fmt, strict=False, exact=False
+                        )
                         return column
                     except:
                         pass
-                raise ValueError(f"Date format not matched for any of the formats: {formats}")
+                raise ValueError(
+                    f"Date format not matched for any of the formats: {formats}"
+                )
 
             _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {
                 MASTER_SHEET_SECCHI_DEPTH_LABEL: pl.String,
@@ -1273,13 +1304,18 @@ class CTD:
                 df = pl.read_excel(
                     master_sheet_path,
                     infer_schema_length=None,
-                    schema_overrides=_masterSheetLabels_to_dtypeInternal
+                    schema_overrides=_masterSheetLabels_to_dtypeInternal,
                 )
             if ".csv" in os.path.basename(master_sheet_path):
                 df = pl.io.csv.read_csv(
-                    master_sheet_path, schema_overrides = _masterSheetLabels_to_dtypeInternal)
+                    master_sheet_path,
+                    schema_overrides=_masterSheetLabels_to_dtypeInternal,
+                )
             if type(df) is type(None):
-                CTDError(message="Invalid mastersheet ending. Must be xlsx or csv file.", filename="")
+                CTDError(
+                    message="Invalid mastersheet ending. Must be xlsx or csv file.",
+                    filename="",
+                )
             df = df.filter(
                 ~pl.col(MASTER_SHEET_TIME_UTC_LABEL).eq("-999"),
                 ~pl.col(MASTER_SHEET_TIME_UTC_LABEL).eq("NA"),
@@ -1287,7 +1323,9 @@ class CTD:
             )
             date_formats = ["%Y-%m-%d", "%d/%m/%Y"]
             df = df.with_columns(
-                parse_date_column(pl.col(MASTER_SHEET_DATE_UTC_LABEL), formats=date_formats),
+                parse_date_column(
+                    pl.col(MASTER_SHEET_DATE_UTC_LABEL), formats=date_formats
+                ),
                 pl.col(MASTER_SHEET_TIME_UTC_LABEL).str.strptime(
                     format="%H:%M", dtype=pl.Time, strict=False, exact=False
                 ),
@@ -1300,7 +1338,8 @@ class CTD:
                     pl.col(MASTER_SHEET_DATE_UTC_LABEL).dt.combine(
                         pl.col(MASTER_SHEET_TIME_UTC_LABEL), time_unit=TIME_UNIT
                     )
-                ).dt.cast_time_unit(TIME_UNIT)
+                )
+                .dt.cast_time_unit(TIME_UNIT)
                 .alias(MASTER_SHEET_DATETIME_LABEL)
                 .dt.replace_time_zone(TIME_ZONE),
                 pl.when(pl.col(MASTER_SHEET_SECCHI_DEPTH_LABEL) == -999)
