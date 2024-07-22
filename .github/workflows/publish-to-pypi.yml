@@ -1,8 +1,6 @@
 name: Python package
 on:
   release:
-    tags:
-      - "v*.*.*"
 jobs:
   build:
     runs-on: ubuntu-latest
