@@ -1,16 +1,13 @@
 import logging
-import os
 import shutil
-import signal
+from signal import signal, SIGTERM, SIGINT, SIGTSTP
+from sys import executable, exit
 import sys
-import warnings
+from warnings import catch_warnings
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
-
-import polars
 import polars as pl
-import rich
 from polars.exceptions import ChronoFormatWarning
 from rich.console import Console
 from rich.live import Live
@@ -18,14 +15,15 @@ from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table, box
 from rich.status import Status
-
+from rich import print as richprint
 from ctdfjorder.ctdfjorder import CTD, CTDError
 from ctdfjorder.ctdplot import plot_secchi_chla
 from ctdfjorder.ctdplot import plot_depth_vs
 from ctdfjorder.ctdplot import plot_map
 from ctdfjorder.constants import *
 import rich_argparse
-
+from os import path, listdir, remove, mkdir, getcwd
+from os.path import isfile
 console = Console()
 
 
@@ -54,7 +52,7 @@ def process_ctd_file(file, plot, cached_master_sheet, master_sheet_path, verbosi
 
     status = []
     data = None
-    with warnings.catch_warnings(record=True, action="once") as warning_list:
+    with catch_warnings(record=True, action="once") as warning_list:
         warning_list_length = len(warning_list)
         for step_name, step_function in steps:
             try:
@@ -95,8 +93,10 @@ def generate_status_table(status_table):
 def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, output_file=None,
                 debug_run=False, table_show=False, mapbox_access_token=None):
     logger = setup_logging(verbosity)
-    plots_folder = os.path.join(get_cwd(), "ctdplots")
+    plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[:20 if debug_run else None]
+    if master_sheet_path in files:
+        files.remove(master_sheet_path)
     if not files:
         raise CTDError(message="No '.rsk' or '.csv' found in this folder")
     cached_master_sheet = CTD.Utility.load_master_sheet(master_sheet_path) if master_sheet_path else None
@@ -125,7 +125,7 @@ def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, 
                 else:
                     error_count += 1
                 if table_show:
-                    status_table.append((os.path.basename(file), status))
+                    status_table.append((path.basename(file), status))
                     live.update(generate_status_table(status_table), refresh=True)
 
         except KeyboardInterrupt:
@@ -149,8 +149,8 @@ def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, 
                               subtitle=f"Errors/Total: {error_count}/{total_count}")
                 pl.Config.set_tbl_rows(-1)
                 df_test = df.unique('filename', keep='first').select(pl.col('filename'), pl.col('unique_id'))
-                df_test.filter(~pl.col('unique_id').is_unique()).write_csv(os.path.join(get_cwd(), "ISUNIQUE.csv"))
-                rich.print(panel)
+                df_test.filter(~pl.col('unique_id').is_unique()).write_csv(path.join(get_cwd(), "ISUNIQUE.csv"))
+                richprint(panel)
                 df_exported = CTD.Utility.save_to_csv(df, output_file)
                 status_spinner_combining.stop()
                 if plot:
@@ -164,34 +164,34 @@ def run_default(plot=False, master_sheet_path=None, max_workers=1, verbosity=0, 
 
 
 def get_ctd_filenames_in_dir(directory, types):
-    return [os.path.join(directory, f) for f in os.listdir(directory) if any(f.endswith(t) for t in types)]
+    return [path.join(directory, f) for f in listdir(directory) if any(f.endswith(t) for t in types)]
 
 
 def get_cwd():
-    return os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.getcwd()
+    return path.dirname(executable) if getattr(sys, "frozen", False) else getcwd()
 
 
 def _reset_file_environment():
     cwd = get_cwd()
     for filename in ["output.csv", "ctdfjorder.log"]:
-        path = os.path.join(cwd, filename)
-        if os.path.isfile(path):
-            os.remove(path)
-    if os.path.isdir("ctdplots"):
+        file_path = path.join(cwd, filename)
+        if isfile(file_path):
+            remove(file_path)
+    if path.isdir("ctdplots"):
         shutil.rmtree("ctdplots")
-    os.mkdir("ctdplots")
+    mkdir("ctdplots")
 
 
 def setup_logging(verbosity):
     level = max(30 - (verbosity * 10), 10)
-    signal.signal(signal.SIGTERM, handler)
-    signal.signal(signal.SIGINT, handler)
-    signal.signal(signal.SIGTSTP, handler)
+    signal(SIGTERM, handler)
+    signal(SIGINT, handler)
+    signal(SIGTSTP, handler)
     for logger_name in ["tensorflow", "matplotlib", "sklearn", "werkzeug", "dash", "flask"]:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
     logger = logging.getLogger("ctdfjorder")
     logger.handlers.clear()
-    file_log = logging.FileHandler(os.path.join(get_cwd(), "ctdfjorder.log"))
+    file_log = logging.FileHandler(path.join(get_cwd(), "ctdfjorder.log"))
     logging.basicConfig(level=level)
     file_log.setLevel(level)
     logger.addHandler(file_log)
@@ -199,7 +199,7 @@ def setup_logging(verbosity):
 
 
 def handler(signal_received, frame):
-    if signal_received == signal.SIGINT:
+    if signal_received == SIGINT:
         return
     raise KeyboardInterrupt
 
@@ -242,4 +242,4 @@ def cli():
         run_default(plot=args.plot, master_sheet_path=args.mastersheet, max_workers=args.workers,
                     verbosity=args.verbosity, output_file=args.output, debug_run=args.debug_run,
                     table_show=args.show_table, mapbox_access_token=args.token)
-        sys.exit()
+        exit()

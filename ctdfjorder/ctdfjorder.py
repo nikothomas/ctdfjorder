@@ -1252,50 +1252,63 @@ class CTD:
         def load_master_sheet(
             master_sheet_path: str, secchi_depth: bool = False
         ) -> pl.DataFrame:
-            _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {
-                MASTER_SHEET_TIME_LOCAL_LABEL: pl.String,
-                MASTER_SHEET_DATE_LOCAL_LABEL: pl.String,
-                MASTER_SHEET_TIME_UTC_LABEL: pl.String,
-                MASTER_SHEET_DATE_UTC_LABEL: pl.String,
-                MASTER_SHEET_SECCHI_DEPTH_LABEL: pl.String,
-            }
-            df = pl.read_excel(
-                master_sheet_path,
-                infer_schema_length=None,
-                schema_overrides=_masterSheetLabels_to_dtypeInternal,
-            )
-            df = df.drop_nulls(MASTER_SHEET_TIME_LOCAL_LABEL)
-            df = df.filter(
-                ~pl.col(MASTER_SHEET_TIME_LOCAL_LABEL).eq("-999"),
-                ~pl.col(MASTER_SHEET_TIME_LOCAL_LABEL).eq("NA"),
-                ~pl.col(MASTER_SHEET_DATE_LOCAL_LABEL).eq("NA"),
-            )
+            def parse_date_column(column, formats):
+                for fmt in formats:
+                    try:
+                        column = column.str.strptime(pl.Date, format=fmt, strict=False, exact=False)
+                        return column
+                    except:
+                        pass
+                raise ValueError(f"Date format not matched for any of the formats: {formats}")
 
+            _masterSheetLabels_to_dtypeInternal: dict[str, type(pl.String)] = {
+                MASTER_SHEET_SECCHI_DEPTH_LABEL: pl.String,
+                LATITUDE_LABEL: pl.String,
+                LONGITUDE_LABEL: pl.String,
+                MASTER_SHEET_DATE_UTC_LABEL: pl.String,
+                MASTER_SHEET_TIME_UTC_LABEL: pl.String,
+            }
+            df = None
+            if ".xlsx" in os.path.basename(master_sheet_path):
+                df = pl.read_excel(
+                    master_sheet_path,
+                    infer_schema_length=None,
+                    schema_overrides=_masterSheetLabels_to_dtypeInternal
+                )
+            if ".csv" in os.path.basename(master_sheet_path):
+                df = pl.io.csv.read_csv(
+                    master_sheet_path, schema_overrides = _masterSheetLabels_to_dtypeInternal)
+            if type(df) is type(None):
+                CTDError(message="Invalid mastersheet ending. Must be xlsx or csv file.", filename="")
+            df = df.filter(
+                ~pl.col(MASTER_SHEET_TIME_UTC_LABEL).eq("-999"),
+                ~pl.col(MASTER_SHEET_TIME_UTC_LABEL).eq("NA"),
+                ~pl.col(MASTER_SHEET_DATE_UTC_LABEL).eq("NA"),
+            )
+            date_formats = ["%Y-%m-%d", "%d/%m/%Y"]
             df = df.with_columns(
-                pl.col(MASTER_SHEET_DATE_LOCAL_LABEL).str.strptime(
-                    format="%Y-%m-%d %H:%M:%S", dtype=pl.Date, strict=False
-                ),
-                pl.col(MASTER_SHEET_TIME_LOCAL_LABEL).str.strptime(
-                    format="%Y-%m-%d %H:%M:%S", dtype=pl.Time, strict=False
+                parse_date_column(pl.col(MASTER_SHEET_DATE_UTC_LABEL), formats=date_formats),
+                pl.col(MASTER_SHEET_TIME_UTC_LABEL).str.strptime(
+                    format="%H:%M", dtype=pl.Time, strict=False, exact=False
                 ),
                 pl.col(MASTER_SHEET_SECCHI_DEPTH_LABEL).cast(pl.Float64, strict=False),
             )
-            df = df.drop_nulls(MASTER_SHEET_DATE_LOCAL_LABEL)
-            df = df.drop_nulls(MASTER_SHEET_TIME_LOCAL_LABEL)
+            df = df.drop_nulls(MASTER_SHEET_DATE_UTC_LABEL)
+            df = df.drop_nulls(MASTER_SHEET_TIME_UTC_LABEL)
             df = df.with_columns(
                 (
-                    pl.col(MASTER_SHEET_DATE_LOCAL_LABEL).dt.combine(
-                        pl.col(MASTER_SHEET_TIME_LOCAL_LABEL).cast(pl.Time)
+                    pl.col(MASTER_SHEET_DATE_UTC_LABEL).dt.combine(
+                        pl.col(MASTER_SHEET_TIME_UTC_LABEL), time_unit=TIME_UNIT
                     )
-                )
+                ).dt.cast_time_unit(TIME_UNIT)
                 .alias(MASTER_SHEET_DATETIME_LABEL)
-                .cast(pl.Datetime)
                 .dt.replace_time_zone(TIME_ZONE),
                 pl.when(pl.col(MASTER_SHEET_SECCHI_DEPTH_LABEL) == -999)
                 .then(None)
                 .otherwise(pl.col(MASTER_SHEET_SECCHI_DEPTH_LABEL))
                 .alias(MASTER_SHEET_SECCHI_DEPTH_LABEL),
             )
+            df = df.drop_nulls(MASTER_SHEET_DATETIME_LABEL)
             return df
 
         @staticmethod

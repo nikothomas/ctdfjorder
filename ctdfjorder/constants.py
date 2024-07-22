@@ -1,6 +1,5 @@
 # Column labels for internal use
 from typing import Literal
-import os
 
 TIMESTAMP_LABEL: str = "timestamp"
 FILENAME_LABEL: str = "filename"
@@ -80,8 +79,6 @@ csvLabels_to_labelInternal: dict[str, str] = {
     "Density (Kilograms per Cubic Meter)": DENSITY_LABEL,
 }
 # Column labels of master sheet
-MASTER_SHEET_TIME_LOCAL_LABEL = "time_local"
-MASTER_SHEET_DATE_LOCAL_LABEL = "date_local"
 MASTER_SHEET_TIME_UTC_LABEL = "time (UTC)"
 MASTER_SHEET_DATE_UTC_LABEL = "date (UTC)"
 MASTER_SHEET_DATETIME_LABEL = "datetime"
