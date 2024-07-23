@@ -10,7 +10,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 - Calculate derived quantities such as absolute salinity, density, and potential density
 - Determine mixed layer depth (MLD) using different methods
 - Generate plots for visualizing CTD profiles and derived quantities
-- Command-line interface (CLI) for easy processing and merging of RSK files
+- Command-line interface (CLI) for easy processing and merging of CTD data files
 
 ## Installation
 It's recommended that you create a new environment just for CTDFjorder. This can be done in conda with the following
@@ -31,16 +31,12 @@ If you want to enable map plotting at the end of the pipeline you'll need a defa
 
 ## Usage
 
-CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data. It is recommended to make your command prompt **fullscreen** before pasting the command.
-This command runs the default processing pipeline and creates plots on all RSK and .csv files found in the current folder with master sheet Fjord Phyto MASTERSHEET.xlsx:
-
-```shell
-ctdfjorder-cli default -r -p -m "FjordPhyto MASTERSHEET.xlsx" -w 4 --show-table --token 'YOUR_MAPBOX_TOKEN'
-```
+CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data in addition to serving
+as a library for other bio-informaticians. To get started read the docs (https://nikothomas.github.io/ctdfjorder/Getting%20Started/)
 
 ## Contributing
 
-Contributions to CTDFjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
+Contributions to CTDFjorder are welcome! If you find any issues or have suggestions for improvements, please open an issue on the [GitHub repository](https://github.com/nikothomas/CTDFjorder).
 
 ## License
 
