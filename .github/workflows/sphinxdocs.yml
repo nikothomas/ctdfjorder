@@ -23,6 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install build
           pip install pydata-sphinx-theme
+          pip install sphinx-argparse
       - id: deployment
         uses: sphinx-notes/pages@v3
         with:
