@@ -79,10 +79,10 @@ csvLabels_to_labelInternal: dict[str, str] = {
     "Density (Kilograms per Cubic Meter)": DENSITY_LABEL,
 }
 # Column labels of master sheet
-MASTER_SHEET_TIME_UTC_LABEL = "time (UTC)"
-MASTER_SHEET_DATE_UTC_LABEL = "date (UTC)"
-MASTER_SHEET_DATETIME_LABEL = "datetime"
-MASTER_SHEET_SECCHI_DEPTH_LABEL = "secchi depth"
+MASTER_SHEET_TIME_UTC_LABEL: str = "time (UTC)"
+MASTER_SHEET_DATE_UTC_LABEL: str = "date (UTC)"
+MASTER_SHEET_DATETIME_LABEL: str = "datetime"
+MASTER_SHEET_SECCHI_DEPTH_LABEL: str = "secchi depth"
 
 # Time string constants
 TIME_ZONE: str = "UTC"
@@ -108,11 +108,12 @@ ERROR_NO_TIMESTAMP_IN_MASTER_SHEET: str = (
 ERROR_MLD_DEPTH_RANGE: str = "Insufficient depth range to calculate MLD"
 ERROR_GRU_INSUFFICIENT_DATA: str = "Not enough values to run the GRU on this data"
 ERROR_CASTAWAY_START_TIME: str = "Castaway file has no time data"
+ERROR_CTD_FILENAME_ENDING: str = "CTD filename must end in '.rsk' or '.csv'"
 # Warning messages
 WARNING_DROPPED_PROFILE: str = "No samples in profile number "
 
 # Info messages
-INFO_CTD_SURFACE_MEASUREMENT: str = (
+WARNING_CTD_SURFACE_MEASUREMENT: str = (
     "First measurment lies below {end} dbar, cannot compute surface measurements"
 )
 # Debug messages
@@ -134,3 +135,6 @@ CONCAT_HOW: Literal["diagonal_relaxed"] = "diagonal_relaxed"
 
 # Sea pressure to pressure difference
 SEA_PRESSURE_TO_PRESSURE_DIFF: float = 10.1325
+
+# Library logger name
+LIB_LOGGER_NAME = "ctdfjorder"

@@ -16,20 +16,20 @@ from rich.pretty import Pretty
 from rich.table import Table, box
 from rich.status import Status
 from rich import print as richprint
-from ctdfjorder.ctdfjorder import CTD, CTDError
-from ctdfjorder.ctdplot import plot_secchi_chla
-from ctdfjorder.ctdplot import plot_depth_vs
-from ctdfjorder.ctdplot import plot_map
+from ctdfjorder.ctdplot import plot_depth_vs, plot_map, plot_secchi_chla
+from ctdfjorder.CTDExceptions.CTDExceptions import CTDError
+from ctdfjorder.CTD import CTD
+from ctdfjorder.utils import save_to_csv
 from ctdfjorder.constants import *
+from ctdfjorder.Mastersheet import Mastersheet
 import rich_argparse
 from os import path, listdir, remove, mkdir, getcwd
 from os.path import isfile
-
 console = Console()
 
 
 def process_ctd_file(
-    file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder
+    file, plot: bool = False, cached_master_sheet: Mastersheet = None, master_sheet_path: str = None, verbosity: int = 0, plots_folder: str = None
 ):
     logger = setup_logging(verbosity)
     steps = [
@@ -86,15 +86,19 @@ def process_ctd_file(
                     and warning_list[-1].category != ChronoFormatWarning
                 ):
                     warning_list_length = len(warning_list)
-                    logger.warning(warning_list[-1])
+                    logger.warning(warning_list[-1].message)
                     status.append("yellow")
                 else:
                     status.append("green")
-            except (CTDError, Exception) as error:
+            except (CTDError) as error:
                 logger.error(error)
                 status.extend(["red"] * (len(steps) - len(status)))
                 return None, status
-
+            except(Exception) as e:
+                print(e)
+                logger.exception(e)
+                status.extend(["red"] * (len(steps) - len(status)))
+                return None, status
 
 def generate_status_table(status_table):
     steps = [
@@ -131,7 +135,6 @@ def run_default(
     table_show=False,
     mapbox_access_token=None,
 ):
-    logger = setup_logging(verbosity)
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
         : 20 if debug_run else None
@@ -141,7 +144,7 @@ def run_default(
     if not files:
         raise CTDError(message="No '.rsk' or '.csv' found in this folder")
     cached_master_sheet = (
-        CTD.Utility.load_master_sheet(master_sheet_path) if master_sheet_path else None
+        Mastersheet(master_sheet_path) if master_sheet_path else None
     )
     status_table, results = [], []
     live_console = console if table_show else Console(quiet=True)
@@ -218,7 +221,7 @@ def run_default(
                     path.join(get_cwd(), "ISUNIQUE.csv")
                 )
                 richprint(panel)
-                df_exported = CTD.Utility.save_to_csv(df, output_file)
+                df_exported = save_to_csv(df, output_file)
                 status_spinner_combining.stop()
                 if plot:
                     if CHLOROPHYLL_LABEL in df.collect_schema():
