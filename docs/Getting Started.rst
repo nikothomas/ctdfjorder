@@ -44,7 +44,7 @@ Run ctdcli
 Now we will process our files.
 
 .. tip::
-    To see what options you have to process the files, type :code:`ctdrun default -h` or view the documentation for the :doc:`CLI`.
+    To see what options you have to process the files, type :code:`ctdcli default -h` or view the documentation for the :doc:`CLI`.
 
 For the purposes of this demo are assuming that you have the following:
 
