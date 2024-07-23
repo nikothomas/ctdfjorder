@@ -57,7 +57,7 @@ Then copy and paste the following into your terminal, and replace :code:`MY_TOKE
 
 .. code-block:: console
 
-   (ctdfjorder) $ ctdcli default -r -p -m "FjordPhyto MASTER SHEET.csv" -w 4 --show-table --token MY_TOKEN
+   (ctdfjorder) $ ctdcli default -r -p -m "FjordPhyto MASTER SHEET.csv" -w 4 --show-status --token MY_TOKEN
 
 Interpret output
 ----------------
