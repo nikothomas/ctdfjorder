@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 import polars as pl
+import rich_argparse_plus
 from polars.exceptions import ChronoFormatWarning
 from rich.console import Console
 from rich.live import Live
@@ -16,20 +17,26 @@ from rich.pretty import Pretty
 from rich.table import Table, box
 from rich.status import Status
 from rich import print as richprint
+import rich_argparse
+from rich_argparse_plus import RichHelpFormatterPlus
 from ctdfjorder.ctdplot import plot_depth_vs, plot_map, plot_secchi_chla
 from ctdfjorder.CTDExceptions.CTDExceptions import CTDError
 from ctdfjorder.CTD import CTD
 from ctdfjorder.utils import save_to_csv
 from ctdfjorder.constants import *
 from ctdfjorder.Mastersheet import Mastersheet
-import rich_argparse
 from os import path, listdir, remove, mkdir, getcwd
 from os.path import isfile
-console = Console()
+console = Console(color_system='windows')
 
 
 def process_ctd_file(
-    file, plot: bool = False, cached_master_sheet: Mastersheet = None, master_sheet_path: str = None, verbosity: int = 0, plots_folder: str = None
+        file,
+        plot: bool = False,
+        cached_master_sheet: Mastersheet = None,
+        master_sheet_path: str = None,
+        verbosity: int = 0,
+        plots_folder: str = None,
 ):
     logger = setup_logging(verbosity)
     steps = [
@@ -81,24 +88,25 @@ def process_ctd_file(
                 else:
                     step_function(data)
                 if (
-                    len(warning_list) > warning_list_length
-                    and warning_list[-1].category != RuntimeWarning
-                    and warning_list[-1].category != ChronoFormatWarning
+                        len(warning_list) > warning_list_length
+                        and warning_list[-1].category != RuntimeWarning
+                        and warning_list[-1].category != ChronoFormatWarning
                 ):
                     warning_list_length = len(warning_list)
                     logger.warning(warning_list[-1].message)
                     status.append("yellow")
                 else:
                     status.append("green")
-            except (CTDError) as error:
+            except CTDError as error:
                 logger.error(error)
                 status.extend(["red"] * (len(steps) - len(status)))
                 return None, status
-            except(Exception) as e:
+            except Exception as e:
                 print(e)
                 logger.exception(e)
                 status.extend(["red"] * (len(steps) - len(status)))
                 return None, status
+
 
 def generate_status_table(status_table):
     steps = [
@@ -126,26 +134,24 @@ def generate_status_table(status_table):
 
 
 def run_default(
-    plot=False,
-    master_sheet_path=None,
-    max_workers=1,
-    verbosity=0,
-    output_file=None,
-    debug_run=False,
-    table_show=False,
-    mapbox_access_token=None,
+        plot=False,
+        master_sheet_path=None,
+        max_workers=1,
+        verbosity=0,
+        output_file=None,
+        debug_run=False,
+        table_show=False,
+        mapbox_access_token=None,
 ):
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
-        : 20 if debug_run else None
-    ]
+            : 20 if debug_run else None
+            ]
     if master_sheet_path in files:
         files.remove(master_sheet_path)
     if not files:
         raise CTDError(message="No '.rsk' or '.csv' found in this folder")
-    cached_master_sheet = (
-        Mastersheet(master_sheet_path) if master_sheet_path else None
-    )
+    cached_master_sheet = Mastersheet(master_sheet_path) if master_sheet_path else None
     status_table, results = [], []
     live_console = console if table_show else Console(quiet=True)
     live = Live(
@@ -193,8 +199,8 @@ def run_default(
         except KeyboardInterrupt:
             live.stop()
             with Status(
-                "Shutdown message received, terminating open profile pipelines",
-                spinner_style="red",
+                    "Shutdown message received, terminating open profile pipelines",
+                    spinner_style="red",
             ) as status_spinner:
                 status_spinner.start()
                 executor.shutdown(wait=True, cancel_futures=True)
@@ -284,19 +290,15 @@ def handler(signal_received, frame):
     raise KeyboardInterrupt
 
 
-def cli():
-    global console
-    console.print(Panel("CTDFjorder", title="CTDFjorder CLI"))
-
+def build_parser():
     parser = ArgumentParser(
-        description="Default Pipeline", formatter_class=rich_argparse.RichHelpFormatter
+        description="Default Pipeline", formatter_class=RichHelpFormatterPlus
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     parser_default = subparsers.add_parser(
         "default",
-        help="Run the default processing pipeline",
-        formatter_class=rich_argparse.RichHelpFormatter,
+        help="Run the default processing pipeline", formatter_class=RichHelpFormatterPlus
     )
     parser_default.add_argument(
         "-p", "--plot", action="store_true", help="Generate plots"
@@ -342,9 +344,69 @@ def cli():
     parser_default.add_argument(
         "-o", "--output", type=str, default="output.csv", help="Output file path"
     )
+    return parser
 
+
+def build_parser_docs():
+    RichHelpFormatterPlus.choose_theme('black_and_white')
+    parser = ArgumentParser(
+        description="Default Pipeline"
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    parser_default = subparsers.add_parser(
+        "default",
+        help="Run the default processing pipeline"
+    )
+    parser_default.add_argument(
+        "-p", "--plot", action="store_true", help="Generate plots"
+    )
+    parser_default.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        dest="verbosity",
+        default=0,
+        help="Verbose logger output to ctdfjorder.log (repeat for increased verbosity)",
+    )
+    parser_default.add_argument(
+        "-q",
+        "--quiet",
+        action="store_const",
+        const=-1,
+        default=0,
+        dest="verbosity",
+        help="Quiet output (show errors only)",
+    )
+    parser_default.add_argument(
+        "-r", "--reset", action="store_true", help="Reset file environment"
+    )
+    parser_default.add_argument(
+        "-t", "--show-table", action="store_true", help="Show live progress table"
+    )
+    parser_default.add_argument(
+        "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
+    )
+    parser_default.add_argument(
+        "-m", "--mastersheet", type=str, help="Path to mastersheet"
+    )
+    parser_default.add_argument(
+        "-w", "--workers", type=int, nargs="?", const=1, help="Max workers"
+    )
+    parser_default.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="MapBox token to enable interactive map plot",
+    )
+    parser_default.add_argument(
+        "-o", "--output", type=str, default="output.csv", help="Output file path"
+    )
+    return parser
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
-
     if args.command == "default":
         if args.reset:
             _reset_file_environment()
@@ -367,3 +429,7 @@ def cli():
             mapbox_access_token=args.token,
         )
         exit()
+
+
+if __name__ == '__main__':
+    main()

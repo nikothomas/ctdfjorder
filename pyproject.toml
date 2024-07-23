@@ -40,11 +40,12 @@ plotly = "^5.20.0"
 dash = "^2.17.1"
 flask = "^3.0.3"
 pytest = "^8.3.1"
+rich-argparse-plus = "^0.3.1.4"
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"
 issues = "https://github.com/nikothomas/ctdfjorder/issues"
 
 [tool.poetry.scripts]
-ctdfjorder-cli = "ctdfjorder.cli:cli"
+ctdcli = "ctdfjorder.cli:main"
 

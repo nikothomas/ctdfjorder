@@ -5,7 +5,7 @@ from ctdfjorder.constants import *
 from ctdfjorder.rsk import load_file_rsk
 from ctdfjorder.castaway import load_file_castaway
 from ctdfjorder import utils
-from ctdfjorder import AI
+from ctdfjorder import _AI
 import pandas as pd
 from sqlite3 import OperationalError
 from os import path
@@ -66,11 +66,11 @@ class CTD:
     _plot: bool = False
 
     def __init__(
-            self,
-            ctd_file_path: str,
-            cached_master_sheet: Mastersheet = None,
-            master_sheet_path=None,
-            plot=False,
+        self,
+        ctd_file_path: str,
+        cached_master_sheet: Mastersheet = None,
+        master_sheet_path=None,
+        plot=False,
     ):
         """
         Initialize a new CTD object.
@@ -159,10 +159,10 @@ class CTD:
                 pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL),
             )
             for profile_id in (
-                    self._data.select(PROFILE_ID_LABEL)
-                            .unique(keep="first")
-                            .to_series()
-                            .to_list()
+                self._data.select(PROFILE_ID_LABEL)
+                .unique(keep="first")
+                .to_series()
+                .to_list()
             ):
                 profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
                 _, _, unique_id, secchi_depth = self._cached_master_sheet.find_match(
@@ -244,16 +244,8 @@ class CTD:
         return True
 
     def remove_upcasts(self) -> None:
-        """
+        r"""
         Removes upcasts by dropping rows where pressure decreases from one sampling event to the next.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -274,7 +266,7 @@ class CTD:
 
         .. math::
 
-            \\Delta p_i = p_{i} - p_{i-1} > 0 \\quad \\text{for} \\quad i = 1, 2, \\ldots, N
+            \Delta p_i = p_{i} - p_{i-1} > 0 \quad \text{for} \quad i = 1, 2, \ldots, N
 
         where :math:`N` is the total number of sampling events in the profile. Rows not satisfying this
         condition are considered upcasts and are removed.
@@ -291,10 +283,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter((pl.col(PRESSURE_LABEL).diff()) > 0.0)
@@ -303,16 +295,8 @@ class CTD:
         self._is_empty(CTD.remove_upcasts.__name__)
 
     def remove_non_positive_samples(self) -> None:
-        """
+        r"""
         Removes rows with non-positive values for depth, pressure, practical salinity, absolute salinity, or density.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -329,12 +313,12 @@ class CTD:
            is non-positive, null, or NaN.
         4. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
 
-        Let :math:`\\( x_i \\)` represent the value of a parameter (depth, pressure, practical salinity, absolute salinity,
-        or density) at the :math:`\\( i \\)`-th sampling event. The condition for retaining a data point is given by:
+        Let :math:`( x_i )` represent the value of a parameter (depth, pressure, practical salinity, absolute salinity,
+        or density) at the :math:`( i )`-th sampling event. The condition for retaining a data point is given by:
 
         .. math::
 
-            x_i > 0 \\quad \\text{and} \\quad x_i \\neq \\text{NaN} \\quad \\text{and} \\quad x_i \\neq \\text{null}
+            x_i > 0 \quad \text{and} \quad x_i \neq \text{NaN} \quad \text{and} \quad x_i \neq \text{null}
 
         Rows not satisfying this condition for any of the parameters are removed.
 
@@ -350,10 +334,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             cols = list(
@@ -374,16 +358,8 @@ class CTD:
         self._is_empty(CTD.remove_non_positive_samples.__name__)
 
     def remove_invalid_salinity_values(self) -> None:
-        """
+        r"""
         Removes rows with practical salinity values less than or equal to 10.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -398,7 +374,7 @@ class CTD:
         2. It then filters out rows where the practical salinity value is less than or equal to 10.
         3. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
 
-        Let :math:`\\( S_i \\)` represent the practical salinity at the`\\( i \\)`-th sampling event. The condition for
+        Let :math:`( S_i )` represent the practical salinity at the`( i )`-th sampling event. The condition for
         retaining a data point is given by:
 
         .. math::
@@ -419,10 +395,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter(pl.col(SALINITY_LABEL) > 10)
@@ -431,7 +407,7 @@ class CTD:
         self._is_empty(CTD.remove_invalid_salinity_values.__name__)
 
     def clean(self, method) -> None:
-        """
+        r"""
         Applies data cleaning methods to the specified feature using the selected method.
         Supports cleaning practical salinity using the 'clean_salinity_ai' method.
 
@@ -461,14 +437,14 @@ class CTD:
         5. Replace the original salinity values in the profile with the predicted clean values.
         6. Reintegration of the cleaned profile into the main dataset.
 
-        The loss function :math:'\\( L \\)` used in training is defined as:
+        The loss function :math:`( L )` used in training is defined as:
 
         .. math::
 
-            L = \\text{MAE}(y_{\\text{true}}, y_{\\text{pred}}) + \\lambda \\cdot \\text{mean}(P)
+            L = \text{MAE}(y_{\text{true}}, y_{\text{pred}}) + \lambda \cdot \text{mean}(P)
 
-        where :math:`\\( P \\)` are penalties for predicted salinity increases with decreasing pressure,
-        and :math:`\\( \\lambda \\)` is a weighting factor.
+        where :math:`( P )` are penalties for predicted salinity increases with decreasing pressure,
+        and :math:`( \lambda )` is a weighting factor.
 
         Examples
         --------
@@ -478,18 +454,17 @@ class CTD:
 
         See Also
         --------
-        Other related methods for data cleaning or preprocessing within the CTD class.
-
+        _AI.clean_salinity_ai : Method used to clean salinity with 'clean_salinity_ai' option.
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             if method == "clean_salinity_ai":
-                profile = AI.clean_salinity_ai(profile, profile_id)
+                profile = _AI.clean_salinity_ai(profile, profile_id)
             else:
                 raise CTDError(
                     message="Method invalid for clean.", filename=self._filename
@@ -499,16 +474,8 @@ class CTD:
         self._is_empty(CTD.clean.__name__)
 
     def add_absolute_salinity(self) -> None:
-        """
+        r"""
         Calculates and adds absolute salinity to the CTD data using the TEOS-10 salinity conversion formula.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -524,17 +491,17 @@ class CTD:
         4. Update the profile with the computed absolute salinity values.
         5. Reintegration of the updated profile into the main dataset.
 
-        The TEOS-10 formula for converting practical salinity :math:`\\( S_P \\)` to absolute salinity :math: `\\( S_A \\)` is used:
+        The TEOS-10 formula for converting practical salinity :math:`( S_P )` to absolute salinity :math:`( S_A )` is used:
 
         .. math::
 
-            S_A = f(S_P, p, \\phi, \\lambda)
+            S_A = f(S_P, p, \phi, \lambda)
 
-        where :math:`\\( p \\)` is the sea pressure, :math:`\\( \\phi \\) is the latitude, and :math:`\\( \\lambda \\)` is the longitude.
+        where :math:`( p )` is the sea pressure, :math:`( \phi )` is the latitude, and :math:`( \lambda )` is the longitude.
 
         The `gsw.conversions.SA_from_SP` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
         for this conversion. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_SA_from_SP.html>`_.
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_SA_from_SP.html>`__.
 
         Examples
         --------
@@ -551,10 +518,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(SALINITY_ABS_LABEL)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             s = profile.select(pl.col(SALINITY_LABEL)).to_numpy()
@@ -571,17 +538,10 @@ class CTD:
         self._is_empty(CTD.add_absolute_salinity.__name__)
 
     def add_density(self):
-        """
+        r"""
         Calculates and adds density to CTD data using the TEOS-10 formula.
         If absolute salinity is not present, it is calculated first.
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -598,17 +558,17 @@ class CTD:
         5. Update the profile with the computed density values.
         6. Reintegration of the updated profile into the main dataset.
 
-        The TEOS-10 formula for calculating density :math:`\\( \\rho \\)` is used:
+        The TEOS-10 formula for calculating density :math:`( \rho )` is used:
 
         .. math::
 
-            \\rho = f(S_A, T, p)
+            \rho = f(S_A, T, p)
 
-        where :math:`\\( S_A \\)` is the absolute salinity, :math:`\\( T \\)` is the in-situ temperature, and :math:`\\( p \\)` is the sea pressure.
+        where :math:`( S_A )` is the absolute salinity, :math:`( T )` is the in-situ temperature, and :math:`( p )` is the sea pressure.
 
         The `gsw.density.rho_t_exact` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
         for this calculation. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_rho_t_exact.html>`_.
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_rho_t_exact.html>`__.
 
         Examples
         --------
@@ -628,10 +588,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(DENSITY_LABEL)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
@@ -648,17 +608,9 @@ class CTD:
         self._is_empty(CTD.add_density.__name__)
 
     def add_potential_density(self):
-        """
+        r"""
         Calculates and adds potential density to the CTD data using the TEOS-10 formula.
         If absolute salinity is not present, it is calculated first.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
 
         Notes
         -----
@@ -676,17 +628,17 @@ class CTD:
         5. Update the profile with the computed potential density values.
         6. Reintegration of the updated profile into the main dataset.
 
-        The TEOS-10 formula for calculating potential density :math:`\\( \\sigma_0 \\)` is used:
+        The TEOS-10 formula for calculating potential density :math:`( \sigma_0 )` is used:
 
         .. math::
 
-            \\sigma_0 = f(S_A, T)
+            \sigma_0 = f(S_A, T)
 
-        where :math:`\\( S_A \\)` is the absolute salinity and :math:`\\( T \\)` is the in-situ temperature.
+        where :math:`( S_A )` is the absolute salinity and :math:`( T )` is the in-situ temperature.
 
         The `gsw.sigma0` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
         for this calculation. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_sigma0.html>`_.
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_sigma0.html>`__.
 
         Examples
         --------
@@ -706,10 +658,10 @@ class CTD:
         if SALINITY_ABS_LABEL not in self._data.columns:
             self.add_absolute_salinity()
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
@@ -723,7 +675,7 @@ class CTD:
         self._is_empty(CTD.add_potential_density.__name__)
 
     def add_surface_salinity_temp_meltwater(self, start=10.1325, end=12.1325):
-        """
+        r"""
         Calculates the surface salinity, surface temperature, and meltwater fraction of a CTD profile.
         Adds these values to the CTD data.
 
@@ -745,9 +697,9 @@ class CTD:
 
         .. math::
 
-            \\text{Meltwater fraction} = (-0.021406 \\cdot S_0 + 0.740392) \\cdot 100
+            \text{Meltwater fraction} = (-0.021406 \cdot S_0 + 0.740392) \cdot 100
 
-        where :math:`\\( S_0 \\)` is the surface salinity.
+        where :math:`( S_0 )` is the surface salinity.
 
         The procedure is as follows:
 
@@ -780,10 +732,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_LABEL),
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -858,10 +810,10 @@ class CTD:
         """
         # Filtering data within the specified pressure range
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -876,7 +828,7 @@ class CTD:
         self._is_empty(CTD.add_mean_surface_density.__name__)
 
     def add_mld(self, reference: int, method="potential_density_avg", delta=0.05):
-        """
+        r"""
         Calculates and adds the mixed layer depth (MLD) using the density threshold method.
 
         Parameters
@@ -885,7 +837,6 @@ class CTD:
             The reference depth for MLD calculation.
         method : str, default "potential_density_avg"
             The MLD calculation method. Options are "abs_density_avg" or "potential_density_avg".
-            (default: "potential_density_avg").
         delta : float, default 0.05
             The change in density or potential density from the reference that would define the MLD.
 
@@ -911,12 +862,13 @@ class CTD:
 
         .. math::
 
-            \\text{MLD} = \\min(D + \\Delta > D_r)
+            \text{MLD} = \min(D + \Delta > D_r)
 
         where:
-        - :math:`\\( D_r \\)` is the reference density, defined as the mean density up to the reference depth.
-        - :math:`\\( D \\)` represents all densities in the profile.
-        - :math:`\\( \\Delta \\)` is the specified change in density (delta).
+
+        * :math:`( D_r )` is the reference density, defined as the mean density up to the reference depth.
+        * :math:`( D )` represents all densities in the profile.
+        * :math:`( \Delta )` is the specified change in density (delta).
 
         Raises
         ------
@@ -940,10 +892,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._mld_col_labels[-1])
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             unpack = None
@@ -975,7 +927,7 @@ class CTD:
         self._is_empty(CTD.add_mld.__name__)
 
     def add_bf_squared(self):
-        """
+        r"""
         Calculates buoyancy frequency squared and adds it to the CTD data.
         Requires potential density to be calculated first.
 
@@ -992,23 +944,24 @@ class CTD:
         4. Update the profile with the computed buoyancy frequency squared and mid-pressure values.
         5. Reintegration of the updated profile into the main dataset.
 
-        Parameters
-        ----------
-        None
-
         Notes
         -----
-        The buoyancy frequency squared :math:`\\( N^2 \\)` is calculated using the formula:
+        The buoyancy frequency squared :math:`( N^2 )` is calculated using the formula:
 
         .. math::
+            N^2 = g^2 \rho \left( \beta_{\Theta} \Delta S_A - \alpha_{\Theta} \Delta \Theta \right) \Delta P
 
-            N^2 = -\\frac{g}{\\rho} \\frac{d\\rho}{dz}
-
-        where :math:`\\( g \\)` is the acceleration due to gravity, :math:`\\( \\rho \\)` is the density, and :math:`\\( z \\)` is the depth.
+        where :math:`\Delta S_A` and :math:`\Delta \Theta` are the differences between the Absolute Salinities and
+        Conservative Temperatures of vertically adjacent seawater parcels separated in pressure by :math:`\Delta P`,
+        measured in Pa. The density :math:`\rho` and the saline contraction and thermal expansion coefficients
+        :math:`\beta_{\Theta}` and :math:`\alpha_{\Theta}` are evaluated at the average values of :math:`S_A`,
+        :math:`\Theta`, and :math:`P` of the two seawater parcels using the GSW Toolbox function
+        `gsw_rho_alpha_beta(SA, CT, p)`. The gravitational acceleration :math:`g` is found from the GSW Toolbox function
+        `gsw_grav(lat, p)` which is a function of latitude and of pressure in the ocean.
 
         The `gsw.Nsquared` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
         for this calculation. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_Nsquared.html>`_.
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_Nsquared.html>`__.
 
         Examples
         --------
@@ -1026,10 +979,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(P_MID_LABEL),
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()

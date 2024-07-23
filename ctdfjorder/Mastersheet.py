@@ -1,7 +1,10 @@
 from ctdfjorder.constants import *
 import polars as pl
 from os import path
-from ctdfjorder.CTDExceptions.CTDExceptions import CTDError, raise_warning_improbable_match
+from ctdfjorder.CTDExceptions.CTDExceptions import (
+    CTDError,
+    raise_warning_improbable_match,
+)
 from typing import Tuple
 from typing import Any
 
@@ -80,9 +83,10 @@ class Mastersheet:
         df = df.drop_nulls(MASTER_SHEET_DATETIME_LABEL)
         self.data = df
 
-    def find_match(self,
-                   profile: pl.DataFrame,
-                   ) -> Tuple[Any, Any, str, float | None]:
+    def find_match(
+        self,
+        profile: pl.DataFrame,
+    ) -> Tuple[Any, Any, str, float | None]:
         """
         Extracts the date and time components from the filename and compares them with the data
         in the master sheet. Calculates the absolute differences between the dates and times to
@@ -126,10 +130,10 @@ class Mastersheet:
         latitude = closest_row_overall.select(pl.col(LATITUDE_LABEL).first()).item()
         longitude = closest_row_overall.select(pl.col(LONGITUDE_LABEL).first()).item()
         distance = (
-                closest_row_overall.select(
-                    pl.col(MASTER_SHEET_DATETIME_LABEL).first()
-                ).item()
-                - timestamp_highest
+            closest_row_overall.select(
+                pl.col(MASTER_SHEET_DATETIME_LABEL).first()
+            ).item()
+            - timestamp_highest
         )
         unique_id = closest_row_overall.select(pl.col("UNIQUE ID CODE ").first()).item()
         secchi_depth = closest_row_overall.select(

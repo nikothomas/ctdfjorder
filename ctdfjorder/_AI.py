@@ -1,3 +1,7 @@
+"""
+This module should not be imported, see :func:`ctdfjorder.CTD.clean` to use the methods here.
+
+"""
 from ctdfjorder.constants import *
 from ctdfjorder.CTDExceptions.CTDExceptions import CTDError
 from ctdfjorder.ctdplot import plot_original_data, plot_predicted_data
@@ -43,12 +47,14 @@ class MinMaxScaler:
                 "This MinMaxScaler instance is not fitted yet. Call 'fit' with appropriate arguments before using this method."
             )
 
-        inverse_scaled_series = (scaled_series - self.min_scaled) / self.scale + self.min_val
+        inverse_scaled_series = (
+            scaled_series - self.min_scaled
+        ) / self.scale + self.min_val
         return inverse_scaled_series
 
 
 def clean_salinity_ai(profile: pl.DataFrame, profile_id: int) -> pl.DataFrame:
-    """
+    r"""
     Cleans salinity using a GRU (Gated Recurrent Unit) machine learning model.
 
     Parameters
@@ -72,30 +78,24 @@ def clean_salinity_ai(profile: pl.DataFrame, profile_id: int) -> pl.DataFrame:
     GRU Model
     ---------
     The GRU model consists of:
-    - An input layer that takes the binned CTD data.
-    - A GRU layer with 16 units.
-    - An output layer that predicts the salinity values.
+
+    * An input layer that takes the binned CTD data.
+    * A GRU layer with 16 units.
+    * An output layer that predicts the salinity values.
 
     Loss Function
     -------------
     The custom loss function used in this model is the Mean Absolute Error (MAE) with an additional penalty term for salinity predictions that decrease with pressure. This is given by:
 
     .. math::
-        L = \\text{MAE}(y_{true}, y_{pred}) + \\lambda \\cdot \\text{mean}(\\text{penalties})
+        L = \text{MAE}(y_{true}, y_{pred}) + \lambda \cdot \text{mean}(\text{penalties})
 
     where penalties are calculated as:
 
     .. math::
-        \\text{penalties} = \\text{where}(\\Delta s_{pred} < 0, \\min(\\Delta s_{pred}, 0), 0)
+        \text{penalties} = \text{where}(\Delta s_{pred} < 0, \min(\Delta s_{pred}, 0), 0)
 
-    Here, :math:`\\Delta s_{pred}` represents the change in predicted salinity values, and :math:`\\lambda` is the weighting factor for the penalty term.
-
-    Methods
-    -------
-    - `GRUModel`: Defines the structure of the GRU model.
-    - `loss_function`: Computes the custom loss including the penalty for decreasing salinity with pressure.
-    - `build_gru`: Initializes the GRU model and the optimizer.
-    - `run_gru`: Executes the GRU model on the provided CTD data, including preprocessing, model training, and postprocessing.
+    Here, :math:`\Delta s_{pred}` represents the change in predicted salinity values, and :math:`\lambda` is the weighting factor for the penalty term.
 
     Examples
     --------

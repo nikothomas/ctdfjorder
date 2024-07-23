@@ -31,8 +31,7 @@ def load_file_castaway(castaway_file_path):
     if type(start_time) == type(None):
         CTDError(filename=filename, message=ERROR_CASTAWAY_START_TIME)
     timestamps = [
-        start_time + timedelta(milliseconds=200 * i)
-        for i in range(profile.height)
+        start_time + timedelta(milliseconds=200 * i) for i in range(profile.height)
     ]
     profile = profile.with_columns(
         pl.Series(timestamps)
@@ -51,8 +50,7 @@ def load_file_castaway(castaway_file_path):
     if LATITUDE_LABEL not in profile.collect_schema().names():
         lat, long = extract_lat_long_castaway(castaway_file_path)
         profile = profile.with_columns(
-            pl.lit(lat).alias(LATITUDE_LABEL),
-            pl.lit(long).alias(LONGITUDE_LABEL)
+            pl.lit(lat).alias(LATITUDE_LABEL), pl.lit(long).alias(LONGITUDE_LABEL)
         )
     data = profile
     return data

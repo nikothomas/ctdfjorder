@@ -1,14 +1,14 @@
 ctdfjorder
 ==========
-.. automodule:: ctdfjorder.ctdfjorder
-    :members:
+* :doc:`Getting Started`
+* :doc:`CLI`
+* :doc:`API`
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
-
-Indices and tables
-==================
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    Getting Started
+    CLI
+    API
+    :maxdepth: 1
+    :titlesonly:
+    :hidden:
+    :caption: Contents:

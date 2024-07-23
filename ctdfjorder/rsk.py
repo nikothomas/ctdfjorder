@@ -2,17 +2,20 @@ import polars as pl
 from ctdfjorder.pyrsktools import RSK, Geo, Region
 from ctdfjorder.Mastersheet import Mastersheet
 from ctdfjorder.constants import *
-from ctdfjorder.CTDExceptions.CTDExceptions import CTDError, raise_warning_native_location
+from ctdfjorder.CTDExceptions.CTDExceptions import (
+    CTDError,
+    raise_warning_native_location,
+)
 import numpy as np
 from os import path
 from typing import Any
 
 
 def process_rsk(
-        rsk_profile: pl.DataFrame,
-        geo: [Geo, Any, Any] = None,
-        filename: str = None,
-        mastersheet: Mastersheet = None
+    rsk_profile: pl.DataFrame,
+    geo: [Geo, Any, Any] = None,
+    filename: str = None,
+    mastersheet: Mastersheet = None,
 ) -> pl.DataFrame | None:
     rsk_profile = rsk_profile.with_columns(
         pl.col(TIMESTAMP_LABEL)
@@ -42,9 +45,7 @@ def process_rsk(
             filename=filename,
             message=DEBUG_FILE_LACKS_LOCATION,
         )
-        lat, long, _, _ = mastersheet.find_match(
-            data
-        )
+        lat, long, _, _ = mastersheet.find_match(data)
         return data.with_columns(
             pl.lit(lat).alias(LATITUDE_LABEL),
             pl.lit(long).alias(LONGITUDE_LABEL),
@@ -53,8 +54,7 @@ def process_rsk(
 
 
 def load_file_rsk(
-        rbr_file_path: str = None,
-        mastersheet: Mastersheet = None
+    rbr_file_path: str = None, mastersheet: Mastersheet = None
 ) -> pl.DataFrame:
     data = None
     num_profiles = 0
@@ -72,7 +72,8 @@ def load_file_rsk(
         profile_to_process = (
             pl.DataFrame(rsk_numpy_array)
             .rename(rskLabels_to_labelInternal)
-            .drop_nulls().with_columns(pl.lit(filename).alias(FILENAME_LABEL))
+            .drop_nulls()
+            .with_columns(pl.lit(filename).alias(FILENAME_LABEL))
         )
         geodata = rsk.geodata(endpoints.start_time, endpoints.end_time)
         processed_profile = process_rsk(
@@ -96,7 +97,8 @@ def load_file_rsk(
         profile = (
             pl.DataFrame(rsk_numpy_array)
             .rename(rskLabels_to_labelInternal)
-            .drop_nulls().with_columns(pl.lit(filename).alias(FILENAME_LABEL))
+            .drop_nulls()
+            .with_columns(pl.lit(filename).alias(FILENAME_LABEL))
         )
         geodata = rsk.geodata()
         processed_profile = process_rsk(

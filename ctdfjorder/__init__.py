@@ -1,1 +1,2 @@
-from ctdfjorder.CTD import CTD
+from .CTD import CTD
+__all__ = ['CTD']
