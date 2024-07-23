@@ -81,14 +81,14 @@ def clean_salinity_ai(profile: pl.DataFrame, profile_id: int) -> pl.DataFrame:
     The custom loss function used in this model is the Mean Absolute Error (MAE) with an additional penalty term for salinity predictions that decrease with pressure. This is given by:
 
     .. math::
-        L = \text{MAE}(y_{true}, y_{pred}) + \lambda \cdot \text{mean}(\text{penalties})
+        L = \\text{MAE}(y_{true}, y_{pred}) + \\lambda \\cdot \\text{mean}(\\text{penalties})
 
     where penalties are calculated as:
 
     .. math::
-        \text{penalties} = \text{where}(\Delta s_{pred} < 0, \min(\Delta s_{pred}, 0), 0)
+        \\text{penalties} = \\text{where}(\\Delta s_{pred} < 0, \\min(\\Delta s_{pred}, 0), 0)
 
-    Here, :math:`\Delta s_{pred}` represents the change in predicted salinity values, and :math:`\lambda` is the weighting factor for the penalty term.
+    Here, :math:`\\Delta s_{pred}` represents the change in predicted salinity values, and :math:`\\lambda` is the weighting factor for the penalty term.
 
     Methods
     -------
