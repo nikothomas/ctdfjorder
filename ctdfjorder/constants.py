@@ -1,7 +1,10 @@
 # Column labels for internal use
+import collections.abc
 from typing import Literal
 
 TIMESTAMP_LABEL: str = "timestamp"
+YEAR_LABEL: str = "year"
+MONTH_LABEL: str = "month"
 FILENAME_LABEL: str = "filename"
 CHLOROPHYLL_LABEL: str = "chlorophyll"
 TEMPERATURE_LABEL: str = "temperature"
@@ -27,8 +30,40 @@ LONGITUDE_LABEL: str = "longitude"
 UNIQUE_ID_LABEL: str = "unique_id"
 PROFILE_ID_LABEL: str = "profile_id"
 
+LIST_LABELS: list[str] = [
+    TIMESTAMP_LABEL,
+    YEAR_LABEL,
+    MONTH_LABEL,
+    FILENAME_LABEL,
+    CHLOROPHYLL_LABEL,
+    TEMPERATURE_LABEL,
+    SEA_PRESSURE_LABEL,
+    DEPTH_LABEL,
+    SALINITY_LABEL,
+    SPEED_OF_SOUND_LABEL,
+    SPECIFIC_CONDUCTIVITY_LABEL,
+    CONDUCTIVITY_LABEL,
+    PRESSURE_LABEL,
+    SALINITY_ABS_LABEL,
+    SURFACE_SALINITY_LABEL,
+    SURFACE_TEMPERATURE_LABEL,
+    SURFACE_DENSITY_LABEL,
+    MELTWATER_FRACTION_LABEL,
+    DENSITY_LABEL,
+    POTENTIAL_DENSITY_LABEL,
+    BV_LABEL,
+    P_MID_LABEL,
+    SECCHI_DEPTH_LABEL,
+    LATITUDE_LABEL,
+    LONGITUDE_LABEL,
+    UNIQUE_ID_LABEL,
+    PROFILE_ID_LABEL
+]
+
 # Export labels
 EXPORT_TIMESTAMP_LABEL = "timestamp"
+EXPORT_YEAR_LABEL = "Year"
+EXPORT_MONTH_LABEL = "Month"
 EXPORT_TEMPERATURE_LABEL = "Temperature_(°C)"
 EXPORT_PRESSURE_LABEL = "Pressure_(dbar)"
 EXPORT_DEPTH_LABEL = "Depth_(m)"

@@ -20,6 +20,8 @@ def save_to_csv(data: pl.DataFrame, output_file: str):
     def relabel_ctd_data(label: str) -> str:
         data_label_mapping = {
             TIMESTAMP_LABEL: EXPORT_TIMESTAMP_LABEL,
+            YEAR_LABEL: EXPORT_YEAR_LABEL,
+            MONTH_LABEL: EXPORT_MONTH_LABEL,
             TEMPERATURE_LABEL: EXPORT_TEMPERATURE_LABEL,
             PRESSURE_LABEL: EXPORT_PRESSURE_LABEL,
             CHLOROPHYLL_LABEL: EXPORT_CHLOROPHYLL_LABEL,
@@ -53,6 +55,8 @@ def save_to_csv(data: pl.DataFrame, output_file: str):
     # Define the desired column order based on the mapping values
     ordered_columns = [
         EXPORT_TIMESTAMP_LABEL,
+        EXPORT_YEAR_LABEL,
+        EXPORT_MONTH_LABEL,
         EXPORT_TEMPERATURE_LABEL,
         EXPORT_PRESSURE_LABEL,
         EXPORT_DEPTH_LABEL,

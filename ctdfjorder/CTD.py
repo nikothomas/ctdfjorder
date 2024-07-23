@@ -123,6 +123,12 @@ class CTD:
         except pl.exceptions.InvalidOperationError:
             raise CTDError(message=ERROR_LOCATION_DATA_INVALID, filename=self._filename)
 
+        # Adding year and month columns
+        self._data = self._data.with_columns(pl.col(TIMESTAMP_LABEL)
+                                             .dt.convert_time_zone(TIME_ZONE)
+                                             .cast(pl.Datetime(time_unit=TIME_UNIT, time_zone=TIME_ZONE)))
+        self._data = self._data.with_columns(pl.col(TIMESTAMP_LABEL).dt.year().alias(YEAR_LABEL),
+                                             pl.col(TIMESTAMP_LABEL).dt.year().alias(MONTH_LABEL))
         if master_sheet_path or self._cached_master_sheet:
             self._data = self._data.with_columns(
                 pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
@@ -263,6 +269,38 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.remove_upcasts.__name__)
+
+    def filter_columns_by_range(self, filters: zip = None, columns: list[str] = None, upper_bounds: list[float | int] = None, lower_bounds: list[float | int] = None):
+        for profile_id in (
+                self._data.select(PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
+        ):
+            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            if type(columns) is not type(None):
+                for x, column in enumerate(columns):
+                    upper_bound = upper_bounds[x]
+                    lower_bound = lower_bounds[x]
+                    if type(upper_bound) is not type(None) and type(lower_bound) is not type(None):
+                        profile = profile.filter(pl.col(column) <= upper_bound,
+                                                 pl.col(column) >= lower_bound)
+                    elif type(upper_bound) is not type(None):
+                        profile = profile.filter(pl.col(column) <= upper_bound)
+                    elif type(lower_bound) is not type(None):
+                        profile = profile.filter(pl.col(column) >= lower_bound)
+
+            elif type(filters)is not type(None):
+                for filter in filters:
+                    column = filter[0]
+                    upper_bound = filter[1]
+                    lower_bound = filter[2]
+                    profile = profile.filter(pl.col(column) <= upper_bound,
+                                             pl.col(column) >= lower_bound)
+
+            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.vstack(profile)
+        self._is_empty(CTD.filter_columns_by_range.__name__)
 
     def remove_non_positive_samples(self) -> None:
         r"""

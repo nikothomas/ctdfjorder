@@ -1,6 +1,7 @@
 import logging
 import shutil
-from signal import signal, SIGTERM, SIGINT, SIGTSTP
+from signal import SIGTERM, SIGINT, SIGTSTP
+import signal
 from sys import executable, exit
 import sys
 from warnings import catch_warnings
@@ -8,7 +9,7 @@ from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 import polars as pl
-import rich_argparse_plus
+import psutil
 from polars.exceptions import ChronoFormatWarning
 from rich.console import Console
 from rich.live import Live
@@ -17,7 +18,6 @@ from rich.pretty import Pretty
 from rich.table import Table, box
 from rich.status import Status
 from rich import print as richprint
-import rich_argparse
 from rich_argparse_plus import RichHelpFormatterPlus
 from ctdfjorder.ctdplot import plot_depth_vs, plot_map, plot_secchi_chla
 from ctdfjorder.CTDExceptions.CTDExceptions import CTDError
@@ -27,6 +27,7 @@ from ctdfjorder.constants import *
 from ctdfjorder.Mastersheet import Mastersheet
 from os import path, listdir, remove, mkdir, getcwd
 from os.path import isfile
+
 console = Console(color_system='windows')
 
 
@@ -37,6 +38,7 @@ def process_ctd_file(
         master_sheet_path: str = None,
         verbosity: int = 0,
         plots_folder: str = None,
+        filters: zip = None
 ):
     logger = setup_logging(verbosity)
     steps = [
@@ -49,6 +51,7 @@ def process_ctd_file(
                 master_sheet_path=master_sheet_path,
             ),
         ),
+        ("Filter", lambda data: data.filter_columns_by_range(filters=filters)),
         ("Remove Upcasts", lambda data: data.remove_upcasts()),
         ("Remove Negative", lambda data: data.remove_non_positive_samples()),
         (
@@ -111,6 +114,7 @@ def process_ctd_file(
 def generate_status_table(status_table):
     steps = [
         "Load File",
+        "Filter",
         "Remove Upcasts",
         "Remove Negative Values",
         "Remove Invalid Salinity Values",
@@ -142,6 +146,7 @@ def run_default(
         debug_run=False,
         table_show=False,
         mapbox_access_token=None,
+        filters=None
 ):
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
@@ -181,6 +186,7 @@ def run_default(
                     master_sheet_path,
                     verbosity,
                     plots_folder,
+                    filters
                 ): file
                 for file in files
             }
@@ -205,6 +211,9 @@ def run_default(
                 status_spinner.start()
                 executor.shutdown(wait=True, cancel_futures=True)
                 status_spinner.stop()
+                for proc in psutil.process_iter():
+                    if proc.name == 'Python':
+                        proc.kill()
 
         finally:
             live.stop()
@@ -234,8 +243,14 @@ def run_default(
                         plot_secchi_chla(df, plots_folder)
                     status_spinner_map_view.start()
                     if mapbox_access_token:
-                        plot_map(df_exported, mapbox_access_token)
-                        status_spinner_map_view.stop()
+                        try:
+                            plot_map(df_exported, mapbox_access_token)
+                        except KeyboardInterrupt:
+                            status_spinner_map_view.stop()
+                            for proc in psutil.process_iter():
+                                if proc.name == 'Python':
+                                    proc.kill()
+
 
 
 def get_ctd_filenames_in_dir(directory, types):
@@ -263,9 +278,9 @@ def _reset_file_environment():
 
 def setup_logging(verbosity):
     level = max(30 - (verbosity * 10), 10)
-    signal(SIGTERM, handler)
-    signal(SIGINT, handler)
-    signal(SIGTSTP, handler)
+    signal.signal(SIGTERM, handler)
+    signal.signal(SIGINT, handler)
+    signal.signal(SIGTSTP, handler)
     for logger_name in [
         "tensorflow",
         "matplotlib",
@@ -344,6 +359,15 @@ def build_parser():
     parser_default.add_argument(
         "-o", "--output", type=str, default="output.csv", help="Output file path"
     )
+    # Assuming columns are passed as a list of strings
+    parser_default.add_argument("--filtercolumns", nargs='*', type=str, required=False, default=None, help='List of columns to filter', choices=LIST_LABELS)
+
+    # Upper bounds
+    parser_default.add_argument("--filterupper", nargs='*', type=float, required=False, default=None, help='Upper bounds for the filtered columns')
+
+    # Lower bounds
+    parser_default.add_argument("--filterlower", nargs='*', type=float, required=False, default=None, help='Lower bounds for the filtered columns')
+
     return parser
 
 
@@ -394,20 +418,41 @@ def build_parser_docs():
         "-w", "--workers", type=int, nargs="?", const=1, help="Max workers"
     )
     parser_default.add_argument(
+        "-o", "--output", type=str, default="output.csv", help="Output file path"
+    )
+    # Assuming columns are passed as a list of strings
+    parser_default.add_argument("--filtercolumns", nargs='*', type=str, required=False, default=None, help='List of columns to filter',
+                                choices=LIST_LABELS)
+
+    # Upper bounds
+    parser_default.add_argument("--filterupper", nargs='*', type=float, required=False, default=None, help='Upper bounds for the filtered columns')
+
+    # Lower bounds
+    parser_default.add_argument("--filterlower", nargs='*', type=float, required=False, default=None, help='Lower bounds for the filtered columns')
+
+    parser_default.add_argument(
         "--token",
         type=str,
         default=None,
         help="MapBox token to enable interactive map plot",
     )
-    parser_default.add_argument(
-        "-o", "--output", type=str, default="output.csv", help="Output file path"
-    )
     return parser
 
+
 def main():
+    signal.signal(SIGINT, handler)
+    signal.signal(SIGTSTP, handler)
+    signal.signal(SIGTERM, handler)
     parser = build_parser()
     args = parser.parse_args()
     if args.command == "default":
+        if type(args.filtercolumns) is not type(None) and type(args.filterupper) is not type(None) and type(args.filterlower) is not type(None):
+            columns = args.filtercolumns
+            upper_bounds = args.filterupper
+            lower_bounds = args.filterlower
+            filters = zip(columns, upper_bounds, lower_bounds)
+        else:
+            filters = None
         if args.reset:
             _reset_file_environment()
 
@@ -427,6 +472,7 @@ def main():
             debug_run=args.debug_run,
             table_show=args.show_table,
             mapbox_access_token=args.token,
+            filters=filters,
         )
         exit()
 

@@ -1,19 +1,28 @@
-import logging
-import polars as pl
-from flask import Flask
 from matplotlib import pyplot as plt
 import numpy as np
 import os
 from ctdfjorder.constants import *
 from statsmodels.api import nonparametric
+import polars as pl
+from dash import dcc, html, dash
+from dash.dependencies import Input, Output, State
 import plotly.express as px
-import dash
-from dash import dcc, html, Input, Output, dash_table
+import logging
+from flask import Flask
+import re
 
 
 def plot_map(df: pl.DataFrame, mapbox_access_token):
     px.set_mapbox_access_token(mapbox_access_token)
-    df_pd = df.to_pandas()
+
+    df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12 + 3) // 3).alias("season"))
+    lat_median = df.select(pl.col(EXPORT_LATITUDE_LABEL).median().first()).item()
+    long_median = df.select(pl.col(EXPORT_LONGITUDE_LABEL).median().first()).item()
+    # Convert Polars DataFrame to pandas DataFrame
+    pd_df = df.to_pandas()
+
+    # Define Antarctic seasons
+    season_dict = {1: 'Autumn', 2: 'Winter', 3: 'Spring', 4: 'Summer'}
 
     # Create the Dash app with external JavaScript to handle window close
     server = Flask(__name__)
@@ -21,84 +30,148 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     app.logger.setLevel(logging.ERROR)
     server.logger.setLevel(logging.ERROR)
 
-    # Create the map plot using plotly.express.scatter_mapbox
-    fig = px.scatter_mapbox(
-        df_pd,
-        lat="latitude",
-        lon="longitude",
-        hover_name="Unique_ID",
-        hover_data={
-            "timestamp": True,
-            "filename": True,
-            "latitude": True,  # Lat and lon are not included in hover as they are already displayed
-            "longitude": True,
-        },
-        mapbox_style="dark",
-        zoom=5,
-        center={"lat": -62.0, "lon": -60.0},
-    )
-
-    # Update layout with Mapbox access token
-    fig.update_layout(
-        mapbox_accesstoken=mapbox_access_token, margin=dict(l=0, r=0, t=0, b=0)
-    )
-
-    # App layout with CSS for dark theme and stacking map over table
-    app.layout = html.Div(
-        [
-            html.Div(
-                dcc.Graph(id="map", figure=fig),
-                style={
-                    "flex": "1",
-                    "height": "calc(100vh - 50vh)",
-                    "min-height": "50vh",
-                },  # Dynamic height map
+    # Layout of the app with filter options, map, and selected profiles list
+    app.layout = html.Div([
+        html.Div([
+            dcc.Dropdown(
+                id='year-dropdown',
+                options=[{'label': str(year), 'value': year} for year in pd_df[EXPORT_YEAR_LABEL].unique()],
+                placeholder="Select a year",
+                multi=True
             ),
-            html.Div(
-                id="table-container",
-                style={
-                    "flex": "1",
-                    "overflowY": "auto",
-                    "overflowX": "auto",
-                    "height": "50vh",
-                },
-                # Scrollable table container
+            dcc.Dropdown(
+                id='season-dropdown',
+                options=[
+                    {'label': 'Winter', 'value': 1},
+                    {'label': 'Spring', 'value': 2},
+                    {'label': 'Summer', 'value': 3},
+                    {'label': 'Autumn', 'value': 4}
+                ],
+                placeholder="Select a season",
+                multi=True
             ),
-            dcc.Interval(id="interval-component", interval=1 * 1000, n_intervals=0),
-        ],
-        style={
-            "display": "flex",
-            "flexDirection": "column",
-            "height": "100vh",
-            "backgroundColor": "#1e1e1e",
-            "color": "#ffffff",
-        },
+            dcc.Input(
+                id='unique-id-input',
+                type='text',
+                placeholder='Enter Unique ID or regex',
+                style={'width': '100%'}
+            ),
+            dcc.Input(
+                id='lat-range',
+                type='text',
+                placeholder='Enter latitude range (e.g. -60, -55)',
+                style={'width': '100%'}
+            ),
+            dcc.Input(
+                id='lon-range',
+                type='text',
+                placeholder='Enter longitude range (e.g. -70, -65)',
+                style={'width': '100%'}
+            ),
+            html.Button('Download CSV', id='download-button'),
+            dcc.Download(id='download-dataframe-csv')
+        ], style={'width': '20%', 'display': 'inline-block', 'verticalAlign': 'top'}),
+        html.Div([
+            dcc.Graph(id='map', style={'height': '100vh', 'width': '100vw'}),
+        ], style={'width': '80%', 'display': 'inline-block', 'verticalAlign': 'top'})
+    ], style={'height': '100vh', 'width': '100vw', 'margin': 0, 'padding': 0})
+
+    @app.callback(
+        Output('map', 'figure'),
+        [Input('year-dropdown', 'value'),
+         Input('season-dropdown', 'value'),
+         Input('unique-id-input', 'value'),
+         Input('lat-range', 'value'),
+         Input('lon-range', 'value')]
     )
-
-    # Callback to update table based on clicked point
-    @app.callback(Output("table-container", "children"), Input("map", "clickData"))
-    def display_profile_data(clickData):
-        if clickData is None:
-            return html.P(
-                "Click on a point to see profile data.", style={"color": "#ffffff"}
-            )
-
-        unique_id = clickData["points"][0][
-            "hovertext"
-        ]  # Get the unique_id from hovertext
-        filtered_df = df_pd[df_pd["Unique_ID"] == unique_id]
-
-        return dash_table.DataTable(
-            columns=[{"name": i, "id": i} for i in filtered_df.columns],
-            data=filtered_df.to_dict("records"),
-            style_table={"overflowX": "auto", "overflowY": "auto"},
-            style_header={"backgroundColor": "#333333", "color": "#ffffff"},
-            style_cell={
-                "backgroundColor": "#1e1e1e",
-                "color": "#ffffff",
-                "whiteSpace": "normal",
+    def update_map(selected_years, selected_seasons, unique_id_filter, lat_range, lon_range):
+        filtered_df = pd_df.copy()
+        if selected_years:
+            filtered_df = filtered_df[filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)]
+        if selected_seasons:
+            filtered_df = filtered_df[filtered_df['season'].isin(selected_seasons)]
+        if unique_id_filter:
+            unique_id_list = unique_id_filter.split()
+            try:
+                filtered_df = filtered_df[filtered_df['Unique_ID'].str.contains('|'.join(unique_id_list), regex=True)]
+            except re.error:
+                pass  # Handle invalid regex gracefully
+        if lat_range:
+            try:
+                lat_min, lat_max = map(float, lat_range.split(','))
+                filtered_df = filtered_df[(filtered_df['latitude'] >= lat_min) & (filtered_df['latitude'] <= lat_max)]
+            except ValueError:
+                pass  # Handle invalid range input gracefully
+        if lon_range:
+            try:
+                lon_min, lon_max = map(float, lon_range.split(','))
+                filtered_df = filtered_df[(filtered_df['longitude'] >= lon_min) & (filtered_df['longitude'] <= lon_max)]
+            except ValueError:
+                pass  # Handle invalid range input gracefully
+        try:
+            lat_median = filtered_df[EXPORT_LATITUDE_LABEL].median()
+            long_median = filtered_df[EXPORT_LONGITUDE_LABEL].median()
+        except Exception as e:
+            pass
+        fig = px.scatter_mapbox(
+            filtered_df,
+            lat="latitude",
+            lon="longitude",
+            hover_name="Unique_ID",
+            hover_data={
+                "timestamp": True,
+                "filename": True,
+                "latitude": True,
+                "longitude": True,
             },
+            mapbox_style="dark",
+            zoom=5,
+            center={"lat": lat_median, "lon": long_median},
         )
+
+        fig.update_layout(mapbox_accesstoken=mapbox_access_token, margin=dict(l=0, r=0, t=0, b=0))
+        return fig
+
+    # Callback to handle CSV download
+    @app.callback(
+        Output('download-dataframe-csv', 'data'),
+        [Input('download-button', 'n_clicks')],
+        [State('year-dropdown', 'value'),
+         State('season-dropdown', 'value'),
+         State('unique-id-input', 'value'),
+         State('lat-range', 'value'),
+         State('lon-range', 'value')]
+    )
+    def download_csv(n_clicks, selected_years, selected_seasons, unique_id_filter, lat_range, lon_range):
+        if n_clicks is None:
+            raise dash.PreventUpdate
+
+        filtered_df = pd_df.copy()
+        if selected_years:
+            filtered_df = filtered_df[filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)]
+        if selected_seasons:
+            filtered_df['season'] = filtered_df['season'].replace(season_dict)
+            filtered_df = filtered_df[filtered_df['season'].isin([season_dict[season] for season in selected_seasons])]
+        if unique_id_filter:
+            unique_id_list = unique_id_filter.split()
+            try:
+                filtered_df = filtered_df[filtered_df['Unique_ID'].str.contains('|'.join(unique_id_list), regex=True)]
+            except re.error:
+                pass  # Handle invalid regex gracefully
+        if lat_range:
+            try:
+                lat_min, lat_max = map(float, lat_range.split(','))
+                filtered_df = filtered_df[(filtered_df['latitude'] >= lat_min) & (filtered_df['latitude'] <= lat_max)]
+            except ValueError:
+                pass  # Handle invalid range input gracefully
+        if lon_range:
+            try:
+                lon_min, lon_max = map(float, lon_range.split(','))
+                filtered_df = filtered_df[(filtered_df['longitude'] >= lon_min) & (filtered_df['longitude'] <= lon_max)]
+            except ValueError:
+                pass  # Handle invalid range input gracefully
+
+        return dcc.send_data_frame(filtered_df.to_csv, "selected_profiles.csv")
 
     # Open the browser automatically
     import webbrowser
@@ -108,11 +181,11 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         webbrowser.open_new("http://127.0.0.1:8050/")
 
     Timer(1, open_browser).start()
-    app.run(debug=False)
+    app.run_server(debug=False)
 
 
 def plot_depth_vs(
-    df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
+        df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
 ):
     """
     Generates a plot of depth vs. specified measurement (salinity, density, temperature).
@@ -138,7 +211,7 @@ def plot_depth_vs(
     plt.rcParams.update({"font.size": 16})
     os.makedirs(plot_folder, exist_ok=True)
     for profile_id in (
-        df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
+            df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
     ):
         profile = df.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
         filename = profile.select(pl.first(FILENAME_LABEL)).item()

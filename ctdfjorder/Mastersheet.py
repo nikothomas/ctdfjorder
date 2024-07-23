@@ -90,13 +90,13 @@ class Mastersheet:
         """
         Extracts the date and time components from the filename and compares them with the data
         in the master sheet. Calculates the absolute differences between the dates and times to
-        find the closest match. Returns the estimated latitude, longitude, and updated filename
+        find the closest match. Returns the estimated latitude, longitude, unique id, and secchi depth
         based on the closest match.
 
         Parameters
         ----------
-        for_id : bool, default False
-            Flag for logging purposes, indicates if we processed for location or id.
+        profile : pl.Dataframe
+            Profile to match to master sheet.
 
         Returns
         -------

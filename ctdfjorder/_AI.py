@@ -187,6 +187,8 @@ def clean_salinity_ai(profile: pl.DataFrame, profile_id: int) -> pl.DataFrame:
         # Define the desired columns and their aggregation functions
         column_agg_dict = {
             TEMPERATURE_LABEL: pl.mean(TEMPERATURE_LABEL),
+            YEAR_LABEL: pl.first(YEAR_LABEL),
+            MONTH_LABEL: pl.first(MONTH_LABEL),
             CHLOROPHYLL_LABEL: pl.mean(CHLOROPHYLL_LABEL),
             SEA_PRESSURE_LABEL: pl.mean(SEA_PRESSURE_LABEL),
             DEPTH_LABEL: pl.mean(DEPTH_LABEL),
