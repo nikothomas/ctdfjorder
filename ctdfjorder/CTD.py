@@ -23,21 +23,25 @@ logger.propagate = 0
 
 class CTD:
     """
-    Class representing a CTD object for processing and analyzing CTD data. A mastersheet is not necessary,
-    but if your files are missing location data then many functions will not work
+    Object representing a single profile.
 
-    Attributes
+    Parameters
     ----------
-    master_sheet_path : str
-        Path to the mastersheet.
+
+    ctd_file_path : str
+        The file path to the RSK or Castaway file.
+    cached_master_sheet : Mastersheet, default None
+        CTDFjorder's internal representation of a master sheet.
+    master_sheet_path : str, default None
+        Path to a master sheet.
+    plot : bool, default False
+        If true saves plots to 'plots' folder in working directory.
 
     Examples
-    ---------
-    Removing non-positive samples from data:
+    --------
+    Castaway CTD profile with valid data
 
-    >>> from ctdfjorder import CTD
     >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
-    >>> ctd_data.remove_non_positive_samples()
     >>> output = ctd_data.get_df()
     >>> print(output.head(3))
     shape: (3, 13)
@@ -50,6 +54,18 @@ class CTD:
     │ 0.45         ┆ 0.446022 ┆ 0.316492    ┆ 28392.966662 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
     │ 0.75         ┆ 0.743371 ┆ 0.310613    ┆ 28386.78011  ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
     └──────────────┴──────────┴─────────────┴──────────────┴───┴────────────┴───────────────────────────────┴────────────┴────────────┘
+
+    Castaway CTD profile with no data
+
+    >>> ctd_data = CTD('CC1627007_20191220_195931.csv') # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    ctdfjorder.CTDError: CC1627007_20191220_195931.csv - No samples in file
+
+    Raises
+    ------
+    CTDError
+        For ctdfjorder related errors
 
     """
 
@@ -72,52 +88,6 @@ class CTD:
         master_sheet_path=None,
         plot=False,
     ):
-        """
-        Initialize a new CTD object.
-
-        Parameters
-        ----------
-
-        ctd_file_path : str
-            The file path to the RSK or Castaway file.
-        cached_master_sheet : pl.Dataframe, default pl.DataFrame()
-            Polars dataframe representation of a master sheet.
-        master_sheet_path : str, default None
-            Path to a master sheet.
-        plot : bool, default False
-            If true saves plots to 'plots' folder in working directory.
-
-        Examples
-        --------
-        Castaway CTD profile with valid data
-
-        >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
-        >>> output = ctd_data.get_df()
-        >>> print(output.head(3))
-        shape: (3, 13)
-        ┌──────────────┬──────────┬─────────────┬──────────────┬───┬────────────┬───────────────────────────────┬────────────┬────────────┐
-        │ sea_pressure ┆ depth    ┆ temperature ┆ conductivity ┆ … ┆ profile_id ┆ filename                      ┆ latitude   ┆ longitude  │
-        │ ---          ┆ ---      ┆ ---         ┆ ---          ┆   ┆ ---        ┆ ---                           ┆ ---        ┆ ---        │
-        │ f64          ┆ f64      ┆ f64         ┆ f64          ┆   ┆ i32        ┆ str                           ┆ f64        ┆ f64        │
-        ╞══════════════╪══════════╪═════════════╪══════════════╪═══╪════════════╪═══════════════════════════════╪════════════╪════════════╡
-        │ 0.15         ┆ 0.148676 ┆ 0.32895     ┆ 28413.735648 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
-        │ 0.45         ┆ 0.446022 ┆ 0.316492    ┆ 28392.966662 ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
-        │ 0.75         ┆ 0.743371 ┆ 0.310613    ┆ 28386.78011  ┆ … ┆ 0          ┆ CC1531002_20181225_114931.csv ┆ -64.668455 ┆ -62.641775 │
-        └──────────────┴──────────┴─────────────┴──────────────┴───┴────────────┴───────────────────────────────┴────────────┴────────────┘
-
-        Castaway CTD profile with no data
-
-        >>> ctd_data = CTD('CC1627007_20191220_195931.csv') # doctest: +IGNORE_EXCEPTION_DETAIL
-        Traceback (most recent call last):
-        ...
-        ctdfjorder.CTDError: CC1627007_20191220_195931.csv - No samples in file
-
-        Raises
-        ------
-        CTDError
-            For ctdfjorder related errors
-
-        """
         self._filename = path.basename(ctd_file_path)
         if type(self._cached_master_sheet) is type(None):
             self._cached_master_sheet = Mastersheet(master_sheet_path)

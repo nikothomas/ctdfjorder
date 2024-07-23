@@ -2,6 +2,7 @@ CTD Class
 ==========
 .. autoclass:: ctdfjorder.CTD
     :undoc-members:
+    :special-members: __init__
     :members:
 
 AI
