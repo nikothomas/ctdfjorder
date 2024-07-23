@@ -142,7 +142,7 @@ def run_default(
         verbosity=0,
         output_file=None,
         debug_run=False,
-        table_show=False,
+        status_show=False,
         mapbox_access_token=None,
         filters=None
 ):
@@ -159,7 +159,7 @@ def run_default(
         raise CTDError(message="No '.rsk' or '.csv' found in this folder", filename="")
     cached_master_sheet = Mastersheet(master_sheet_path) if master_sheet_path else None
     status_table, results = [], []
-    if not table_show:
+    if not status_show:
         Console(quiet=True)
     #live = Live(
         #generate_status_table(status_table),
@@ -206,7 +206,7 @@ def run_default(
                 else:
                     remaining_files -= 1
                     error_count += 1
-                if table_show:
+                if status_show:
                     status_table.append((path.basename(file), status))
                     status_spinner_processing.update(status=f"Processing {remaining_files} files")
             status_spinner_processing.stop()
@@ -224,7 +224,8 @@ def run_default(
                         proc.kill()
 
         finally:
-            console.print(generate_status_table(status_table))
+            if status_show:
+                console.print(generate_status_table(status_table))
             with console.screen():
                 status_spinner_cleaning_up.start()
                 executor.shutdown(wait=True, cancel_futures=True)
@@ -347,7 +348,7 @@ def build_parser():
         "-r", "--reset", action="store_true", help="Reset file environment"
     )
     parser_default.add_argument(
-        "-t", "--show-table", action="store_true", help="Show live progress table"
+        "-s", "--show-status", action="store_true", help="Show processing status and pipeline status"
     )
     parser_default.add_argument(
         "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
@@ -414,7 +415,7 @@ def build_parser_docs():
         "-r", "--reset", action="store_true", help="Reset file environment"
     )
     parser_default.add_argument(
-        "-s", "--show-status", action="store_true", help="Show live progress table"
+        "-s", "--show-status", action="store_true", help="Show processing status and pipeline status"
     )
     parser_default.add_argument(
         "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
