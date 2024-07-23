@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'ctdfjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.2.84'
+release = '0.3.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
