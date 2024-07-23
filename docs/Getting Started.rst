@@ -55,23 +55,16 @@ For the purposes of this demo are assuming that you have the following:
 If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your MapBox token.
 
-.. warning::
-    Do not scroll or interact with the terminal window as CTDFjorder is processing files.
-    To shutdown CTDFjorder during this stage press the :code:`CTRL+C` keys at the same time and wait for it to terminate.
-    Once the map opens, you are safe to scroll through your terminal to see which files did not pass the pipeline.
-
 .. code-block:: console
 
    (ctdfjorder) $ ctdcli default -r -p -m "FjordPhyto MASTER SHEET.csv" -w 4 --show-table --token MY_TOKEN
 
 Interpret output
 ----------------
-You should see a table with the filenames and dots representing the status of the file at each step.
-Green means the file passed a step, yellow alerts you to unusual data, and red means an error occurred such that the
-file could not continue to be processed. Once all files are completed, a map will open. The points are individual casts.
-To see the data from a cast, click on the cast. The table can be scrolled from left to right as well as up and down.
-
-We ran the following functions on our CTD data during the processing:
+If you see a spinning globe you did it! Once the files are done processing a table will print with pipeline information
+for each file. Green means the file passed a step, yellow alerts you to unusual data, and red means an error occurred
+such that the file could not continue to be processed. Once all files are completed, a map will open as well.
+The points are individual casts. The map can be filtered.
 
 .. tip::
     Plots are in the **ctdplots** folder in the same place as your original CTD data.

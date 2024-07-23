@@ -11,7 +11,7 @@ from os import path
 def load_file_castaway(castaway_file_path):
     filename = path.basename(castaway_file_path)
     with open(castaway_file_path) as file:
-        profile = pl.read_csv(file, comment_prefix="%")
+        profile = pl.read_csv(file, comment_prefix="%", null_values="#N/A")
     if profile.is_empty():
         raise CTDError(message=ERROR_NO_SAMPLES, filename=filename)
     if CASTAWAY_DATETIME_LABEL in profile.columns:
@@ -29,7 +29,7 @@ def load_file_castaway(castaway_file_path):
     else:
         start_time = extract_utc_cast_time(castaway_file_path)
     if type(start_time) == type(None):
-        CTDError(filename=filename, message=ERROR_CASTAWAY_START_TIME)
+        raise CTDError(filename=filename, message=ERROR_CASTAWAY_START_TIME)
     timestamps = [
         start_time + timedelta(milliseconds=200 * i) for i in range(profile.height)
     ]

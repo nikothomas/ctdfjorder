@@ -12,7 +12,6 @@ import polars as pl
 import psutil
 from polars.exceptions import ChronoFormatWarning
 from rich.console import Console
-from rich.live import Live
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table, box
@@ -27,7 +26,6 @@ from ctdfjorder.constants import *
 from ctdfjorder.Mastersheet import Mastersheet
 from os import path, listdir, remove, mkdir, getcwd
 from os.path import isfile
-
 console = Console(color_system='windows')
 
 
@@ -152,29 +150,37 @@ def run_default(
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
             : 20 if debug_run else None
             ]
+    total_files = len(files)
+    remaining_files = total_files
     if master_sheet_path in files:
+        total_files -= 1
         files.remove(master_sheet_path)
     if not files:
-        raise CTDError(message="No '.rsk' or '.csv' found in this folder")
+        raise CTDError(message="No '.rsk' or '.csv' found in this folder", filename="")
     cached_master_sheet = Mastersheet(master_sheet_path) if master_sheet_path else None
     status_table, results = [], []
-    live_console = console if table_show else Console(quiet=True)
-    live = Live(
-        generate_status_table(status_table),
-        auto_refresh=False,
-        console=live_console,
-        vertical_overflow="visible",
-    )
+    if not table_show:
+        Console(quiet=True)
+    #live = Live(
+        #generate_status_table(status_table),
+        #auto_refresh=False,
+        #console=live_console,
+        #vertical_overflow="ellipsis",
+        #transient=True
+    #)
     executor = ProcessPoolExecutor(max_workers=max_workers)
-    status_spinner_combining = Status("Combining CTD profiles", spinner="earth")
-    status_spinner_cleaning_up = Status("Cleaning up", spinner="earth")
+    status_spinner_processing = Status(f"Processing {files} files", spinner="earth", console=console)
+    status_spinner_combining = Status("Combining CTD profiles", spinner="earth", console=console)
+    status_spinner_cleaning_up = Status("Cleaning up", spinner="earth", console=console)
     status_spinner_map_view = Status(
-        "Running interactive map view. To shutdown press CTRL+Z.", spinner="earth"
+        "Running interactive map view. To shutdown press CTRL+Z.", spinner="earth", console=console
     )
     error_count = 0
-    total_count = len(files)
+    success_count = 0
     with ExitStack() as stack:
-        stack.enter_context(live)
+        stack.enter_context(status_spinner_processing)
+        status_spinner_processing.start()
+        status_spinner_processing.update(status=f"Processing {total_files} files. Press CTRL+Z to shutdown.")
         try:
             stack.enter_context(executor)
             futures = {
@@ -190,20 +196,22 @@ def run_default(
                 ): file
                 for file in files
             }
-
             for future in as_completed(futures):
                 file = futures[future]
                 result, status = future.result()
                 if isinstance(result, pl.DataFrame):
                     results.append(result)
+                    success_count += 1
+                    remaining_files -= 1
                 else:
+                    remaining_files -= 1
                     error_count += 1
                 if table_show:
                     status_table.append((path.basename(file), status))
-                    live.update(generate_status_table(status_table), refresh=True)
-
+                    status_spinner_processing.update(status=f"Processing {remaining_files} files")
+            status_spinner_processing.stop()
         except KeyboardInterrupt:
-            live.stop()
+            status_spinner_processing.stop()
             with Status(
                     "Shutdown message received, terminating open profile pipelines",
                     spinner_style="red",
@@ -216,7 +224,7 @@ def run_default(
                         proc.kill()
 
         finally:
-            live.stop()
+            console.print(generate_status_table(status_table))
             with console.screen():
                 status_spinner_cleaning_up.start()
                 executor.shutdown(wait=True, cancel_futures=True)
@@ -226,7 +234,7 @@ def run_default(
                 panel = Panel(
                     Pretty(df.select("pressure", "salinity", "temperature").describe()),
                     title="Overall stats",
-                    subtitle=f"Errors/Total: {error_count}/{total_count}",
+                    subtitle=f"Errors/Total: {error_count}/{total_files}",
                 )
                 pl.Config.set_tbl_rows(-1)
                 df_test = df.unique("filename", keep="first").select(
@@ -406,7 +414,7 @@ def build_parser_docs():
         "-r", "--reset", action="store_true", help="Reset file environment"
     )
     parser_default.add_argument(
-        "-t", "--show-table", action="store_true", help="Show live progress table"
+        "-s", "--show-status", action="store_true", help="Show live progress table"
     )
     parser_default.add_argument(
         "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
@@ -470,7 +478,7 @@ def main():
             verbosity=args.verbosity,
             output_file=args.output,
             debug_run=args.debug_run,
-            table_show=args.show_table,
+            status_show=args.show_status,
             mapbox_access_token=args.token,
             filters=filters,
         )
