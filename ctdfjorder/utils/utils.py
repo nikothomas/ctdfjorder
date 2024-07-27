@@ -90,7 +90,9 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str):
     reordered_data = renamed_data.select(present_columns)
 
     # Append any missing columns that were not in the specified order
-    missing_columns = [col for col in renamed_data.columns if col not in present_columns]
+    missing_columns = [
+        col for col in renamed_data.columns if col not in present_columns
+    ]
     if missing_columns:
         missing_data = renamed_data.select(missing_columns)
         reordered_data = pl.concat([reordered_data, missing_data], how="horizontal")

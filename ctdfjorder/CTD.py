@@ -82,11 +82,11 @@ class CTD:
     _plot: bool = False
 
     def __init__(
-            self,
-            ctd_file_path: str,
-            cached_master_sheet: MasterSheet = None,
-            master_sheet_path=None,
-            plot=False,
+        self,
+        ctd_file_path: str,
+        cached_master_sheet: MasterSheet = None,
+        master_sheet_path=None,
+        plot=False,
     ):
         # Define instance vars, load master sheet if path given and master sheet is not cached
         self._filename = path.basename(ctd_file_path)
@@ -116,55 +116,72 @@ class CTD:
             raise CTDError(filename=self._filename, message=ERROR_NO_SAMPLES)
 
         # Adding year and month columns
-        self._data = self._data.with_columns(pl.col(TIMESTAMP_LABEL)
-                                             .dt.convert_time_zone(TIME_ZONE)
-                                             .cast(pl.Datetime(time_unit=TIME_UNIT, time_zone=TIME_ZONE)))
-        self._data = self._data.with_columns(pl.col(TIMESTAMP_LABEL).dt.year().alias(YEAR_LABEL),
-                                             pl.col(TIMESTAMP_LABEL).dt.month().alias(MONTH_LABEL))
+        self._data = self._data.with_columns(
+            pl.col(TIMESTAMP_LABEL)
+            .dt.convert_time_zone(TIME_ZONE)
+            .cast(pl.Datetime(time_unit=TIME_UNIT, time_zone=TIME_ZONE))
+        )
+        self._data = self._data.with_columns(
+            pl.col(TIMESTAMP_LABEL).dt.year().alias(YEAR_LABEL),
+            pl.col(TIMESTAMP_LABEL).dt.month().alias(MONTH_LABEL),
+        )
 
         # If master sheet or cached master sheet is present, find the matching information and correct missing location
         if master_sheet_path or self._cached_master_sheet:
-            self._data = self._data.with_columns(pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
-                                                 pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL))
+            self._data = self._data.with_columns(
+                pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
+                pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL),
+            )
             for profile_id in (
-                    self._data.select(PROFILE_ID_LABEL)
-                            .unique(keep="first")
-                            .to_series()
-                            .to_list()
+                self._data.select(PROFILE_ID_LABEL)
+                .unique(keep="first")
+                .to_series()
+                .to_list()
             ):
                 profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
 
                 # Find master sheet match
-                master_sheet_match = self._cached_master_sheet.find_match(
-                    profile
-                )
+                master_sheet_match = self._cached_master_sheet.find_match(profile)
                 # Add secchi depth and Unique ID
                 profile = profile.with_columns(
-                    pl.lit(master_sheet_match.unique_id, dtype=pl.String).alias(UNIQUE_ID_LABEL),
-                    pl.lit(master_sheet_match.secchi_depth).cast(pl.Float32).alias(SECCHI_DEPTH_LABEL),
+                    pl.lit(master_sheet_match.unique_id, dtype=pl.String).alias(
+                        UNIQUE_ID_LABEL
+                    ),
+                    pl.lit(master_sheet_match.secchi_depth)
+                    .cast(pl.Float32)
+                    .alias(SECCHI_DEPTH_LABEL),
                 )
                 # Add location data if not present
-                if (LATITUDE_LABEL not in profile.columns
-                        or (profile.select(pl.col(LATITUDE_LABEL).has_nulls()).item()
-                            or profile.select(pl.col(LATITUDE_LABEL).is_nan().any()).item())
-                        or profile.select(pl.col(LATITUDE_LABEL)).is_empty()
-                            or profile.select(pl.col(LATITUDE_LABEL)).limit(1).item() is None):
-                    self._data = self._data.with_columns(pl.lit(None, dtype=pl.Float64).alias(LATITUDE_LABEL),
-                                                         pl.lit(None, dtype=pl.Float64).alias(LONGITUDE_LABEL))
+                if (
+                    LATITUDE_LABEL not in profile.columns
+                    or (
+                        profile.select(pl.col(LATITUDE_LABEL).has_nulls()).item()
+                        or profile.select(pl.col(LATITUDE_LABEL).is_nan().any()).item()
+                    )
+                    or profile.select(pl.col(LATITUDE_LABEL)).is_empty()
+                    or profile.select(pl.col(LATITUDE_LABEL)).limit(1).item() is None
+                ):
+                    self._data = self._data.with_columns(
+                        pl.lit(None, dtype=pl.Float64).alias(LATITUDE_LABEL),
+                        pl.lit(None, dtype=pl.Float64).alias(LONGITUDE_LABEL),
+                    )
                     latitude = master_sheet_match.latitude
                     longitude = master_sheet_match.longitude
-                    if latitude is None or longitude is None or np.isnan(latitude) or np.isnan(longitude):
+                    if (
+                        latitude is None
+                        or longitude is None
+                        or np.isnan(latitude)
+                        or np.isnan(longitude)
+                    ):
                         latitude = None
                         longitude = None
-                    new_fname = self._filename + 'cm'
+                    new_fname = self._filename + "cm"
                     profile = profile.with_columns(
                         pl.lit(latitude).cast(pl.Float64).alias(LATITUDE_LABEL),
                         pl.lit(longitude).cast(pl.Float64).alias(LONGITUDE_LABEL),
-                        pl.lit(new_fname, pl.String).alias('filename')
+                        pl.lit(new_fname, pl.String).alias("filename"),
                     )
-                self._data = self._data.filter(
-                    pl.col(PROFILE_ID_LABEL) != profile_id
-                )
+                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
                 self._data = self._data.vstack(profile)
 
         # Try casting location to float
@@ -285,10 +302,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter((pl.col(PRESSURE_LABEL).diff()) > 0.0)
@@ -298,8 +315,13 @@ class CTD:
         if not self._data.filter(pl.col(PROFILE_ID_LABEL) > 0).is_empty():
             print(self._data.filter(pl.col(PROFILE_ID_LABEL) > 0))
 
-    def filter_columns_by_range(self, filters: zip = None, columns: list[str] = None,
-                                upper_bounds: list[float | int] = None, lower_bounds: list[float | int] = None):
+    def filter_columns_by_range(
+        self,
+        filters: zip = None,
+        columns: list[str] = None,
+        upper_bounds: list[float | int] = None,
+        lower_bounds: list[float | int] = None,
+    ):
         """
         Filters columns of the dataset based on specified upper and lower bounds.
 
@@ -346,19 +368,22 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             if type(columns) is not type(None):
                 for x, column in enumerate(columns):
                     upper_bound = upper_bounds[x]
                     lower_bound = lower_bounds[x]
-                    if type(upper_bound) is not type(None) and type(lower_bound) is not type(None):
-                        profile = profile.filter(pl.col(column) <= upper_bound,
-                                                 pl.col(column) >= lower_bound)
+                    if type(upper_bound) is not type(None) and type(
+                        lower_bound
+                    ) is not type(None):
+                        profile = profile.filter(
+                            pl.col(column) <= upper_bound, pl.col(column) >= lower_bound
+                        )
                     elif type(upper_bound) is not type(None):
                         profile = profile.filter(pl.col(column) <= upper_bound)
                     elif type(lower_bound) is not type(None):
@@ -371,8 +396,9 @@ class CTD:
                     column = filter[0]
                     upper_bound = filter[1]
                     lower_bound = filter[2]
-                    profile = profile.filter(pl.col(column) <= upper_bound,
-                                             pl.col(column) >= lower_bound)
+                    profile = profile.filter(
+                        pl.col(column) <= upper_bound, pl.col(column) >= lower_bound
+                    )
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.filter_columns_by_range.__name__)
@@ -417,10 +443,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             cols = list(
@@ -478,10 +504,10 @@ class CTD:
 
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             profile = profile.filter(pl.col(SALINITY_LABEL) > 10)
@@ -540,10 +566,10 @@ class CTD:
         _AI.clean_salinity_ai : Method used to clean salinity with 'clean_salinity_ai' option.
         """
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             if method == "clean_salinity_ai":
@@ -601,10 +627,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(SALINITY_ABS_LABEL)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             s = profile.select(pl.col(SALINITY_LABEL)).to_numpy()
@@ -671,10 +697,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(DENSITY_LABEL)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
@@ -741,10 +767,10 @@ class CTD:
         if SALINITY_ABS_LABEL not in self._data.columns:
             self.add_absolute_salinity()
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
@@ -815,10 +841,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_LABEL),
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -893,10 +919,10 @@ class CTD:
         """
         # Filtering data within the specified pressure range
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             surface_data = profile.filter(
@@ -975,10 +1001,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(self._mld_col_labels[-1])
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             unpack = None
@@ -1062,10 +1088,10 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias(P_MID_LABEL),
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
-                        .unique(keep="first")
-                        .to_series()
-                        .to_list()
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()

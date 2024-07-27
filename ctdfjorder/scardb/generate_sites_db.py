@@ -4,6 +4,7 @@ from ctdfjorder.ctddataclasses.ctddataclasses import SitesDatabase, ResearchSite
 import polars as pl
 from ctdfjorder.exceptions.ctd_exceptions import raise_warning_site_location
 from datasketch import MinHash, MinHashLSH
+
 # Function to create MinHash object from a string
 
 
@@ -27,9 +28,11 @@ def generate_sites_database(site_names: list[str]) -> SitesDatabase:
                     cost = 0
                 else:
                     cost = 1
-                dp[i][j] = min(dp[i - 1][j] + 1,      # Deletion
-                               dp[i][j - 1] + 1,      # Insertion
-                               dp[i - 1][j - 1] + cost)  # Substitution
+                dp[i][j] = min(
+                    dp[i - 1][j] + 1,  # Deletion
+                    dp[i][j - 1] + 1,  # Insertion
+                    dp[i - 1][j - 1] + cost,
+                )  # Substitution
 
         return dp[m][n]
 
@@ -47,48 +50,75 @@ def generate_sites_database(site_names: list[str]) -> SitesDatabase:
     def get_parquet_file_path(filename: str):
         # Get the absolute path of the Parquet file
         base_dir = os.path.dirname(__file__)
-        data_dir = os.path.join(base_dir, 'sitenamesdb')
+        data_dir = os.path.join(base_dir, "sitenamesdb")
         file_path = os.path.join(data_dir, filename)
         return file_path
 
-    site_names_SCAR_USA = pl.read_parquet(get_parquet_file_path('USA.parquet'))
-    site_names_SCAR_UK = pl.read_parquet(get_parquet_file_path('UK.parquet'))
-    site_names_SCAR_Argentina = pl.read_parquet(get_parquet_file_path('Argentina.parquet'))
-    site_names_SCAR_Chile = pl.read_parquet(get_parquet_file_path('Chile.parquet'))
+    site_names_SCAR_USA = pl.read_parquet(get_parquet_file_path("USA.parquet"))
+    site_names_SCAR_UK = pl.read_parquet(get_parquet_file_path("UK.parquet"))
+    site_names_SCAR_Argentina = pl.read_parquet(
+        get_parquet_file_path("Argentina.parquet")
+    )
+    site_names_SCAR_Chile = pl.read_parquet(get_parquet_file_path("Chile.parquet"))
 
     priority_dfs = [
         site_names_SCAR_USA,
         site_names_SCAR_UK,
         site_names_SCAR_Argentina,
-        site_names_SCAR_Chile
+        site_names_SCAR_Chile,
     ]
     sites_found_list: list[ResearchSite] = []
     for site_name in site_names:
         found = False
         for df in priority_dfs:
-            matching_rows = df.filter(pl.col('place_name_mapping') == site_name)
+            matching_rows = df.filter(pl.col("place_name_mapping") == site_name)
             if not matching_rows.is_empty():
-                site_name = matching_rows.select(pl.col('place_name_mapping').first()).item()
-                site_lat = matching_rows.select(pl.col('latitude').first()).item()
-                site_long = matching_rows.select(pl.col('longitude').first()).item()
-                site_narrative = matching_rows.select(pl.col('narrative').first()).item()
-                new_site = ResearchSite(name=site_name, short_name=None, latitude=site_lat, longitude=site_long,
-                                        narrative=site_narrative)
+                site_name = matching_rows.select(
+                    pl.col("place_name_mapping").first()
+                ).item()
+                site_lat = matching_rows.select(pl.col("latitude").first()).item()
+                site_long = matching_rows.select(pl.col("longitude").first()).item()
+                site_narrative = matching_rows.select(
+                    pl.col("narrative").first()
+                ).item()
+                new_site = ResearchSite(
+                    name=site_name,
+                    short_name=None,
+                    latitude=site_lat,
+                    longitude=site_long,
+                    narrative=site_narrative,
+                )
                 sites_found_list.append(new_site)
                 found = True
                 break
         if not found:
-            name = pl.col('place_name_mapping')
-            sim = 'similarity'
-            sim_col = pl.col('similarity')
-            SCAR_with_similarity_USA = site_names_SCAR_USA.select(name.map_elements(lambda x: levenshtein_similarity(x, site_name)))
-            SCAR_with_similarity_UK = site_names_SCAR_UK.select(name.map_elements(lambda x: levenshtein_similarity(x, site_name)))
-            SCAR_with_similarity_Argentina = site_names_SCAR_Argentina.select(name.map_elements(lambda x: levenshtein_similarity(x, site_name)))
-            SCAR_with_similarity_Chile = site_names_SCAR_Chile.select(name.map_elements(lambda x: levenshtein_similarity(x, site_name)))
-            sim_USA = site_names_SCAR_USA.with_columns(SCAR_with_similarity_USA.to_series().alias(sim))
-            sim_UK = site_names_SCAR_UK.with_columns(SCAR_with_similarity_UK.to_series().alias(sim))
-            sim_Arg = site_names_SCAR_Argentina.with_columns(SCAR_with_similarity_Argentina.to_series().alias(sim))
-            sim_Chile = site_names_SCAR_Chile.with_columns(SCAR_with_similarity_Chile.to_series().alias(sim))
+            name = pl.col("place_name_mapping")
+            sim = "similarity"
+            sim_col = pl.col("similarity")
+            SCAR_with_similarity_USA = site_names_SCAR_USA.select(
+                name.map_elements(lambda x: levenshtein_similarity(x, site_name))
+            )
+            SCAR_with_similarity_UK = site_names_SCAR_UK.select(
+                name.map_elements(lambda x: levenshtein_similarity(x, site_name))
+            )
+            SCAR_with_similarity_Argentina = site_names_SCAR_Argentina.select(
+                name.map_elements(lambda x: levenshtein_similarity(x, site_name))
+            )
+            SCAR_with_similarity_Chile = site_names_SCAR_Chile.select(
+                name.map_elements(lambda x: levenshtein_similarity(x, site_name))
+            )
+            sim_USA = site_names_SCAR_USA.with_columns(
+                SCAR_with_similarity_USA.to_series().alias(sim)
+            )
+            sim_UK = site_names_SCAR_UK.with_columns(
+                SCAR_with_similarity_UK.to_series().alias(sim)
+            )
+            sim_Arg = site_names_SCAR_Argentina.with_columns(
+                SCAR_with_similarity_Argentina.to_series().alias(sim)
+            )
+            sim_Chile = site_names_SCAR_Chile.with_columns(
+                SCAR_with_similarity_Chile.to_series().alias(sim)
+            )
             closest_USA = sim_USA.filter(sim_col == sim_col.max()).limit(2)
             closest_UK = sim_UK.filter(sim_col == sim_col.max()).limit(2)
             closest_Arg = sim_Arg.filter(sim_col == sim_col.max()).limit(2)
@@ -109,5 +139,7 @@ def generate_sites_database(site_names: list[str]) -> SitesDatabase:
                 sn_UK = None
             if 0.0 in ss_Chile:
                 sn_UK = None
-            raise_warning_site_location(message=f"Site name '{site_name}' may be one of US: {sn_USA} UK: {sn_UK} AR: {sn_Arg} CH: {sn_Chile} ")
+            raise_warning_site_location(
+                message=f"Site name '{site_name}' may be one of US: {sn_USA} UK: {sn_UK} AR: {sn_Arg} CH: {sn_Chile} "
+            )
     return SitesDatabase(sites_found_list)

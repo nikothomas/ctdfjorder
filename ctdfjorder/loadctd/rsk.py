@@ -21,9 +21,9 @@ rskLabels_to_labelInternal: dict[str, str] = {
 
 
 def process_rsk(
-        rsk_profile: pl.DataFrame,
-        geo: [Geo, Any, Any] = None,
-        filename: str = None,
+    rsk_profile: pl.DataFrame,
+    geo: [Geo, Any, Any] = None,
+    filename: str = None,
 ) -> pl.DataFrame | None:
     rsk_profile = rsk_profile.with_columns(
         pl.col(TIMESTAMP_LABEL)
@@ -43,14 +43,13 @@ def process_rsk(
         profile_geodata = next(geo)
         return data.with_columns(
             pl.lit(profile_geodata.latitude).alias(LATITUDE_LABEL),
-            pl.lit(profile_geodata.longitude).alias(LONGITUDE_LABEL)
+            pl.lit(profile_geodata.longitude).alias(LONGITUDE_LABEL),
         )
 
     # No geodata found in rsk file
     except StopIteration:
         return data.with_columns(
-            pl.lit(None).alias(LATITUDE_LABEL),
-            pl.lit(None).alias(LONGITUDE_LABEL)
+            pl.lit(None).alias(LATITUDE_LABEL), pl.lit(None).alias(LONGITUDE_LABEL)
         )
 
 
@@ -72,14 +71,14 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
             pl.DataFrame(rsk_numpy_array)
             .rename(rskLabels_to_labelInternal)
             .drop_nulls()
-            .with_columns(pl.lit(filename).alias(FILENAME_LABEL),
-                          pl.lit(num_profiles).alias(PROFILE_ID_LABEL))
+            .with_columns(
+                pl.lit(filename).alias(FILENAME_LABEL),
+                pl.lit(num_profiles).alias(PROFILE_ID_LABEL),
+            )
         )
         geodata = rsk.geodata(endpoints.start_time, endpoints.end_time)
         processed_profile = process_rsk(
-            rsk_profile=profile_to_process,
-            geo=geodata,
-            filename=filename
+            rsk_profile=profile_to_process, geo=geodata, filename=filename
         )
         if data is None:
             data = processed_profile
@@ -97,8 +96,10 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
         profile = (
             pl.DataFrame(rsk_numpy_array)
             .rename(rskLabels_to_labelInternal)
-            .with_columns(pl.lit(filename).alias(FILENAME_LABEL),
-                          pl.lit(num_profiles).alias(PROFILE_ID_LABEL))
+            .with_columns(
+                pl.lit(filename).alias(FILENAME_LABEL),
+                pl.lit(num_profiles).alias(PROFILE_ID_LABEL),
+            )
         )
         geodata = rsk.geodata()
         processed_profile = process_rsk(

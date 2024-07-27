@@ -14,6 +14,7 @@ class ResearchSite:
 class SitesDatabase:
     sites: list[ResearchSite]
 
+
 @dataclass
 class Metadata:
     latitude: float | None

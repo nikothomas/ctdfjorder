@@ -21,103 +21,147 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     long_median = df.select(pl.col(EXPORT_LONGITUDE_LABEL).median().first()).item()
     pd_df = df.to_pandas()
 
-    season_dict = {1: 'Autumn', 2: 'Winter', 3: 'Spring', 4: 'Summer'}
+    season_dict = {1: "Autumn", 2: "Winter", 3: "Spring", 4: "Summer"}
 
     server = Flask(__name__)
     app = dash.Dash(__name__, server=server)
     app.logger.setLevel(logging.ERROR)
     server.logger.setLevel(logging.ERROR)
 
-    app.layout = html.Div([
-        html.Div([
-            dcc.Dropdown(
-                id='year-dropdown',
-                options=[{'label': str(year), 'value': year} for year in pd_df[EXPORT_YEAR_LABEL].unique()],
-                placeholder="Select a year",
-                multi=True
-            ),
-            dcc.Dropdown(
-                id='season-dropdown',
-                options=[
-                    {'label': 'Winter', 'value': 1},
-                    {'label': 'Spring', 'value': 2},
-                    {'label': 'Summer', 'value': 3},
-                    {'label': 'Autumn', 'value': 4}
+    app.layout = html.Div(
+        [
+            html.Div(
+                [
+                    dcc.Dropdown(
+                        id="year-dropdown",
+                        options=[
+                            {"label": str(year), "value": year}
+                            for year in pd_df[EXPORT_YEAR_LABEL].unique()
+                        ],
+                        placeholder="Select a year",
+                        multi=True,
+                    ),
+                    dcc.Dropdown(
+                        id="season-dropdown",
+                        options=[
+                            {"label": "Winter", "value": 1},
+                            {"label": "Spring", "value": 2},
+                            {"label": "Summer", "value": 3},
+                            {"label": "Autumn", "value": 4},
+                        ],
+                        placeholder="Select a season",
+                        multi=True,
+                    ),
+                    dcc.Input(
+                        id="unique-id-input",
+                        type="text",
+                        placeholder="Enter Unique ID or regex",
+                        style={"width": "100%"},
+                    ),
+                    dcc.Input(
+                        id="lat-range",
+                        type="text",
+                        placeholder="Enter latitude range (e.g. -60, -55)",
+                        style={"width": "100%"},
+                    ),
+                    dcc.Input(
+                        id="lon-range",
+                        type="text",
+                        placeholder="Enter longitude range (e.g. -70, -65)",
+                        style={"width": "100%"},
+                    ),
+                    dcc.DatePickerRange(
+                        id="date-picker-range",
+                        start_date=pd_df["timestamp"].min(),
+                        end_date=pd_df["timestamp"].max(),
+                        display_format="YYYY-MM-DD",
+                        style={"width": "100%"},
+                    ),
+                    html.Div(id="total-profiles", style={"padding": "10px 0"}),
+                    html.Button("Download CSV", id="download-button"),
+                    dcc.Download(id="download-dataframe-csv"),
                 ],
-                placeholder="Select a season",
-                multi=True
+                style={
+                    "width": "20%",
+                    "display": "inline-block",
+                    "verticalAlign": "top",
+                },
             ),
-            dcc.Input(
-                id='unique-id-input',
-                type='text',
-                placeholder='Enter Unique ID or regex',
-                style={'width': '100%'}
+            html.Div(
+                [
+                    dcc.Graph(id="map", style={"height": "100vh", "width": "100vw"}),
+                ],
+                style={
+                    "width": "80%",
+                    "display": "inline-block",
+                    "verticalAlign": "top",
+                },
             ),
-            dcc.Input(
-                id='lat-range',
-                type='text',
-                placeholder='Enter latitude range (e.g. -60, -55)',
-                style={'width': '100%'}
-            ),
-            dcc.Input(
-                id='lon-range',
-                type='text',
-                placeholder='Enter longitude range (e.g. -70, -65)',
-                style={'width': '100%'}
-            ),
-            dcc.DatePickerRange(
-                id='date-picker-range',
-                start_date=pd_df['timestamp'].min(),
-                end_date=pd_df['timestamp'].max(),
-                display_format='YYYY-MM-DD',
-                style={'width': '100%'}
-            ),
-            html.Div(id='total-profiles', style={'padding': '10px 0'}),
-            html.Button('Download CSV', id='download-button'),
-            dcc.Download(id='download-dataframe-csv')
-        ], style={'width': '20%', 'display': 'inline-block', 'verticalAlign': 'top'}),
-        html.Div([
-            dcc.Graph(id='map', style={'height': '100vh', 'width': '100vw'}),
-        ], style={'width': '80%', 'display': 'inline-block', 'verticalAlign': 'top'})
-    ], style={'height': '100vh', 'width': '100vw', 'margin': 0, 'padding': 0})
+        ],
+        style={"height": "100vh", "width": "100vw", "margin": 0, "padding": 0},
+    )
 
     @app.callback(
-        [Output('map', 'figure'),
-         Output('total-profiles', 'children')],
-        [Input('year-dropdown', 'value'),
-         Input('season-dropdown', 'value'),
-         Input('unique-id-input', 'value'),
-         Input('lat-range', 'value'),
-         Input('lon-range', 'value'),
-         Input('date-picker-range', 'start_date'),
-         Input('date-picker-range', 'end_date')]
+        [Output("map", "figure"), Output("total-profiles", "children")],
+        [
+            Input("year-dropdown", "value"),
+            Input("season-dropdown", "value"),
+            Input("unique-id-input", "value"),
+            Input("lat-range", "value"),
+            Input("lon-range", "value"),
+            Input("date-picker-range", "start_date"),
+            Input("date-picker-range", "end_date"),
+        ],
     )
-    def update_map(selected_years, selected_seasons, unique_id_filter, lat_range, lon_range, start_date, end_date):
+    def update_map(
+        selected_years,
+        selected_seasons,
+        unique_id_filter,
+        lat_range,
+        lon_range,
+        start_date,
+        end_date,
+    ):
         filtered_df = pd_df.copy()
         if selected_years:
-            filtered_df = filtered_df[filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)]
+            filtered_df = filtered_df[
+                filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)
+            ]
         if selected_seasons:
-            filtered_df = filtered_df[filtered_df['season'].isin(selected_seasons)]
+            filtered_df = filtered_df[filtered_df["season"].isin(selected_seasons)]
         if unique_id_filter:
             unique_id_list = unique_id_filter.split()
             try:
-                filtered_df = filtered_df[filtered_df['Unique_ID'].str.contains('|'.join(unique_id_list), regex=True)]
+                filtered_df = filtered_df[
+                    filtered_df["Unique_ID"].str.contains(
+                        "|".join(unique_id_list), regex=True
+                    )
+                ]
             except re.error:
                 pass
         if lat_range:
             try:
-                lat_min, lat_max = map(float, lat_range.split(','))
-                filtered_df = filtered_df[(filtered_df['latitude'] >= lat_min) & (filtered_df['latitude'] <= lat_max)]
+                lat_min, lat_max = map(float, lat_range.split(","))
+                filtered_df = filtered_df[
+                    (filtered_df["latitude"] >= lat_min)
+                    & (filtered_df["latitude"] <= lat_max)
+                ]
             except ValueError:
                 pass
         if lon_range:
             try:
-                lon_min, lon_max = map(float, lon_range.split(','))
-                filtered_df = filtered_df[(filtered_df['longitude'] >= lon_min) & (filtered_df['longitude'] <= lon_max)]
+                lon_min, lon_max = map(float, lon_range.split(","))
+                filtered_df = filtered_df[
+                    (filtered_df["longitude"] >= lon_min)
+                    & (filtered_df["longitude"] <= lon_max)
+                ]
             except ValueError:
                 pass
         if start_date and end_date:
-            filtered_df = filtered_df[(filtered_df['timestamp'] >= start_date) & (filtered_df['timestamp'] <= end_date)]
+            filtered_df = filtered_df[
+                (filtered_df["timestamp"] >= start_date)
+                & (filtered_df["timestamp"] <= end_date)
+            ]
 
         total_profiles = len(filtered_df)
         try:
@@ -141,49 +185,77 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
             center={"lat": lat_median, "lon": long_median},
         )
 
-        fig.update_layout(mapbox_accesstoken=mapbox_access_token, margin=dict(l=0, r=0, t=0, b=0))
-        return fig, f'Total Profiles: {total_profiles}'
+        fig.update_layout(
+            mapbox_accesstoken=mapbox_access_token, margin=dict(l=0, r=0, t=0, b=0)
+        )
+        return fig, f"Total Profiles: {total_profiles}"
 
     @app.callback(
-        Output('download-dataframe-csv', 'data'),
-        [Input('download-button', 'n_clicks')],
-        [State('year-dropdown', 'value'),
-         State('season-dropdown', 'value'),
-         State('unique-id-input', 'value'),
-         State('lat-range', 'value'),
-         State('lon-range', 'value'),
-         State('date-picker-range', 'start_date'),
-         State('date-picker-range', 'end_date')]
+        Output("download-dataframe-csv", "data"),
+        [Input("download-button", "n_clicks")],
+        [
+            State("year-dropdown", "value"),
+            State("season-dropdown", "value"),
+            State("unique-id-input", "value"),
+            State("lat-range", "value"),
+            State("lon-range", "value"),
+            State("date-picker-range", "start_date"),
+            State("date-picker-range", "end_date"),
+        ],
     )
-    def download_csv(n_clicks, selected_years, selected_seasons, unique_id_filter, lat_range, lon_range, start_date, end_date):
+    def download_csv(
+        n_clicks,
+        selected_years,
+        selected_seasons,
+        unique_id_filter,
+        lat_range,
+        lon_range,
+        start_date,
+        end_date,
+    ):
         if n_clicks is None:
             raise dash.PreventUpdate
 
         filtered_df = pd_df.copy()
         if selected_years:
-            filtered_df = filtered_df[filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)]
+            filtered_df = filtered_df[
+                filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)
+            ]
         if selected_seasons:
-            filtered_df = filtered_df[filtered_df['season'].isin(selected_seasons)]
+            filtered_df = filtered_df[filtered_df["season"].isin(selected_seasons)]
         if unique_id_filter:
             unique_id_list = unique_id_filter.split()
             try:
-                filtered_df = filtered_df[filtered_df['Unique_ID'].str.contains('|'.join(unique_id_list), regex=True)]
+                filtered_df = filtered_df[
+                    filtered_df["Unique_ID"].str.contains(
+                        "|".join(unique_id_list), regex=True
+                    )
+                ]
             except re.error:
                 pass
         if lat_range:
             try:
-                lat_min, lat_max = map(float, lat_range.split(','))
-                filtered_df = filtered_df[(filtered_df['latitude'] >= lat_min) & (filtered_df['latitude'] <= lat_max)]
+                lat_min, lat_max = map(float, lat_range.split(","))
+                filtered_df = filtered_df[
+                    (filtered_df["latitude"] >= lat_min)
+                    & (filtered_df["latitude"] <= lat_max)
+                ]
             except ValueError:
                 pass
         if lon_range:
             try:
-                lon_min, lon_max = map(float, lon_range.split(','))
-                filtered_df = filtered_df[(filtered_df['longitude'] >= lon_min) & (filtered_df['longitude'] <= lon_max)]
+                lon_min, lon_max = map(float, lon_range.split(","))
+                filtered_df = filtered_df[
+                    (filtered_df["longitude"] >= lon_min)
+                    & (filtered_df["longitude"] <= lon_max)
+                ]
             except ValueError:
                 pass
         if start_date and end_date:
-            filtered_df = filtered_df[(filtered_df['timestamp'] >= start_date) & (filtered_df['timestamp'] <= end_date)]
+            filtered_df = filtered_df[
+                (filtered_df["timestamp"] >= start_date)
+                & (filtered_df["timestamp"] <= end_date)
+            ]
 
         return dcc.send_data_frame(filtered_df.to_csv, "selected_profiles.csv")
 
@@ -198,7 +270,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
 
 
 def plot_depth_vs(
-        df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
+    df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
 ):
     """
     Generates a plot of depth vs. specified measurement (salinity, density, temperature).
@@ -224,7 +296,7 @@ def plot_depth_vs(
     plt.rcParams.update({"font.size": 16})
     os.makedirs(plot_folder, exist_ok=True)
     for profile_id in (
-            df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
+        df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
     ):
         profile = df.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
@@ -304,12 +376,14 @@ def plot_secchi_chla(df: pl.DataFrame, plot_folder: str):
         pl.col("secchi_depth").is_not_nan(),
         pl.col("chlorophyll").is_not_nan(),
         pl.col("secchi_depth") > 0,
-        pl.col("chlorophyll") > 0
+        pl.col("chlorophyll") > 0,
     )
     data_secchi_chla = df.group_by("profile_id", "filename", maintain_order=True).agg(
         pl.first("secchi_depth"), pl.mean("chlorophyll")
     )
-    secchi_depth = data_secchi_chla.select(pl.col("secchi_depth")).to_series().to_numpy()
+    secchi_depth = (
+        data_secchi_chla.select(pl.col("secchi_depth")).to_series().to_numpy()
+    )
     chla = data_secchi_chla.select(pl.col("chlorophyll")).to_series().to_numpy()
 
     # Linear regression
@@ -318,7 +392,12 @@ def plot_secchi_chla(df: pl.DataFrame, plot_folder: str):
     # Plotting
     fig = plt.figure(figsize=(10, 6))
     plt.scatter(secchi_depth, chla, color="b", label="Data Points")
-    plt.plot(secchi_depth, intercept + slope * secchi_depth, 'r', label=f'Linear fit: y = {slope:.2f}x + {intercept:.2f}')
+    plt.plot(
+        secchi_depth,
+        intercept + slope * secchi_depth,
+        "r",
+        label=f"Linear fit: y = {slope:.2f}x + {intercept:.2f}",
+    )
     plt.title("Secchi Depth vs Chlorophyll-a")
     plt.xlabel("Secchi Depth (m)")
     plt.ylabel("Chlorophyll-a (µg/l)")
@@ -326,11 +405,18 @@ def plot_secchi_chla(df: pl.DataFrame, plot_folder: str):
     plt.legend()
 
     # Add regression statistics
-    plt.text(0.05, 0.95, f'$R^2$ = {r_value**2:.2f}\np-value = {p_value:.2e}',
-             transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+    plt.text(
+        0.05,
+        0.95,
+        f"$R^2$ = {r_value**2:.2f}\np-value = {p_value:.2e}",
+        transform=plt.gca().transAxes,
+        fontsize=12,
+        verticalalignment="top",
+    )
 
     fig.savefig(os.path.join(plot_folder, "secchi_depth_vs_chla.png"))
     plt.close(fig)
+
 
 def plot_secchi_log_chla_log(df: pl.DataFrame, plot_folder: str):
     os.makedirs(plot_folder, exist_ok=True)
@@ -340,7 +426,7 @@ def plot_secchi_log_chla_log(df: pl.DataFrame, plot_folder: str):
         pl.col("secchi_depth").is_not_nan(),
         pl.col("chlorophyll").is_not_nan(),
         pl.col("secchi_depth") > 0,
-        pl.col("chlorophyll") > 0
+        pl.col("chlorophyll") > 0,
     )
     data_secchi_chla = df.group_by("profile_id", "filename", maintain_order=True).agg(
         pl.first("secchi_depth"), pl.mean("chlorophyll")
@@ -356,7 +442,12 @@ def plot_secchi_log_chla_log(df: pl.DataFrame, plot_folder: str):
     # Plotting
     fig = plt.figure(figsize=(10, 6))
     plt.scatter(log_secchi_depth, log_chla, color="b", label="Data Points")
-    plt.plot(log_secchi_depth, intercept + slope * log_secchi_depth, 'r', label=f'Linear fit: y = {slope:.2f}x + {intercept:.2f}')
+    plt.plot(
+        log_secchi_depth,
+        intercept + slope * log_secchi_depth,
+        "r",
+        label=f"Linear fit: y = {slope:.2f}x + {intercept:.2f}",
+    )
     plt.title("Log10 of Secchi Depth vs Log10 of Chlorophyll-a")
     plt.xlabel("Log10 of Secchi Depth (m)")
     plt.ylabel("Log10 of Chlorophyll-a (µg/l)")
@@ -364,11 +455,18 @@ def plot_secchi_log_chla_log(df: pl.DataFrame, plot_folder: str):
     plt.legend()
 
     # Add regression statistics
-    plt.text(0.05, 0.95, f'$R^2$ = {r_value**2:.2f}\np-value = {p_value:.2e}',
-             transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+    plt.text(
+        0.05,
+        0.95,
+        f"$R^2$ = {r_value**2:.2f}\np-value = {p_value:.2e}",
+        transform=plt.gca().transAxes,
+        fontsize=12,
+        verticalalignment="top",
+    )
 
     fig.savefig(os.path.join(plot_folder, "log_secchi_depth_vs_log_chla.png"))
     plt.close(fig)
+
 
 def plot_secchi_chla_log(df: pl.DataFrame, plot_folder: str):
     os.makedirs(plot_folder, exist_ok=True)
@@ -378,12 +476,14 @@ def plot_secchi_chla_log(df: pl.DataFrame, plot_folder: str):
         pl.col("secchi_depth").is_not_nan(),
         pl.col("chlorophyll").is_not_nan(),
         pl.col("secchi_depth") > 0,
-        pl.col("chlorophyll") > 0
+        pl.col("chlorophyll") > 0,
     )
     data_secchi_chla = df.group_by("profile_id", "filename", maintain_order=True).agg(
         pl.first("secchi_depth"), pl.mean("chlorophyll")
     )
-    secchi_depth = data_secchi_chla.select(pl.col("secchi_depth")).to_series().to_numpy()
+    secchi_depth = (
+        data_secchi_chla.select(pl.col("secchi_depth")).to_series().to_numpy()
+    )
     chlas = data_secchi_chla.select(pl.col("chlorophyll")).to_series()
     log_chla = np.log10(np.array(chlas.to_numpy()))
 
@@ -393,7 +493,12 @@ def plot_secchi_chla_log(df: pl.DataFrame, plot_folder: str):
     # Plotting
     fig = plt.figure(figsize=(10, 6))
     plt.scatter(secchi_depth, log_chla, color="b", label="Data Points")
-    plt.plot(secchi_depth, intercept + slope * secchi_depth, 'r', label=f'Linear fit: y = {slope:.2f}x + {intercept:.2f}')
+    plt.plot(
+        secchi_depth,
+        intercept + slope * secchi_depth,
+        "r",
+        label=f"Linear fit: y = {slope:.2f}x + {intercept:.2f}",
+    )
     plt.title("Secchi Depth vs Log10 of Chlorophyll-a")
     plt.xlabel("Secchi Depth (m)")
     plt.ylabel("Log10 of Chlorophyll-a (µg/l)")
@@ -401,8 +506,14 @@ def plot_secchi_chla_log(df: pl.DataFrame, plot_folder: str):
     plt.legend()
 
     # Add regression statistics
-    plt.text(0.05, 0.95, f'$R^2$ = {r_value**2:.2f}\np-value = {p_value:.2e}',
-             transform=plt.gca().transAxes, fontsize=12, verticalalignment='top')
+    plt.text(
+        0.05,
+        0.95,
+        f"$R^2$ = {r_value**2:.2f}\np-value = {p_value:.2e}",
+        transform=plt.gca().transAxes,
+        fontsize=12,
+        verticalalignment="top",
+    )
 
     fig.savefig(os.path.join(plot_folder, "secchi_depth_vs_log_chla.png"))
     plt.close(fig)

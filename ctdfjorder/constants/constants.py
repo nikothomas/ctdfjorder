@@ -56,7 +56,7 @@ LIST_LABELS: list[str] = [
     LATITUDE_LABEL,
     LONGITUDE_LABEL,
     UNIQUE_ID_LABEL,
-    PROFILE_ID_LABEL
+    PROFILE_ID_LABEL,
 ]
 
 # Export labels

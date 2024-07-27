@@ -181,9 +181,9 @@ class AI:
                 for col, agg_func in column_agg_dict.items()
                 if col in data.columns
             }
-            data_binned = filtered_data.group_by("pressure_bin", maintain_order=True).agg(
-                list(available_columns.values())
-            )
+            data_binned = filtered_data.group_by(
+                "pressure_bin", maintain_order=True
+            ).agg(list(available_columns.values()))
             data_binned = data_binned.rename({"pressure_bin": PRESSURE_LABEL})
             if data_binned.limit(4).height < 2:
                 raise CTDError(
@@ -222,7 +222,9 @@ class AI:
                     data.select(SALINITY_LABEL).to_numpy(),
                     data.select(DEPTH_LABEL).to_numpy(),
                     filename + str(profile_id),
-                    plot_path=path.join(getcwd(), "ctdplots", f"{filename}_original.png"),
+                    plot_path=path.join(
+                        getcwd(), "ctdplots", f"{filename}_original.png"
+                    ),
                 )
                 plot_predicted_data(
                     salinity=predicted_seq,
@@ -230,7 +232,9 @@ class AI:
                     filename=filename + str(profile_id),
                     xlim=xlim,
                     ylim=ylim,
-                    plot_path=path.join(getcwd(), "ctdplots", f"{filename}_predicted.png"),
+                    plot_path=path.join(
+                        getcwd(), "ctdplots", f"{filename}_predicted.png"
+                    ),
                 )
             data_binned = data_binned.with_columns(
                 pl.Series(predicted_seq, dtype=pl.Float64).alias(SALINITY_LABEL)

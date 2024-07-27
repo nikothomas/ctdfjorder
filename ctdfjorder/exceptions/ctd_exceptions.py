@@ -1,6 +1,8 @@
 import logging
 import warnings
-logger = logging.getLogger('ctdfjorder')
+
+logger = logging.getLogger("ctdfjorder")
+
 
 class CTDError(Exception):
     """
@@ -76,6 +78,7 @@ def raise_warning_improbable_match(message, filename=None):
     """
     warnings.warn(message=f"{filename} - {message}", category=Mastersheet)
     logger.warning(f"{filename} - {message}")
+
 
 def raise_warning_site_location(message, filename=None):
     """

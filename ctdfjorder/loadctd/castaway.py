@@ -62,7 +62,8 @@ def load_file_castaway(castaway_file_path):
     if LATITUDE_LABEL not in profile.collect_schema().names():
         lat, long = extract_lat_long_castaway(castaway_file_path)
         profile = profile.with_columns(
-            pl.lit(lat).cast(pl.Float64).alias(LATITUDE_LABEL), pl.lit(long).cast(pl.Float64).alias(LONGITUDE_LABEL)
+            pl.lit(lat).cast(pl.Float64).alias(LATITUDE_LABEL),
+            pl.lit(long).cast(pl.Float64).alias(LONGITUDE_LABEL),
         )
     data = profile
     return data
