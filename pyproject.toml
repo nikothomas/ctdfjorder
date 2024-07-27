@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ctdfjorder"
-version = "0.3.0"
+version = "0.4.0"
 description = "A package for processing and analyzing CTD data."
 readme = "README.md"
 authors = ["Nikolas Yanek-Chrones <research@icarai.io>"]
@@ -41,11 +41,14 @@ dash = "^2.17.1"
 flask = "^3.0.3"
 pytest = "^8.3.1"
 rich-argparse-plus = "^0.3.1.4"
+scipy = "^1.14.0"
+datasketch = "^1.6.5"
+scikit-learn = "^1.5.1"
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"
 issues = "https://github.com/nikothomas/ctdfjorder/issues"
 
 [tool.poetry.scripts]
-ctdcli = "ctdfjorder.cli:main"
+ctdcli = "ctdfjorder.cli.cli:main"
 

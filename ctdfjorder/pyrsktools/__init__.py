@@ -11,7 +11,7 @@ import itertools
 import re
 import sqlite3
 
-import ctdfjorder.pyrsktools.channeltypes as channeltypes
+import ctdfjorder.pyrsktools.channel_types as channel_types
 
 INSTRUMENT_TIME_MIN = datetime(2000, 1, 1, tzinfo=timezone.utc)
 INSTRUMENT_TIME_MAX = datetime(2100, 1, 1, tzinfo=timezone.utc)
@@ -109,7 +109,7 @@ class RSK(object):
             # RSKs don't store channel labels (and L2 channels don't have
             # labels naturally), so we'll generate them the same way Ruskin
             # otherwise would.
-            label_prefix = channeltypes.label_prefixes.get(
+            label_prefix = channel_types.label_prefixes.get(
                 key, name.lower().replace(" ", "")
             )
             label_counter = used_labels.get(label_prefix, 0)

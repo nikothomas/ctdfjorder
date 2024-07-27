@@ -5,7 +5,7 @@ CTD Class
 
 AI
 ===
-.. automodule:: ctdfjorder._AI
+.. automodule:: ctdfjorder.ai
     :undoc-members:
     :members:
     :exclude-members: MinMaxScaler
