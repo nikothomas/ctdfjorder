@@ -90,7 +90,7 @@ class CTD:
     ):
         # Define instance vars, load master sheet if path given and master sheet is not cached
         self._filename = path.basename(ctd_file_path)
-        if type(self._cached_master_sheet) is type(None):
+        if type(self._cached_master_sheet) is type(None) and master_sheet_path:
             self._cached_master_sheet = MasterSheet(master_sheet_path)
         else:
             self._cached_master_sheet = cached_master_sheet
@@ -694,7 +694,7 @@ class CTD:
         if SALINITY_ABS_LABEL not in self._data.columns:
             self.add_absolute_salinity()
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(DENSITY_LABEL)
+            pl.lit(None).cast(pl.Float64).alias(DENSITY_LABEL)
         )
         for profile_id in (
             self._data.select(PROFILE_ID_LABEL)
@@ -707,10 +707,7 @@ class CTD:
             t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy()
             p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy()
             density = pl.Series(
-                np.array(gsw.density.rho_t_exact(sa, t, p)).flatten(),
-                dtype=pl.Float64,
-                strict=False,
-            ).to_frame(DENSITY_LABEL)
+                np.array(gsw.density.rho_t_exact(sa, t, p)).flatten(), dtype=pl.Float64, strict=True).to_frame(DENSITY_LABEL)
             profile = profile.with_columns(density)
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
@@ -918,6 +915,7 @@ class CTD:
 
         """
         # Filtering data within the specified pressure range
+        self._data = self._data.with_columns(pl.lit(None).cast(pl.Float64).alias(SURFACE_DENSITY_LABEL))
         for profile_id in (
             self._data.select(PROFILE_ID_LABEL)
             .unique(keep="first")
