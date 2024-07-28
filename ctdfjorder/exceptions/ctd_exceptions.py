@@ -20,6 +20,20 @@ class CTDError(Exception):
         super().__init__(filename + " - " + message)
 
 
+class Critical(Exception):
+    """
+    Exception raised for CTDFjorder critical errors.
+
+    Parameters
+    ----------
+    message : str
+        Explanation of the error.
+    """
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class NativeLocation(Warning):
     def __init__(self, message):
         self.message = message

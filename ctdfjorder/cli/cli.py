@@ -10,16 +10,18 @@ from warnings import catch_warnings
 
 import polars as pl
 import psutil
+from polars.exceptions import ChronoFormatWarning
 from rich.console import Console
 from rich.panel import Panel
 from rich.pretty import Pretty
 from rich.table import Table, box
 from rich.status import Status
+from rich.prompt import Confirm
 from rich import print as richprint
 from rich_argparse_plus import RichHelpFormatterPlus
 
 from ctdfjorder.visualize import ctd_plot
-from ctdfjorder.exceptions.ctd_exceptions import CTDError
+from ctdfjorder.exceptions.ctd_exceptions import CTDError, Critical
 from ctdfjorder.CTD import CTD
 from ctdfjorder.utils.utils import save_to_csv
 from ctdfjorder.constants.constants import *
@@ -76,7 +78,8 @@ def process_ctd_file(
                 else:
                     step_function(data)
                 status.append(
-                    "yellow" if len(warning_list) > warning_list_length else "green"
+                    "yellow" if len(warning_list) > warning_list_length
+                    and warning_list[-1].category is not ChronoFormatWarning else "green"
                 )
                 warning_list_length = len(warning_list)
             except CTDError as error:
@@ -135,6 +138,7 @@ def run_default(
 ):
     logger = setup_logging(verbosity)
     status_table, results = [], []
+    cached_master_sheet = None
     if not status_show:
         Console(quiet=True)
 
@@ -157,11 +161,20 @@ def run_default(
         spinner="earth",
         console=console,
     ) as status_master_sheet:
-        cached_master_sheet = (
-            MasterSheet(master_sheet_path, with_crosschecked_site_names=False)
-            if master_sheet_path
-            else None
-        )
+        try:
+            status_master_sheet.start()
+            cached_master_sheet = (
+                MasterSheet(master_sheet_path, with_crosschecked_site_names=False)
+                if master_sheet_path
+                else None
+            )
+        except Critical as e:
+            status_master_sheet.stop()
+            console.print(e, style="white on red")
+            continue_no_mastersheet = Confirm.ask("Continue without mastersheet?")
+            if not continue_no_mastersheet:
+                sys.exit()
+
 
     with ExitStack() as stack:
         executor = stack.enter_context(ProcessPoolExecutor(max_workers=max_workers))
@@ -213,7 +226,6 @@ def run_default(
                 for proc in psutil.process_iter():
                     if proc.name == "Python":
                         proc.kill()
-
         finally:
             stack.close()
             if status_show:
@@ -332,7 +344,7 @@ def signal_handler(signal_received, frame):
 
 def build_parser():
     parser = ArgumentParser(
-        description="Default Pipeline", formatter_class=RichHelpFormatterPlus
+        description="CTDFjorder", formatter_class=RichHelpFormatterPlus
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     parser_default = subparsers.add_parser(
@@ -340,18 +352,38 @@ def build_parser():
         help="Run the default processing pipeline",
         formatter_class=RichHelpFormatterPlus,
     )
+    parser_fjord = subparsers.add_parser(
+        "fjord",
+        help="Run the Fjord Phyto processing pipeline",
+    )
+    parser_fjord.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="MapBox token to enable interactive map plot",
+    )
     add_arguments(parser_default)
     return parser
 
 
 def build_parser_docs():
     parser = ArgumentParser(
-        description="Default Pipeline"
+        description="CTDFjorder"
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     parser_default = subparsers.add_parser(
         "default",
         help="Run the default processing pipeline",
+    )
+    parser_fjord = subparsers.add_parser(
+        "fjord",
+        help="Run the Fjord Phyto processing pipeline",
+    )
+    parser_fjord.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="MapBox token to enable interactive map plot",
     )
     add_arguments(parser_default)
     return parser
@@ -449,6 +481,20 @@ def main():
             filters=filters,
         )
         sys.exit()
+    if args.command == "fjord":
+        reset_file_environment()
+        display_config(args)
+        run_default(
+            plot=True,
+            master_sheet_path="mastersheet.xlsx",
+            max_workers=4,
+            verbosity=3,
+            output_file="ctdfjorder_data.csv",
+            debug_run=False,
+            status_show=True,
+            mapbox_access_token=args.token,
+            filters=None,
+        )
 
 
 def create_filters(args):

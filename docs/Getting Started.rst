@@ -50,10 +50,13 @@ For the purposes of this demo are assuming that you have the following:
 
 * Files with endings **.rsk** from an RBR instrument or **.csv** from a Castaway device.
 * A master sheet named **FjordPhyto MASTER SHEET.csv** in the same folder as your CTD data, this will be used to attach metadata to the CTD tables.
-* Access to a `MapBox <https://docs.mapbox.com/help/getting-started/access-tokens/>`_ token.
+* Access to a public `MapBox <https://docs.mapbox.com/help/getting-started/access-tokens/>`_ token.
 
 If you meet those conditions make your terminal window fullscreen.
-Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your MapBox token.
+Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
+
+.. tip::
+    Are you a member of Fjord Phyto? If so run `ctdcli fjord --token MY_TOKEN`.
 
 .. code-block:: console
 

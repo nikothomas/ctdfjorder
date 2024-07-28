@@ -113,6 +113,4 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
             num_profiles += 1
         else:
             CTDError(message=ERROR_NO_SAMPLES, filename=filename)
-    if num_profiles > 1:
-        print(f"{filename} has {num_profiles}")
     return data

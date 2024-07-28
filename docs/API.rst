@@ -1,4 +1,4 @@
-CTD Class
+API
 ==========
 .. autoclass:: ctdfjorder.CTD
     :members:

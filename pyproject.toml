@@ -45,6 +45,7 @@ rich-argparse-plus = "^0.3.1.4"
 scipy = "^1.14.0"
 datasketch = "^1.6.5"
 scikit-learn = "^1.5.1"
+xlsx2csv = "^0.8.2"
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"

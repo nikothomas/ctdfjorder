@@ -1,5 +1,7 @@
 import polars as pl
 from os import path
+
+import ctdfjorder.exceptions.ctd_exceptions
 from ctdfjorder.exceptions.ctd_exceptions import (
     CTDError,
     raise_warning_improbable_match,
@@ -59,49 +61,62 @@ class MasterSheet:
 
         # Generating polars dataframe representation of the master sheet
         df = None
+        null_values = [
+            "-999",
+            "NA",
+            "#N/A",
+            "",
+            "2022-10-29 -999",
+            "14-11-2022 11:50",
+            "14-11-2022 12:20",
+            "2022-11-28 -999",
+            "28-11-2022 13:00",
+            "23-12-2022 20:30",
+            "16-1-2023 11:37",
+            "19-1-2023 13:23",
+            "2023-01-22 -999",
+            "17-2-2023 12:01",
+            "17-2-2023 17:10",
+            "18-2-2023 17:05",
+            "19-2-2023 12:03",
+            "20-2-2023 12:05",
+            "20-2-2023 22:00",
+            "20-2-2023 16:00",
+            "22-2-2023 11:30",
+            "22-2-2023 18:30",
+            "24-2-2023 18:00",
+            "25-2-2023 17:00",
+            "26-2-2023 11:28",
+            "27-2-2023 11:06",
+            "27-2-2023 18:00",
+            "28-Jan--22 18:30",
+            "OCt-NOV ",
+            " ",
+        ]
         if ".xlsx" in path.basename(master_sheet_path):
             df = pl.read_excel(
                 master_sheet_path,
-                infer_schema_length=None,
+                engine="calamine"
             )
+            df = df.select(list_of_cols)
+            df = df.with_columns(pl.col(self.datetime_utc_label).replace(old=list_of_cols, new=None))
+            df = df.with_columns(pl.col(self.datetime_utc_label).str.to_datetime(format='%Y-%m-%dT%H:%M:%S.%f%z',
+                                                                            strict=False,
+                                                                            exact=False)
+                                 .cast(pl.Datetime)
+                                 .dt.cast_time_unit(TIME_UNIT).dt.replace_time_zone(TIME_ZONE).alias(self.datetime_utc_label))
+            df = df.drop_nulls(self.datetime_utc_label)
+            if df.is_empty():
+                raise ctdfjorder.exceptions.ctd_exceptions.Critical(f"Could not read mastersheet data from {master_sheet_path}."
+                                                                    f" If on mac download your mastersheet as a csv not an xlsx.")
+
         if ".csv" in path.basename(master_sheet_path):
-            df = pl.io.csv.read_csv(
+            df = pl.read_csv(
                 master_sheet_path,
                 columns=list_of_cols,
                 try_parse_dates=True,
                 rechunk=True,
-                null_values=[
-                    "-999",
-                    "NA",
-                    "#N/A",
-                    "",
-                    "2022-10-29 -999",
-                    "14-11-2022 11:50",
-                    "14-11-2022 12:20",
-                    "2022-11-28 -999",
-                    "28-11-2022 13:00",
-                    "23-12-2022 20:30",
-                    "16-1-2023 11:37",
-                    "19-1-2023 13:23",
-                    "2023-01-22 -999",
-                    "17-2-2023 12:01",
-                    "17-2-2023 17:10",
-                    "18-2-2023 17:05",
-                    "19-2-2023 12:03",
-                    "20-2-2023 12:05",
-                    "20-2-2023 22:00",
-                    "20-2-2023 16:00",
-                    "22-2-2023 11:30",
-                    "22-2-2023 18:30",
-                    "24-2-2023 18:00",
-                    "25-2-2023 17:00",
-                    "26-2-2023 11:28",
-                    "27-2-2023 11:06",
-                    "27-2-2023 18:00",
-                    "28-Jan--22 18:30",
-                    "OCt-NOV ",
-                    " ",
-                ],
+                null_values=null_values
             )
         if type(df) is type(None):
             raise IOError(

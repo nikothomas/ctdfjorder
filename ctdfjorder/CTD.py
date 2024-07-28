@@ -1,4 +1,4 @@
-from ctdfjorder.exceptions.ctd_exceptions import CTDError
+from ctdfjorder.exceptions.ctd_exceptions import CTDError, Critical
 from ctdfjorder.exceptions.ctd_exceptions import raise_warning_calculatuion
 from ctdfjorder.metadata.master_sheet import MasterSheet
 from ctdfjorder.constants.constants import *
@@ -91,7 +91,10 @@ class CTD:
         # Define instance vars, load master sheet if path given and master sheet is not cached
         self._filename = path.basename(ctd_file_path)
         if type(self._cached_master_sheet) is type(None) and master_sheet_path:
-            self._cached_master_sheet = MasterSheet(master_sheet_path)
+            try:
+                self._cached_master_sheet = MasterSheet(master_sheet_path)
+            except Critical:
+                pass
         else:
             self._cached_master_sheet = cached_master_sheet
         self.master_sheet_path = master_sheet_path
@@ -127,7 +130,7 @@ class CTD:
         )
 
         # If master sheet or cached master sheet is present, find the matching information and correct missing location
-        if master_sheet_path or self._cached_master_sheet:
+        if self._cached_master_sheet:
             self._data = self._data.with_columns(
                 pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
                 pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL),
@@ -192,8 +195,6 @@ class CTD:
             )
         except pl.exceptions.InvalidOperationError:
             raise CTDError(message=ERROR_LOCATION_DATA_INVALID, filename=self._filename)
-        if not self._data.filter(pl.col(PROFILE_ID_LABEL) > 0).is_empty():
-            print(self._data.filter(pl.col(PROFILE_ID_LABEL) > 0))
 
     def get_df(self, pandas=False) -> pl.DataFrame | Any:
         """
@@ -312,8 +313,6 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.remove_upcasts.__name__)
-        if not self._data.filter(pl.col(PROFILE_ID_LABEL) > 0).is_empty():
-            print(self._data.filter(pl.col(PROFILE_ID_LABEL) > 0))
 
     def filter_columns_by_range(
         self,
@@ -573,7 +572,7 @@ class CTD:
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
             if method == "clean_salinity_ai":
-                profile = ai.clean_salinity_ai(profile, profile_id)
+                profile = ai.AI.clean_salinity_ai(profile, profile_id)
             else:
                 raise CTDError(
                     message="Method invalid for clean.", filename=self._filename
