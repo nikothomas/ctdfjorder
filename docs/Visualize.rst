@@ -1,4 +1,4 @@
 Visualize
 ==========
-.. autosummary:: ctdfjorder.Visualize.ctd_plot
+.. autosummary:: ctdfjorder.visualize.ctd_plot
     :members:
