@@ -6,6 +6,3 @@ CLI
     :prog: sample
 .. automodule:: ctdfjorder.cli.cli
     :members:
-.. toctree::
-   :maxdepth: 3
-   :caption: Contents:
