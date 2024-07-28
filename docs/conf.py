@@ -37,3 +37,4 @@ html_sidebars = {
     'Getting Started': [],
 }
 html_static_path = ['_static']
+

@@ -799,7 +799,7 @@ class CTD:
 
         - Surface temperature is the mean temperature from pressure `start` to `end`.
         - Surface salinity is the salinity value at the lowest pressure within the range from `start` to `end`.
-        - Meltwater fraction is calculated using the formula:
+        - Meltwater fraction is calculated using the formula from `Pan et. al 2019<https://doi.org/10.1371/journal.pone.0211107>`__:
 
         .. math::
 
