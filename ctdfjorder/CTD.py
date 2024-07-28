@@ -1056,15 +1056,14 @@ class CTD:
         The buoyancy frequency squared :math:`( N^2 )` is calculated using the formula:
 
         .. math::
-            N^2 = g^2 \rho \left( \beta_{\Theta} \Delta S_A - \alpha_{\Theta} \Delta \Theta \right) \Delta P
 
-        where :math:`\Delta S_A` and :math:`\Delta \Theta` are the differences between the Absolute Salinities and
-        Conservative Temperatures of vertically adjacent seawater parcels separated in pressure by :math:`\Delta P`,
-        measured in Pa. The density :math:`\rho` and the saline contraction and thermal expansion coefficients
-        :math:`\beta_{\Theta}` and :math:`\alpha_{\Theta}` are evaluated at the average values of :math:`S_A`,
-        :math:`\Theta`, and :math:`P` of the two seawater parcels using the GSW Toolbox function
-        `gsw_rho_alpha_beta(SA, CT, p)`. The gravitational acceleration :math:`g` is found from the GSW Toolbox function
-        `gsw_grav(lat, p)` which is a function of latitude and of pressure in the ocean.
+            N_2 = g_2 \cdot \frac{\beta \cdot d(SA) - \alpha \cdot d(CT)}{\text{specvol\_local} \cdot dP}
+
+        Note. This routine uses rho from "gsw_specvol", which is the
+          computationally efficient 75-term expression for specific volume in
+          terms of SA, CT and p (Roquet et al., 2015).
+        Note also that the pressure increment, dP, in the above formula is in
+          Pa, so that it is 104 times the pressure increment dp in dbar.
 
         The `gsw.Nsquared` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
         for this calculation. More information about this function can be found at the
