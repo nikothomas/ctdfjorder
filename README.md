@@ -1,3 +1,4 @@
+[![<nikothomas>](https://circleci.com/gh/nikothomas/ctdfjorder.svg?style=svg)](<https://github.com/nikothomas/ctdfjorder/actions>)
 # CTDFjorder
 
 CTDFjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
