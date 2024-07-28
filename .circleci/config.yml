@@ -47,7 +47,7 @@ jobs:
           name: Check and Publish to PyPI
           command: |
             CURRENT_VERSION=$(poetry version -s)
-            PACKAGE_NAME=$(poetry pyproject show name)
+            PACKAGE_NAME="ctdfjorder"
             PYPI_URL="https://pypi.org/pypi/${PACKAGE_NAME}/json"
             EXISTING_VERSION=$(curl -s $PYPI_URL | python -c "import sys, json; print(json.load(sys.stdin)['info']['version'])")
 
