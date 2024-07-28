@@ -7,8 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
 import sys
-import sys
-sys.setrecursionlimit(50000)
+
 
 sys.path.insert(0, os.path.abspath('..'))
 project = 'CTDFjorder'
