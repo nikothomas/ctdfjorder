@@ -344,6 +344,18 @@ def build_parser():
     return parser
 
 
+def build_parser_docs():
+    parser = ArgumentParser(
+        description="Default Pipeline"
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser_default = subparsers.add_parser(
+        "default",
+        help="Run the default processing pipeline",
+    )
+    add_arguments(parser_default)
+    return parser
+
 def add_arguments(parser):
     parser.add_argument("-p", "--plot", action="store_true", help="Generate plots")
     parser.add_argument(
