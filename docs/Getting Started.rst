@@ -1,8 +1,12 @@
 Getting Started
 ===============
 
+The following tutorial is for CLI users, if you are a developer using the library then you'll want to read
+the :doc:`API` documentation.
+
 Installation
 ------------
+
 We recommend using a conda environment just for CTDFjorder.
 To do this, open your terminal (MacOS/Linux) or command prompt (Windows) and run the following commands:
 
@@ -18,12 +22,6 @@ To use CTDFjorder, first install it using pip:
 .. code-block:: console
 
    (ctdfjorder) $ pip install ctdfjorder
-
-
-Processing Files in the Command Line
-====================================
-Files can be processed without needing to write your own script by using the built in command line tool described in
-this tutorial.
 
 Navigate to your files
 ----------------------
@@ -41,6 +39,7 @@ Our CTD files are in a folder called **CTD Data** on our desktop:
 
 Run ctdcli
 ----------
+
 Now we will process our files.
 
 .. tip::
@@ -75,7 +74,3 @@ The points are individual casts. The map can be filtered.
     To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
 
 Congrats! You can now use CTDFjorder to investigate your ctd data.
-
-Using the Library
------------------
-If you'd like to use CTDFjorder to develop in python see the :doc:`API` documentation.
