@@ -33,6 +33,40 @@ console = Console(color_system="windows")
 def process_ctd_file(
     file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder, filters
 ):
+    """
+    Processes a CTD file through a series of data cleaning and analysis steps.
+
+    Parameters
+    ----------
+    file : str
+        The path to the CTD file.
+    plot : bool
+        Flag indicating whether to generate plots.
+    cached_master_sheet : MasterSheet
+        A cached instance of the master sheet for cross-checking site names.
+    master_sheet_path : str
+        The path to the master sheet.
+    verbosity : int
+        The verbosity level for logging.
+    plots_folder : str
+        The folder to save plots in.
+    filters : list
+        List of filters to apply to the data.
+
+    Returns
+    -------
+    pl.DataFrame | None
+        The processed data as a Polars DataFrame or None if an error occurred.
+    list[str]
+        The status of each processing step, represented by color codes ("green", "yellow", "red").
+
+    Notes
+    -----
+    The function goes through several steps to process the CTD file, including filtering,
+    removing upcasts and non-positive samples, cleaning salinity data, adding surface measurements,
+    absolute salinity, density, potential density, mixed layer depth (MLD), and Brunt-Väisälä frequency squared (BF Squared).
+    If plotting is enabled, it generates plots for potential density and salinity versus depth.
+    """
     logger = setup_logging(verbosity)
     steps = [
         (
@@ -95,11 +129,44 @@ def process_ctd_file(
 
 
 def plot_data(my_data, plots_folder):
+    """
+    Generates plots for the given CTD data.
+
+    Parameters
+    ----------
+    my_data : pl.DataFrame
+        The CTD data to plot.
+    plots_folder : str
+        The folder to save plots in.
+
+    Notes
+    -----
+    This function generates two types of plots: depth vs potential density and depth vs salinity.
+    The plots are saved in the specified folder.
+    """
     ctd_plot.plot_depth_vs(my_data, POTENTIAL_DENSITY_LABEL, plot_folder=plots_folder)
     ctd_plot.plot_depth_vs(my_data, SALINITY_LABEL, plot_folder=plots_folder)
 
 
 def generate_status_table(status_table):
+    """
+    Generates a status table displaying the processing status for each file.
+
+    Parameters
+    ----------
+    status_table : list[tuple]
+        A list of tuples containing the file name and its processing status.
+
+    Returns
+    -------
+    rich.table.Table
+        A rich Table object displaying the status of each file.
+
+    Notes
+    -----
+    The table includes columns for each processing step and uses color codes to indicate the status:
+    green for success, yellow for warnings, and red for errors.
+    """
     steps = [
         "Load File",
         "Filter",
@@ -136,6 +203,37 @@ def run_default(
     mapbox_access_token,
     filters,
 ):
+    """
+    Runs the default processing pipeline for CTD files.
+
+    Parameters
+    ----------
+    plot : bool
+        Flag indicating whether to generate plots.
+    master_sheet_path : str
+        The path to the master sheet.
+    max_workers : int
+        The maximum number of worker processes to use.
+    verbosity : int
+        The verbosity level for logging.
+    output_file : str
+        The path to the output CSV file.
+    debug_run : bool
+        Flag indicating whether to run in debug mode (processes only 20 files).
+    status_show : bool
+        Flag indicating whether to show the processing status.
+    mapbox_access_token : str
+        The Mapbox access token for generating interactive maps.
+    filters : list
+        List of filters to apply to the data.
+
+    Notes
+    -----
+    This function orchestrates the entire CTD file processing pipeline. It sets up logging,
+    processes the master sheet, and uses a process pool to handle multiple CTD files concurrently.
+    The processing status of each file is tracked, and results are compiled and saved to a CSV file.
+    If plotting is enabled, it generates plots and an interactive map.
+    """
     logger = setup_logging(verbosity)
     status_table, results = [], []
     cached_master_sheet = None
@@ -243,6 +341,30 @@ def run_default(
 def process_results(
     results, total_files, output_file, plot, plots_folder, mapbox_access_token
 ):
+    """
+    Processes the results of the CTD file processing pipeline.
+
+    Parameters
+    ----------
+    results : list[pl.DataFrame]
+        The list of processed CTD data.
+    total_files : int
+        The total number of files processed.
+    output_file : str
+        The path to the output CSV file.
+    plot : bool
+        Flag indicating whether to generate plots.
+    plots_folder : str
+        The folder to save plots in.
+    mapbox_access_token : str
+        The Mapbox access token for generating interactive maps.
+
+    Notes
+    -----
+    This function combines the processed data from all files, generates a summary of the data,
+    and saves the combined data to a CSV file. If plotting is enabled, it generates various plots
+    and an interactive map using Mapbox.
+    """
     with console.screen():
         with Status(
             "Combining CTD profiles", spinner="earth", console=console
@@ -268,6 +390,26 @@ def process_results(
 
 
 def plot_results(df, plots_folder, df_exported, mapbox_access_token):
+    """
+    Generates plots for the processed CTD data and an interactive map view.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The processed CTD data.
+    plots_folder : str
+        The folder to save plots in.
+    df_exported : pl.DataFrame
+        The exported CTD data.
+    mapbox_access_token : str
+        The Mapbox access token for generating interactive maps.
+
+    Notes
+    -----
+    This function generates several plots for the CTD data, including secchi depth vs chlorophyll-a,
+    both in linear and logarithmic scales, and depth vs potential density and salinity.
+    If a Mapbox access token is provided, it generates an interactive map to visualize the data.
+    """
     if CHLOROPHYLL_LABEL in df.collect_schema():
         ctd_plot.plot_secchi_chla(df, plots_folder)
         ctd_plot.plot_secchi_chla_log(df, plots_folder)
@@ -287,6 +429,26 @@ def plot_results(df, plots_folder, df_exported, mapbox_access_token):
 
 
 def get_ctd_filenames_in_dir(directory, types):
+    """
+    Gets the filenames of CTD files in a directory.
+
+    Parameters
+    ----------
+    directory : str
+        The directory to search for CTD files.
+    types : list[str]
+        A list of file extensions to search for.
+
+    Returns
+    -------
+    list[str]
+        A list of CTD file paths in the directory.
+
+    Notes
+    -----
+    This function searches the specified directory for files with the given extensions (e.g., .rsk, .csv)
+    and returns a list of matching file paths.
+    """
     return [
         path.join(directory, f)
         for f in listdir(directory)
@@ -295,10 +457,31 @@ def get_ctd_filenames_in_dir(directory, types):
 
 
 def get_cwd():
+    """
+    Gets the current working directory.
+
+    Returns
+    -------
+    str
+        The current working directory.
+
+    Notes
+    -----
+    If the script is running in a frozen state (e.g., packaged with PyInstaller), it returns the directory
+    of the executable. Otherwise, it returns the standard current working directory.
+    """
     return path.dirname(sys.executable) if getattr(sys, "frozen", False) else getcwd()
 
 
 def reset_file_environment():
+    """
+    Resets the file environment by removing existing output files and creating necessary directories.
+
+    Notes
+    -----
+    This function removes old output files and directories to ensure a clean environment for running
+    the CTD file processing pipeline. It creates a new directory for plots.
+    """
     cwd = get_cwd()
     for filename in ["output.csv", "ctdfjorder.log"]:
         file_path = path.join(cwd, filename)
@@ -310,6 +493,24 @@ def reset_file_environment():
 
 
 def setup_logging(verbosity):
+    """
+    Sets up logging for the application.
+
+    Parameters
+    ----------
+    verbosity : int
+        The verbosity level for logging.
+
+    Returns
+    -------
+    logging.Logger
+        The configured logger.
+
+    Notes
+    -----
+    This function configures the logging settings for the application, including setting the log level
+    based on verbosity, formatting log messages, and handling signals for graceful termination.
+    """
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTSTP, signal_handler)
@@ -337,12 +538,40 @@ def setup_logging(verbosity):
 
 
 def signal_handler(signal_received, frame):
+    """
+    Handles system signals to gracefully terminate the application.
+
+    Parameters
+    ----------
+    signal_received : signal
+        The received signal.
+    frame : frame
+        The current stack frame.
+
+    Notes
+    -----
+    This function handles system signals such as SIGINT, SIGTERM, and SIGTSTP to allow for graceful
+    termination of the application, cleaning up resources as needed.
+    """
     if signal_received == signal.SIGINT:
         return
     raise KeyboardInterrupt
 
 
 def build_parser():
+    """
+    Builds the argument parser for the command-line interface.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        The configured argument parser.
+
+    Notes
+    -----
+    This function sets up the argument parser for the command-line interface, defining the available
+    commands and their respective options. It uses RichHelpFormatterPlus for enhanced help text formatting.
+    """
     parser = ArgumentParser(
         description="CTDFjorder", formatter_class=RichHelpFormatterPlus
     )
@@ -368,6 +597,19 @@ def build_parser():
 
 
 def build_parser_docs():
+    """
+    Builds the argument parser for the documentation.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        The configured argument parser.
+
+    Notes
+    -----
+    This function sets up the argument parser specifically for generating documentation, defining
+    the available commands and their respective options without the enhanced formatting.
+    """
     parser = ArgumentParser(
         description="CTDFjorder"
     )
@@ -391,6 +633,21 @@ def build_parser_docs():
     return parser
 
 def add_arguments(parser):
+    """
+    Adds arguments to the argument parser.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The argument parser to add arguments to.
+
+    Notes
+    -----
+    This function adds various command-line arguments to the parser, including options for plotting,
+    verbosity, resetting the file environment, showing processing status, running in debug mode,
+    specifying the master sheet path, setting the number of worker processes, providing a Mapbox token,
+    and defining filters for data columns.
+    """
     parser.add_argument("-p", "--plot", action="store_true", help="Generate plots")
     parser.add_argument(
         "-v",
@@ -462,6 +719,14 @@ def add_arguments(parser):
 
 
 def main():
+    """
+    The main entry point for the application. Parses arguments and runs the appropriate processing pipeline.
+
+    Notes
+    -----
+    This function initializes signal handlers, builds the argument parser, and parses the command-line arguments.
+    Depending on the specified command, it runs the default or Fjord Phyto processing pipeline.
+    """
     for sig in [signal.SIGINT, signal.SIGTSTP, signal.SIGTERM]:
         signal.signal(sig, signal_handler)
     parser = build_parser()
@@ -488,7 +753,7 @@ def main():
         display_config(args)
         run_default(
             plot=True,
-            master_sheet_path="mastersheet.xlsx",
+            master_sheet_path="mastersheet.csv",
             max_workers=4,
             verbosity=3,
             output_file="ctdfjorder_data.csv",
@@ -500,6 +765,24 @@ def main():
 
 
 def create_filters(args):
+    """
+    Creates filters from command-line arguments.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        The parsed command-line arguments.
+
+    Returns
+    -------
+    list[tuple] | None
+        A list of filters or None if no filters are specified.
+
+    Notes
+    -----
+    This function generates a list of filters based on the specified columns, upper bounds, and lower bounds
+    provided via command-line arguments. If not all required filter arguments are provided, it returns None.
+    """
     if all(
         arg is not None
         for arg in [args.filtercolumns, args.filterupper, args.filterlower]
@@ -509,6 +792,19 @@ def create_filters(args):
 
 
 def display_config(args):
+    """
+    Displays the configuration of the processing pipeline.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        The parsed command-line arguments.
+
+    Notes
+    -----
+    This function generates a table displaying the configuration options specified via command-line arguments,
+    providing a clear overview of the pipeline settings before execution.
+    """
     table = Table(title="Processing Pipeline Config")
     table.add_column("Argument", style="cyan", no_wrap=True)
     table.add_column("Value", style="magenta")

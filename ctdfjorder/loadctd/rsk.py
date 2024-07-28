@@ -20,42 +20,82 @@ rskLabels_to_labelInternal: dict[str, str] = {
 }
 
 
-def process_rsk(
-    rsk_profile: pl.DataFrame,
-    geo: [Geo, Any, Any] = None,
-    filename: str = None,
-) -> pl.DataFrame | None:
-    rsk_profile = rsk_profile.with_columns(
-        pl.col(TIMESTAMP_LABEL)
-        .cast(pl.String)
-        .str.to_datetime(
-            format="%Y-%m-%d %H:%M:%S%.f",
-            time_zone=TIME_ZONE,
-            time_unit=TIME_UNIT,
-        )
-        .cast(pl.Datetime(time_unit=TIME_UNIT))
-        .dt.convert_time_zone(time_zone=TIME_ZONE)
-    )
-    if rsk_profile.is_empty():
-        raise CTDError(filename=filename, message=ERROR_NO_SAMPLES)
-    data = rsk_profile
-    try:
-        profile_geodata = next(geo)
-        return data.with_columns(
-            pl.lit(profile_geodata.latitude).alias(LATITUDE_LABEL),
-            pl.lit(profile_geodata.longitude).alias(LONGITUDE_LABEL),
-        )
-
-    # No geodata found in rsk file
-    except StopIteration:
-        return data.with_columns(
-            pl.lit(None).alias(LATITUDE_LABEL), pl.lit(None).alias(LONGITUDE_LABEL)
-        )
-
-
 def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
-    data = None
+    """
+    Loads and processes an RSK file, extracting profiles and adding geospatial information.
 
+    Parameters
+    ----------
+    rbr_file_path : str, optional
+        The file path to the RSK file.
+
+    Returns
+    -------
+    pl.DataFrame
+        The processed RSK file data.
+
+    Raises
+    ------
+    CTDError
+        If the RSK profile is empty or if no samples are found in the file.
+    """
+
+
+    def process_rsk(
+            rsk_profile: pl.DataFrame,
+            geo: [Geo, Any, Any] = None,
+            filename: str = None,
+    ) -> pl.DataFrame | None:
+        """
+        Processes an RSK profile dataframe, adding geospatial information.
+
+        Parameters
+        ----------
+        rsk_profile : pl.DataFrame
+            The RSK profile data to process.
+        geo : Geo, optional
+            Geospatial information generator.
+        filename : str, optional
+            The filename of the RSK profile.
+
+        Returns
+        -------
+        pl.DataFrame | None
+            The processed RSK profile dataframe with latitude and longitude columns added, or None if the profile is empty.
+
+        Raises
+        ------
+        CTDError
+            If the RSK profile is empty.
+        """
+        rsk_profile = rsk_profile.with_columns(
+            pl.col(TIMESTAMP_LABEL)
+            .cast(pl.String)
+            .str.to_datetime(
+                format="%Y-%m-%d %H:%M:%S%.f",
+                time_zone=TIME_ZONE,
+                time_unit=TIME_UNIT,
+            )
+            .cast(pl.Datetime(time_unit=TIME_UNIT))
+            .dt.convert_time_zone(time_zone=TIME_ZONE)
+        )
+        if rsk_profile.is_empty():
+            raise CTDError(filename=filename, message=ERROR_NO_SAMPLES)
+        data = rsk_profile
+        try:
+            profile_geodata = next(geo)
+            return data.with_columns(
+                pl.lit(profile_geodata.latitude).alias(LATITUDE_LABEL),
+                pl.lit(profile_geodata.longitude).alias(LONGITUDE_LABEL),
+            )
+
+        # No geodata found in rsk file
+        except StopIteration:
+            return data.with_columns(
+                pl.lit(None).alias(LATITUDE_LABEL), pl.lit(None).alias(LONGITUDE_LABEL)
+            )
+
+    data = None
     filename = path.basename(rbr_file_path)
     rsk = RSK(rbr_file_path)
     num_profiles = 0

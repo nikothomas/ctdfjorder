@@ -21,6 +21,24 @@ csvLabels_to_labelInternal: dict[str, str] = {
 
 
 def load_file_castaway(castaway_file_path):
+    """
+    Loads and processes a Castaway CTD file.
+
+    Parameters
+    ----------
+    castaway_file_path : str
+        The file path to the Castaway CTD file.
+
+    Returns
+    -------
+    pl.DataFrame
+        The processed Castaway CTD data.
+
+    Raises
+    ------
+    CTDError
+        If the Castaway CTD profile is empty or if no samples are found in the file, or if the start time is missing.
+    """
     filename = path.basename(castaway_file_path)
     with open(castaway_file_path) as file:
         profile = pl.read_csv(file, comment_prefix="%", null_values=["#N/A", "null"])
@@ -71,17 +89,17 @@ def load_file_castaway(castaway_file_path):
 
 def extract_utc_cast_time(ctd_file_path):
     """
-    Function to extract the UTC cast time from a castaway file and convert it to ISO 8601 format.
+    Extracts the UTC cast time from a Castaway file and converts it to ISO 8601 format.
 
     Parameters
     ----------
     ctd_file_path : str
-        The file path of the castaway file to extract the time from.
+        The file path of the Castaway file to extract the time from.
 
     Returns
     -------
-    str
-        Cast time (UTC) of the castaway file in ISO 8601 format.
+    datetime.datetime | None
+        The cast time (UTC) of the Castaway file in ISO 8601 format, or None if not found.
     """
     # Initialize variable to store UTC cast time
     cast_time_utc = None
@@ -104,17 +122,17 @@ def extract_utc_cast_time(ctd_file_path):
 
 def extract_lat_long_castaway(ctd_file_path):
     """
-    Function extract start lat/long from castaway file.
+    Extracts the start latitude and longitude from a Castaway file.
 
     Parameters
     ----------
     ctd_file_path : str
-        Filepath to castaway ctd file.
+        The file path to the Castaway CTD file.
 
     Returns
     -------
     tuple
-        (latitude, longitude)
+        A tuple containing the latitude and longitude as strings, or None if not found.
     """
     latitude = None
     longitude = None

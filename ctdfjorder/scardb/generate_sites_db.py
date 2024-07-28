@@ -5,10 +5,49 @@ import polars as pl
 from ctdfjorder.exceptions.ctd_exceptions import raise_warning_site_location
 from datasketch import MinHash, MinHashLSH
 
-# Function to create MinHash object from a string
-
 
 def generate_sites_database(site_names: list[str]) -> SitesDatabase:
+    """
+    Generates a database of research sites based on given site names, using data from various SCAR (Scientific Committee on Antarctic Research) datasets.
+
+    Parameters
+    ----------
+    site_names : list[str]
+        A list of site names to search for in the SCAR datasets.
+
+    Returns
+    -------
+    SitesDatabase
+        An object containing a list of ResearchSite objects for each matching site found in the datasets.
+
+    Notes
+    -----
+    The function attempts to find exact matches for the provided site names in the SCAR datasets. If no exact match is found,
+    it calculates the Levenshtein similarity between the provided site name and the names in the datasets to suggest potential matches.
+
+    Examples
+    --------
+    Generate a database with a list of site names:
+
+    >>> site_names = ['Site A', 'Site B', 'Site C']
+    >>> database = generate_sites_database(site_names)
+    >>> print(database)
+    SitesDatabase with 3 sites
+
+    Details
+    -------
+    - The function uses Levenshtein distance to compute similarities between site names.
+    - It reads data from SCAR datasets stored in Parquet files.
+    - If an exact match is found, the corresponding site information is added to the `SitesDatabase`.
+    - If no exact match is found, it suggests potential matches with the highest similarity score.
+    - Raises a warning if no similar site name is found in any of the datasets.
+
+    Raises
+    ------
+    Warning
+        If a provided site name does not match exactly or similarly with any site name in the SCAR datasets.
+
+    """
     def levenshtein_distance(s1, s2):
         s1 = str.lower(s1)
         s2 = str.lower(s2)

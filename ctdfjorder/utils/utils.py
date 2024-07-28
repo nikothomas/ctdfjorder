@@ -103,8 +103,15 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
 
 
 def get_cwd():
-    working_directory_path = None
-    # determine if application is a script file or frozen exe
+    """
+    Gets the current working directory.
+
+    Returns
+    -------
+    str
+        The current working directory.
+    """
+    # Determine if application is a script file or frozen exe
     if getattr(sys, "frozen", False):
         working_directory_path = path.dirname(sys.executable)
     elif __file__:

@@ -14,6 +14,44 @@ from typing import Literal
 
 
 class MasterSheet:
+    """
+    Represents a master sheet for research site data, allowing for the integration and cross-checking of site data.
+
+    Attributes
+    ----------
+    TIME_UNIT : Literal["ns", "us", "ms"], default "ns"
+        The time unit for datetime operations.
+    TIME_ZONE : str, default "UTC"
+        The time zone for datetime operations.
+    data : polars.DataFrame
+        The data from the master sheet.
+    secchi_depth_label : str
+        The label for secchi depth in the master sheet.
+    latitude_label : str
+        The label for latitude in the master sheet.
+    longitude_label : str
+        The label for longitude in the master sheet.
+    date_utc_label : str
+        The label for UTC date in the master sheet.
+    time_utc_label : str
+        The label for UTC time in the master sheet.
+    site_names_label : str
+        The label for site names in the master sheet.
+    site_names_short_label : str
+        The label for short site names in the master sheet.
+    with_crosschecked_site_names : bool
+        Indicates whether site names should be cross-checked with a database.
+    site_names_db : SitesDatabase
+        The database of site names for cross-checking.
+
+    Methods
+    -------
+    __init__(self, master_sheet_path: str, secchi_depth_label: str = "secchi depth", latitude_label: str = "latitude", longitude_label: str = "longitude", datetime_utc_label: str = "date/time (ISO)", unique_id_label: str = "UNIQUE ID CODE ", site_names_label: str = "location", site_names_short_label: str = "loc id", with_crosschecked_site_names: bool = False)
+        Initializes the MasterSheet with the given path and column labels.
+
+    find_match(self, profile: pl.DataFrame) -> Metadata
+        Extracts the date and time components from the filename and compares them with the data in the master sheet. Calculates the absolute differences between the dates and times to find the closest match. Returns the estimated latitude, longitude, unique id, and secchi depth based on the closest match.
+    """
     TIME_UNIT: Literal["ns", "us", "ms"] = "ns"
     TIME_ZONE: str = "UTC"
     data = None
@@ -40,7 +78,37 @@ class MasterSheet:
         site_names_short_label: str = "loc id",
         with_crosschecked_site_names: bool = False,
     ):
+        """
+        Initializes the MasterSheet with the given path and column labels.
 
+        Parameters
+        ----------
+        master_sheet_path : str
+            The file path to the master sheet.
+        secchi_depth_label : str, default "secchi depth"
+            The label for secchi depth in the master sheet.
+        latitude_label : str, default "latitude"
+            The label for latitude in the master sheet.
+        longitude_label : str, default "longitude"
+            The label for longitude in the master sheet.
+        datetime_utc_label : str, default "date/time (ISO)"
+            The label for UTC date and time in the master sheet.
+        unique_id_label : str, default "UNIQUE ID CODE "
+            The label for unique ID in the master sheet.
+        site_names_label : str, default "location"
+            The label for site names in the master sheet.
+        site_names_short_label : str, default "loc id"
+            The label for short site names in the master sheet.
+        with_crosschecked_site_names : bool, default False
+            Indicates whether site names should be cross-checked with a database.
+
+        Raises
+        ------
+        IOError
+            If the master sheet file type is not supported or if the data cannot be read.
+        CTDError
+            If there are issues with the data, such as missing or invalid values.
+        """
         self.secchi_depth_label: str = secchi_depth_label
         self.latitude_label: str = latitude_label
         self.longitude_label: str = longitude_label
@@ -145,19 +213,20 @@ class MasterSheet:
 
         Parameters
         ----------
-        profile : pl.Dataframe
+        profile : pl.DataFrame
             Profile to match to master sheet.
 
         Returns
         -------
-        tuple
-            A tuple containing the estimated latitude, longitude, unique id, and secchi depth.
+        Metadata
+            An object containing the estimated latitude, longitude, unique id, and secchi depth.
 
         Raises
         ------
         CTDError
             When there is no timestamp data in the master sheet and/or CTD file.
-
+        Warning
+            When the guessed unique ID or latitude is improbable or inconsistent.
         """
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
         if TIMESTAMP_LABEL not in profile.collect_schema().names():

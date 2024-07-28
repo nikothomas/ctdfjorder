@@ -293,6 +293,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.remove_upcasts()
         >>> # This will clean the dataset by removing upcasts, ensuring all profiles have monotonically
         >>> # increasing pressure readings.
@@ -351,6 +352,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> filters = zip(['temperature', 'salinity'], [20.0, 35.0], [10.0, 30.0])
         >>> ctd_data.filter_columns_by_range(filters=filters)
         >>> # This will filter the `temperature` column to be between 10.0 and 20.0, and `salinity` to be between 30.0 and 35.0.
@@ -432,6 +434,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.remove_non_positive_samples()
         >>> # This will clean the dataset by removing samples with non-positive, null, or NaN values
         >>> # for the specified key parameters.
@@ -493,6 +496,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.remove_invalid_salinity_values()
         >>> # This will clean the dataset by removing samples with practical salinity values less than
         >>> # or equal to 10.
@@ -556,6 +560,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.clean('clean_salinity_ai')
         >>> # This will clean the salinity data using the AI-based method, correcting any unrealistic
         >>> # values and ensuring smoother transitions with respect to pressure.
@@ -613,6 +618,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_absolute_salinity()
         >>> # This will add a new column with absolute salinity values to the dataset, calculated using the
         >>> # TEOS-10 formula.
@@ -680,6 +686,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_density()
         >>> # This will add a new column with density values to the dataset, calculated using the
         >>> # TEOS-10 formula.
@@ -747,6 +754,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_potential_density()
         >>> # This will add a new column with potential density values to the dataset, calculated using the
         >>> # TEOS-10 formula.
@@ -822,6 +830,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_surface_salinity_temp_meltwater(start=10.1325, end=12.1325)
         >>> # This will add new columns with surface salinity, surface temperature, and meltwater fraction
         >>> # values to the dataset, calculated using the specified pressure range.
@@ -903,6 +912,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_mean_surface_density(start=10.1325, end=12.1325)
         >>> # This will add a new column with mean surface density values to the dataset, calculated using the
         >>> # specified pressure range.
@@ -983,6 +993,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_mld(reference=10, method="potential_density_avg", delta=0.05)
         >>> # This will add a new column with MLD values to the dataset, calculated using the specified method
         >>> # and parameters.
@@ -1070,6 +1081,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.add_bf_squared()
         >>> # This will add new columns with buoyancy frequency squared values and mid-pressure values to the dataset,
         >>> # calculated using the TEOS-10 formula.
@@ -1142,6 +1154,7 @@ class CTD:
 
         Examples
         --------
+        >>> ctd_data = CTD('example.csv')
         >>> ctd_data.save_to_csv(output_file='path/to/output.csv')
         >>> # This will rename the columns of the CTD dataset and save it to 'path/to/output.csv'.
         >>> # Any existing file with the same name at that location will be overwritten.

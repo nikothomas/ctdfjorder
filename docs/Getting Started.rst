@@ -48,7 +48,7 @@ Now we will process our files.
 For the purposes of this demo are assuming that you have the following:
 
 * Files with endings **.rsk** from an RBR instrument or **.csv** from a Castaway device.
-* A master sheet named **FjordPhyto MASTER SHEET.csv** in the same folder as your CTD data, this will be used to attach metadata to the CTD tables.
+* A master sheet named **mastersheet.csv** in the same folder as your CTD data, this will be used to attach metadata to the CTD tables.
 * Access to a public `MapBox <https://docs.mapbox.com/help/getting-started/access-tokens/>`_ token.
 
 If you meet those conditions make your terminal window fullscreen.
@@ -59,7 +59,7 @@ Then copy and paste the following into your terminal, and replace :code:`MY_TOKE
 
 .. code-block:: console
 
-   (ctdfjorder) $ ctdcli default -r -p -m "FjordPhyto MASTER SHEET.csv" -w 4 --show-status --token MY_TOKEN
+   (ctdfjorder) $ ctdcli default -r -p -m "mastersheet.csv" -w 4 --show-status --token MY_TOKEN
 
 Interpret output
 ----------------

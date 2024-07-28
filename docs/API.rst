@@ -1,14 +1,10 @@
 API
 ==========
-.. autoclass:: ctdfjorder.CTD
+.. automodule:: ctdfjorder.CTD
     :members:
-
-AI
-===
-.. automodule:: ctdfjorder.ai.ai.AI
-    :undoc-members:
+.. automodule:: ctdfjorder
     :members:
-    :exclude-members: MinMaxScaler
+    :exclude-members: CTD
 
 References
 ===========
