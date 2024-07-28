@@ -13,7 +13,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 - [<code>📢 Acknowledgments</code>](#-acknowledgments)
 
 ## ⭐ Features
-- Read RSK (.rsk) and Castaway (.csv) files and extract CTD data
+- Read RBR (.rsk) and SonTek Castaway (.csv) files and extract CTD data
 - Process CTD data, including removing non-positive samples and cleaning data
 - Calculate derived quantities such as absolute salinity, density, and potential density
 - Determine mixed layer depth (MLD) using different methods
@@ -32,9 +32,6 @@ To install ctdfjorder you can use pip:
 pip install ctdfjorder
 ```
 
-## 🗺️ Mapping
-If you want to enable map plotting at the end of the pipeline you'll need a default token from [MapBox](https://www.mapbox.com).
-
 ## 🚀 Usage
 CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data in addition to serving
 as a python library. A tutorial has been setup [here](https://nikothomas.github.io/ctdfjorder/Getting%20Started.html)
@@ -49,3 +46,4 @@ CTDFjorder was developed for the Fjord Phyto project. The gsw library was used f
 ## Citations
 McDougall, T. J., & Barker, P. M. (2011). Getting started with TEOS-10 and the Gibbs Seawater (GSW) Oceanographic Toolbox. SCOR/IAPSO WG127.
 
+Pan, B.J.; Vernet, M.; Reynolds, R.A.; Mitchell, B.G.: The optical and biological properties of glacial meltwater in an Antarctic fjord. PLOS ONE 14(2): e0211107 (2019). https://doi.org/10.1371/journal.pone.0211107
