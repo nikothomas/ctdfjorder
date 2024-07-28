@@ -46,6 +46,7 @@ jobs:
       - run:
           name: Publish to PyPI
           command: |
+            pip config set pypi-token.pypi $PYPI_API_TOKEN
             poetry config pypi-token.pypi $PYPI_API_TOKEN
             poetry publish --build
 
