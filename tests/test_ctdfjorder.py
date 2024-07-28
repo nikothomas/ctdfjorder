@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 import pytest
 import polars as pl
 import pandas as pd
@@ -25,10 +27,10 @@ def mock_master_sheet(monkeypatch):
 
     monkeypatch.setattr("ctdfjorder.metadata.master_sheet.MasterSheet", MockMasterSheet)
 
-
 @pytest.fixture
 def ctd_instance(mock_master_sheet):
-    return CTD('CC1531002_20181225_114931.csv')
+    test_file_path = os.path.join(Path(__file__).parent,'CC1531002_20181225_114931.csv')
+    return CTD(str(test_file_path))
 
 
 # Tests
