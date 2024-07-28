@@ -55,7 +55,7 @@ If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
 
 .. tip::
-    Are you a member of Fjord Phyto? If so run :code:`ctdcli fjord -t MY_TOKEN`
+    Are you a member of Fjord Phyto? If so run command this instead :code:`ctdcli fjord -t MY_TOKEN`
 
 .. code-block:: console
 
@@ -74,3 +74,14 @@ The points are individual casts. The map can be filtered.
     To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
 
 Congrats! You can now use CTDFjorder to investigate your ctd data.
+
+CLI Commands
+=============
+.. argparse::
+    :filename: ../ctdfjorder/ctdfjorder/cli/cli.py
+    :func: build_parser_docs
+    :prog: sample
+
+.. toctree::
+    :maxdepth: 0
+    :hidden:

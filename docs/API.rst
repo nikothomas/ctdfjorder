@@ -1,23 +1,52 @@
-API
-==========
+API Documentation
+=================
+
+Welcome to the **CTDFjorder API** documentation! This section provides a detailed overview of the various modules, classes, and functions available in the CTDFjorder library. Use the navigation below to explore the different components of the API.
+
+Introduction
+------------
+
+The CTDFjorder API is organized into several modules, each focused on specific functionality. Below is a brief overview of what each module offers:
+
++----------------------+-----------------------------------------------------------------------------------------+
+| Module               | Description                                                                             |
++======================+=========================================================================================+
+| :doc:`AI`            | Functions and classes related to artificial intelligence and machine learning           |
+|                      | applications within CTDFjorder.                                                         |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`CLI`           | Command-line interface for processing and analyzing CTD data.                           |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Constants`     | Definitions of constants used throughout the CTDFjorder library.                        |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`CTD`           | Core classes and functions for loading, processing, and analyzing CTD data.             |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Data Classes`  | Data structures used within the CTDFjorder library.                                     |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Exceptions`    | Custom exceptions used within the CTDFjorder library.                                   |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Load CTD`      | Functions for loading CTD data from various file formats.                               |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Metadata`      | Handling of metadata associated with CTD data.                                          |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`SCAR Database` | Access and interaction with the SCAR database.                                          |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Utils`         | Utility functions and helpers.                                                          |
++----------------------+-----------------------------------------------------------------------------------------+
+| :doc:`Visualize`     | Functions and classes for visualizing CTD data.                                         |
++----------------------+-----------------------------------------------------------------------------------------+
+
 .. toctree::
-    AI
-    CLI
-    Constants
-    CTD
-    CTD Data Classes
-    Exceptions
-    Load CTD
-    Metadata
-    SCAR Database
-    Utils
-    Visualize
-    :maxdepth: 2
-    :titlesonly:
-    :caption: Contents:
+   :maxdepth: 2
+   :caption: Contents
 
-References
-===========
-.. rubric::
-
-.. [PaVR19] Pan, B.J.; Vernet, M.; Reynolds, R.A.; Mitchell, B.G.: The optical and biological properties of glacial meltwater in an Antarctic fjord. PLOS ONE 14(2): e0211107 (2019). https://doi.org/10.1371/journal.pone.0211107
+   AI
+   CLI
+   Constants
+   CTD
+   Data Classes
+   Exceptions
+   Load CTD
+   Metadata
+   SCAR Database
+   Utils
+   Visualize

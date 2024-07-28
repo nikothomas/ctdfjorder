@@ -1,9 +1,7 @@
 CLI
 ====
-.. argparse::
-    :filename: ../ctdfjorder/ctdfjorder/cli/cli.py
-    :func: build_parser_docs
-    :prog: sample
+.. note::
+    Looking for documentation on how to use the CLI? Go here :doc:`Getting Started`.
 
 .. automodule:: ctdfjorder.cli.cli
     :members:

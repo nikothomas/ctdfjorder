@@ -1,4 +1,4 @@
-CTD Data Classes
+Data Classes
 =================
 .. automodule:: ctdfjorder.ctddataclasses.ctddataclasses
     :members:
