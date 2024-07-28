@@ -1067,7 +1067,7 @@ class CTD:
 
         .. math::
 
-            N_2 = g_2 \cdot \frac{\beta \cdot d(SA) - \alpha \cdot d(CT)}{\text{specvol\_local} \cdot dP}
+            N_2 = g_2 \cdot \frac{\beta \cdot d(SA) - \alpha \cdot d(CT)}{\text{specvol_local} \cdot dP}
 
         Note. This routine uses rho from "gsw_specvol", which is the
           computationally efficient 75-term expression for specific volume in
