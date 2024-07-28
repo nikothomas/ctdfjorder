@@ -8,7 +8,7 @@ ctdfjorder
     Getting Started
     CLI
     API
-    :maxdepth: 1
+    :maxdepth: 5
     :titlesonly:
     :hidden:
     :caption: Contents:

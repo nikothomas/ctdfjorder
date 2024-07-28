@@ -14,6 +14,21 @@ from scipy.stats import linregress
 
 
 def plot_map(df: pl.DataFrame, mapbox_access_token):
+    """
+    Generates an interactive map using Plotly and Dash to visualize CTD profiles.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The CTD data to plot on the map.
+    mapbox_access_token : str
+        The Mapbox access token for rendering the map.
+
+    Notes
+    -----
+    This function creates a Dash web application with interactive controls for filtering the data by year,
+    season, unique ID, latitude, longitude, and date range. The filtered data is displayed on a Mapbox map.
+    """
     px.set_mapbox_access_token(mapbox_access_token)
 
     df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12 + 3) // 3).alias("season"))
@@ -277,21 +292,20 @@ def plot_depth_vs(
 
     Parameters
     ----------
-    df : pl.Dataframe
-        CTD dataframe
+    df : pl.DataFrame
+        The CTD dataframe containing the data to plot.
     measurement : str
-        Options are self.SALINITY_LABEL, self.DENSITY_LABEL, 'potential_density, or self.TEMPERATURE_LABEL.
+        The measurement to plot against depth. Options are 'salinity', 'density', 'potential_density', or 'temperature'.
     plot_folder : str
-        Full path to plots folder.
-    plot_type : str
-        Options are 'line' or 'scatter', defaults to 'scatter'.
+        The path to the folder where plots will be saved.
+    plot_type : str, optional
+        The type of plot to generate. Options are 'line' or 'scatter'. Defaults to 'scatter'.
 
     Notes
     -----
     - Adds horizontal lines indicating the mixed layer depth (MLD) if present.
     - Allows for both scatter and line plot types.
-    - Saves the plot as an image file.
-
+    - Saves the plot as an image file in the specified folder.
     """
     plt.rcParams.update({"font.size": 16})
     os.makedirs(plot_folder, exist_ok=True)
@@ -369,6 +383,23 @@ def plot_depth_vs(
 
 
 def plot_secchi_chla(df: pl.DataFrame, plot_folder: str):
+    """
+    Generates a scatter plot of Secchi depth vs. Chlorophyll-a concentration.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The CTD dataframe containing the Secchi depth and Chlorophyll-a data.
+    plot_folder : str
+        The path to the folder where the plot will be saved.
+
+    Notes
+    -----
+    - Filters the data to remove null and invalid values.
+    - Performs a linear regression to fit a line to the data.
+    - Adds the regression line and statistics (R^2, p-value) to the plot.
+    - Saves the plot as an image file in the specified folder.
+    """
     os.makedirs(plot_folder, exist_ok=True)
     df = df.filter(
         pl.col("secchi_depth").is_not_null(),
@@ -419,6 +450,23 @@ def plot_secchi_chla(df: pl.DataFrame, plot_folder: str):
 
 
 def plot_secchi_log_chla_log(df: pl.DataFrame, plot_folder: str):
+    """
+    Generates a scatter plot of log10(Secchi depth) vs. log10(Chlorophyll-a) concentration.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The CTD dataframe containing the Secchi depth and Chlorophyll-a data.
+    plot_folder : str
+        The path to the folder where the plot will be saved.
+
+    Notes
+    -----
+    - Filters the data to remove null and invalid values.
+    - Performs a linear regression on the log-transformed data.
+    - Adds the regression line and statistics (R^2, p-value) to the plot.
+    - Saves the plot as an image file in the specified folder.
+    """
     os.makedirs(plot_folder, exist_ok=True)
     df = df.filter(
         pl.col("secchi_depth").is_not_null(),
@@ -469,6 +517,23 @@ def plot_secchi_log_chla_log(df: pl.DataFrame, plot_folder: str):
 
 
 def plot_secchi_chla_log(df: pl.DataFrame, plot_folder: str):
+    """
+    Generates a scatter plot of Secchi depth vs. log10(Chlorophyll-a) concentration.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The CTD dataframe containing the Secchi depth and Chlorophyll-a data.
+    plot_folder : str
+        The path to the folder where the plot will be saved.
+
+    Notes
+    -----
+    - Filters the data to remove null and invalid values.
+    - Performs a linear regression on the data with log-transformed Chlorophyll-a.
+    - Adds the regression line and statistics (R^2, p-value) to the plot.
+    - Saves the plot as an image file in the specified folder.
+    """
     os.makedirs(plot_folder, exist_ok=True)
     df = df.filter(
         pl.col("secchi_depth").is_not_null(),
@@ -520,6 +585,31 @@ def plot_secchi_chla_log(df: pl.DataFrame, plot_folder: str):
 
 
 def plot_original_data(salinity, depths, filename, plot_path):
+    """
+    Generates a scatter plot of original salinity vs. depth.
+
+    Parameters
+    ----------
+    salinity : array-like
+        The salinity data to plot.
+    depths : array-like
+        The corresponding depth data.
+    filename : str
+        The name of the file being plotted.
+    plot_path : str
+        The path to save the plot image.
+
+    Returns
+    -------
+    tuple
+        The x and y limits of the plot.
+
+    Notes
+    -----
+    - Creates a scatter plot with salinity on the x-axis and depth on the y-axis (inverted).
+    - Adds a title, labels, and grid to the plot.
+    - Saves the plot as an image file and returns the plot limits.
+    """
     plt.figure(figsize=(10, 6))
     plt.scatter(salinity, -depths, alpha=0.6)
     plt.xlabel("Salinity (PSU)")
@@ -534,6 +624,31 @@ def plot_original_data(salinity, depths, filename, plot_path):
 
 
 def plot_predicted_data(salinity, depths, xlim, ylim, filename, plot_path):
+    """
+    Generates a scatter plot of predicted salinity vs. depth.
+
+    Parameters
+    ----------
+    salinity : array-like
+        The predicted salinity data to plot.
+    depths : array-like
+        The corresponding depth data.
+    xlim : tuple
+        The x-axis limits from the original data plot.
+    ylim : tuple
+        The y-axis limits from the original data plot.
+    filename : str
+        The name of the file being plotted.
+    plot_path : str
+        The path to save the plot image.
+
+    Notes
+    -----
+    - Creates a scatter plot with predicted salinity on the x-axis and depth on the y-axis (inverted).
+    - Adds a title, labels, and grid to the plot.
+    - Uses the same axis limits as the original data plot for comparison.
+    - Saves the plot as an image file.
+    """
     plt.figure(figsize=(10, 6))
     plt.scatter(salinity, -depths, alpha=0.6, color="red")
     title = f"Predicted Salinity vs. Depth - {filename}"

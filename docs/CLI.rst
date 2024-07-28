@@ -4,6 +4,8 @@ CLI
     :filename: ../ctdfjorder/ctdfjorder/cli/cli.py
     :func: build_parser_docs
     :prog: sample
+.. automodule:: ctdfjorder.cli.cli
+    :members:
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
