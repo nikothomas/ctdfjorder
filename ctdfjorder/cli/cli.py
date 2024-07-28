@@ -18,7 +18,7 @@ from rich.table import Table, box
 from rich.status import Status
 from rich.prompt import Confirm
 from rich import print as richprint
-from rich_argparse_plus import RichHelpFormatterPlus
+from rich_argparse import RichHelpFormatter
 
 from ctdfjorder.visualize import ctd_plot
 from ctdfjorder.exceptions.ctd_exceptions import CTDError, Critical
@@ -572,13 +572,13 @@ def build_parser():
     commands and their respective options. It uses RichHelpFormatterPlus for enhanced help text formatting.
     """
     parser = ArgumentParser(
-        description="CTDFjorder", formatter_class=RichHelpFormatterPlus
+        description="CTDFjorder", formatter_class=RichHelpFormatter
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     parser_default = subparsers.add_parser(
         "default",
         help="Run the default processing pipeline",
-        formatter_class=RichHelpFormatterPlus,
+        formatter_class=RichHelpFormatter,
     )
     parser_fjord = subparsers.add_parser(
         "fjord",
