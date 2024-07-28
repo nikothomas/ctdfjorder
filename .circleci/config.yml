@@ -34,7 +34,30 @@ jobs:
       - store_test_results:
           path: junit.xml
 
+  build-and-publish:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install poetry
+      - run:
+          name: Publish to PyPI
+          command: |
+            poetry config pypi-token.pypi $PYPI_API_TOKEN
+            poetry publish --build
+
+
 workflows:
   build-and-test:
     jobs:
       - test-python
+
+  release:
+    jobs:
+      - build-and-publish:
+          filters:
+            tags:
+              only: /^v.*/
