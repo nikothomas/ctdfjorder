@@ -1,10 +1,9 @@
 API
 ==========
-.. automodule:: ctdfjorder.CTD
-    :members:
-.. automodule:: ctdfjorder
-    :members:
-    :exclude-members: CTD
+.. currentmodule:: ctdfjorder
+
+.. autosummary::
+   :recursive:
 
 References
 ===========
