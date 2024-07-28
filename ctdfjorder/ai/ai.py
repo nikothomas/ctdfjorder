@@ -175,6 +175,8 @@ class AI:
                 FILENAME_LABEL: pl.first(FILENAME_LABEL),
                 PROFILE_ID_LABEL: pl.first(PROFILE_ID_LABEL),
                 SECCHI_DEPTH_LABEL: pl.first(SECCHI_DEPTH_LABEL),
+                SITE_NAME_LABEL: pl.first(SITE_NAME_LABEL),
+                SITE_ID_LABEL: pl.first(SITE_ID_LABEL),
             }
             available_columns = {
                 col: agg_func

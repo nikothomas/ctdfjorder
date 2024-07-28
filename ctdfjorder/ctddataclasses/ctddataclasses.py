@@ -51,8 +51,14 @@ class Metadata:
         The unique identifier for the site, if available.
     secchi_depth : float | None
         The secchi depth measurement for the site, if available.
+    site_name : str | None
+        The name of the site, if available.
+    site_id : str | None
+        The short name the site, if available.
     """
     latitude: float | None
     longitude: float | None
     unique_id: str | None
     secchi_depth: float | None
+    site_name: str | None
+    site_id: str | None

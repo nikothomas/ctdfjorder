@@ -63,7 +63,10 @@ UNIQUE_ID_LABEL: str = "unique_id"
 """str: Label for unique ID column."""
 PROFILE_ID_LABEL: str = "profile_id"
 """str: Label for profile ID column."""
-
+SITE_NAME_LABEL: str = "site_name"
+"""str: Label for site name column."""
+SITE_ID_LABEL: str = "site_id"
+"""str: Label for the site id column."""
 LIST_LABELS: list[str] = [
     TIMESTAMP_LABEL,
     YEAR_LABEL,
@@ -92,6 +95,8 @@ LIST_LABELS: list[str] = [
     LONGITUDE_LABEL,
     UNIQUE_ID_LABEL,
     PROFILE_ID_LABEL,
+    SITE_ID_LABEL,
+    SITE_NAME_LABEL
 ]
 """list[str]: List of all internal column labels."""
 
@@ -150,6 +155,10 @@ EXPORT_P_MID_LABEL = "Mid_Pressure_Used_For_BV_Calc"
 """str: Export label for mid pressure used for Brunt-Väisälä calculation."""
 EXPORT_SECCHI_DEPTH_LABEL = "Secchi_Depth_(m)"
 """str: Export label for Secchi depth."""
+EXPORT_SITE_NAME_LABEL = "Site_Name"
+"""str: Export label for site name."""
+EXPORT_SITE_ID_LABEL = "Site_ID"
+"""str: Export label for site id."""
 
 # Time string constants
 TIME_ZONE: str = "UTC"
@@ -230,3 +239,7 @@ SEA_PRESSURE_TO_PRESSURE_DIFF: float = 10.1325
 # Library logger name
 LIB_LOGGER_NAME = "ctdfjorder"
 """str: Logger name for the CTDFjorder library."""
+
+# Default output file
+DEFAULT_OUTPUT_FILE = "ctdfjorder_data.csv"
+"""str: Name of the default output file."""

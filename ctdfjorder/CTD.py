@@ -134,6 +134,8 @@ class CTD:
             self._data = self._data.with_columns(
                 pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
                 pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL),
+                pl.lit(None, dtype=pl.String).alias(SITE_NAME_LABEL),
+                pl.lit(None, dtype=pl.String).alias(SITE_ID_LABEL),
             )
             for profile_id in (
                 self._data.select(PROFILE_ID_LABEL)
@@ -153,6 +155,12 @@ class CTD:
                     pl.lit(master_sheet_match.secchi_depth)
                     .cast(pl.Float32)
                     .alias(SECCHI_DEPTH_LABEL),
+                    pl.lit(master_sheet_match.site_name)
+                    .cast(pl.String)
+                    .alias(SITE_NAME_LABEL),
+                    pl.lit(master_sheet_match.site_id)
+                    .cast(pl.String)
+                    .alias(SITE_ID_LABEL),
                 )
                 # Add location data if not present
                 if (

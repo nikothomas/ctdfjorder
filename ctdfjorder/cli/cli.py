@@ -1,12 +1,12 @@
 import logging
 import shutil
-import signal
 import sys
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 from os import path, listdir, remove, mkdir, getcwd
 from warnings import catch_warnings
+import signal
 
 import polars as pl
 import psutil
@@ -224,7 +224,7 @@ def run_default(
         Flag indicating whether to show the processing status.
     mapbox_access_token : str
         The Mapbox access token for generating interactive maps.
-    filters : list
+    filters : list or None
         List of filters to apply to the data.
 
     Notes
@@ -513,7 +513,6 @@ def setup_logging(verbosity):
     """
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTSTP, signal_handler)
     level = max(30 - (verbosity * 10), 10)
     for logger_name in [
         "tensorflow",
@@ -538,19 +537,19 @@ def setup_logging(verbosity):
 
 
 def signal_handler(signal_received, frame):
-    """
+    r"""
     Handles system signals to gracefully terminate the application.
 
     Parameters
     ----------
-    signal_received : signal
+    signal_received : Any
         The received signal.
     frame : frame
         The current stack frame.
 
     Notes
     -----
-    This function handles system signals such as SIGINT, SIGTERM, and SIGTSTP to allow for graceful
+    This function handles system signals such as SIGINT and SIGTERM to allow for graceful
     termination of the application, cleaning up resources as needed.
     """
     if signal_received == signal.SIGINT:
@@ -689,7 +688,7 @@ def add_arguments(parser):
         help="MapBox token to enable interactive map plot",
     )
     parser.add_argument(
-        "-o", "--output", type=str, default="output.csv", help="Output file path"
+        "-o", "--output", type=str, default="ctdfjorder_data.csv", help="Output file path"
     )
     parser.add_argument(
         "--filtercolumns",

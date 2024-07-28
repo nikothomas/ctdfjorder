@@ -241,6 +241,12 @@ class MasterSheet:
         secchi_depth = closest_row_overall.select(
             pl.col(self.secchi_depth_label).cast(pl.Float32, strict=False).first()
         ).item()
+        site_name = closest_row_overall.select(
+            pl.col(self.site_names_label).cast(pl.String).first()
+        ).item()
+        site_id = closest_row_overall.select(
+            pl.col(self.site_names_short_label).cast(pl.String).first()
+        ).item()
         # Extract days, hours, and minutes from the time difference
         days = abs(distance.days)
         hours, remainder = divmod(distance.seconds, 3600)
@@ -287,4 +293,6 @@ class MasterSheet:
             longitude=longitude,
             unique_id=unique_id,
             secchi_depth=secchi_depth,
+            site_name=site_name,
+            site_id=site_id
         )
