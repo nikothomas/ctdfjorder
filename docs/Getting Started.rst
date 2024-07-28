@@ -56,7 +56,7 @@ If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
 
 .. tip::
-    Are you a member of Fjord Phyto? If so run `ctdcli fjord --token MY_TOKEN`.
+    Are you a member of Fjord Phyto? If so run :code:`ctdcli fjord -t MY_TOKEN`
 
 .. code-block:: console
 

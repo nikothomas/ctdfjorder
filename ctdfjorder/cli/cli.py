@@ -261,7 +261,7 @@ def process_results(
                 path.join(get_cwd(), "ISUNIQUE.csv")
             )
             richprint(panel)
-            df_exported = save_to_csv(df, output_file, "null")
+            df_exported = save_to_csv(df, output_file, None)
 
         if plot:
             plot_results(df, plots_folder, df_exported, mapbox_access_token)
@@ -357,6 +357,7 @@ def build_parser():
         help="Run the Fjord Phyto processing pipeline",
     )
     parser_fjord.add_argument(
+        "-t",
         "--token",
         type=str,
         default=None,
@@ -380,6 +381,7 @@ def build_parser_docs():
         help="Run the Fjord Phyto processing pipeline",
     )
     parser_fjord.add_argument(
+        "-t",
         "--token",
         type=str,
         default=None,

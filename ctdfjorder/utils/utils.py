@@ -4,7 +4,7 @@ import sys
 from os import path, getcwd
 
 
-def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str):
+def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
     """
     Renames the columns of the CTD data table based on a predefined mapping and saves the
     data to the specified CSV file.

@@ -1109,7 +1109,7 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
 
-    def save_to_csv(self, output_file: str, null_value: str):
+    def save_to_csv(self, output_file: str, null_value: str | None):
         """
         Renames the columns of the CTD data table based on a predefined mapping and saves the
         data to the specified CSV file.
@@ -1118,6 +1118,8 @@ class CTD:
         ----------
         output_file : str
             The output CSV file path.
+        null_value : str or None
+            The value to represent null cells in the saved file.
 
         Notes
         -----
