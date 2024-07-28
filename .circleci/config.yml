@@ -42,14 +42,21 @@ jobs:
           name: Install dependencies
           command: |
             python -m pip install --upgrade pip
-            pip install poetry
+            pip install poetry requests packaging
       - run:
-          name: Publish to PyPI
+          name: Check and Publish to PyPI
           command: |
-            pip config set pypi-token.pypi "$PYPI_API_TOKEN"
-            poetry config pypi-token.pypi "$PYPI_API_TOKEN"
-            poetry publish --build
+            CURRENT_VERSION=$(poetry version -s)
+            PACKAGE_NAME=$(poetry pyproject show name)
+            PYPI_URL="https://pypi.org/pypi/${PACKAGE_NAME}/json"
+            EXISTING_VERSION=$(curl -s $PYPI_URL | python -c "import sys, json; print(json.load(sys.stdin)['info']['version'])")
 
+            if [ "$(python -c "from packaging.version import parse; print(parse('$CURRENT_VERSION') > parse('$EXISTING_VERSION'))")" == "True" ]; then
+              poetry config pypi-token.pypi "$PYPI_API_TOKEN"
+              poetry publish --build
+            else
+              echo "Current version ($CURRENT_VERSION) is not greater than existing version ($EXISTING_VERSION). Skipping publish."
+            fi
 
 workflows:
   build-and-test:
