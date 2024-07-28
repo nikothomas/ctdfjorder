@@ -829,7 +829,7 @@ class CTD:
 
         See Also
         --------
-        Other.
+        Other related methods for data analysis or preprocessing within the CTD class.
 
         """
         self._data = self._data.with_columns(
