@@ -1,5 +1,5 @@
-
 [![CircleCI](https://dl.circleci.com/status-badge/img/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/tree/main)
+[![PyPI version](https://badge.fury.io/py/ctdfjorder.svg)](https://badge.fury.io/py/ctdfjorder)
 
 # CTDFjorder
 CTDFjorder is a Python package for processing and analyzing CTD (Conductivity, Temperature, Depth) data.
