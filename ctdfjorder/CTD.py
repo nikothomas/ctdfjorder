@@ -485,7 +485,7 @@ class CTD:
         2. It then filters out rows where the practical salinity value is less than or equal to 10.
         3. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
 
-        Let :math:`( S_i )` represent the practical salinity at the`( i )`-th sampling event. The condition for
+        Let :math:`( S_i )` represent the practical salinity at the :math:`( i )`-th sampling event. The condition for
         retaining a data point is given by:
 
         .. math::
