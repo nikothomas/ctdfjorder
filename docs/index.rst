@@ -14,7 +14,7 @@ Introduction
 ------------
 
 **CTDFjorder** is a Python package that simplifies the processing and analysis of CTD data. It supports reading data
-from various file formats such as RSK (.rsk) and Castaway (.csv), and offers tools for data cleaning, filtering, and
+from various file formats such as RBR (.rsk) and SonTek Castaway (.csv), and offers tools for data cleaning, filtering, and
 calculation of derived oceanographic quantities like absolute salinity, density, and potential density. Additionally,
 CTDFjorder includes capabilities for visualizing CTD profiles and derived quantities through advanced plotting tools.
 

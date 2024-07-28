@@ -11,21 +11,13 @@ designed to process and analyze CTD (Conductivity, Temperature, Depth) data effi
 
 
 Introduction
-------------
-
-**CTDFjorder** is a Python package that simplifies the processing and analysis of CTD data. It supports reading data
-from various file formats such as RSK (.rsk) and Castaway (.csv), and offers tools for data cleaning, filtering, and
-calculation of derived oceanographic quantities like absolute salinity, density, and potential density. Additionally,
-CTDFjorder includes capabilities for visualizing CTD profiles and derived quantities through advanced plotting tools.
-
-Interacting with the API
 ------------------------
 
 The primary way to interact with **CTDFjorder** is through the :class:`~ctdfjorder.CTD.CTD` class. This class provides a comprehensive
 interface for loading, processing, and analyzing CTD data.
 Here’s a brief overview of what you can do with the :class:`~ctdfjorder.CTD.CTD` class:
 
-- **Load Data**: Read CTD data from RSK (.rsk) and Castaway (.csv) files.
+- **Load Data**: Read CTD data from RBR (.rsk) and SonTek Castaway (.csv) files.
 - **Process Data**: Clean and filter data, remove non-positive samples, and handle various preprocessing tasks.
 - **Analyze Data**: Calculate derived quantities such as absolute salinity, density, and potential density.
 - **Visualize Data**: Generate plots to visualize CTD profiles and derived quantities.
