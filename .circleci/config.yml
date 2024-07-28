@@ -3,12 +3,12 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@2
+  python: circleci/python@2.1.1
 
 executors:
   python-executor:
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:3.12.4
 
   base-executor:
     docker:
