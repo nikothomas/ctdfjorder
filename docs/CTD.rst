@@ -1,12 +1,12 @@
 CTD
 ===
 
-The :class:`CTD` class in the **CTDFjorder** library provides a comprehensive interface for loading, processing, and analyzing CTD data. Below is a detailed breakdown of the key methods and functionalities provided by the :class:`CTD` class.
+The :class:`~ctdfjorder.CTD.CTD` class in the **CTDFjorder** library provides a comprehensive interface for loading, processing, and analyzing CTD data. Below is a detailed breakdown of the key methods and functionalities provided by the :class:`~ctdfjorder.CTD.CTD` class.
 
 Initialization
 ---------------
-
-.. automethod:: ctdfjorder.CTD.CTD.__init__
+.. autoclass:: ctdfjorder.CTD.CTD
+    :private-members:
 
 Data Processing
 ----------------

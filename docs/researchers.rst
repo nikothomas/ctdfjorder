@@ -31,7 +31,7 @@ Command-Line Interface (CLI)
 The **CTDFjorder** library includes a command-line interface (CLI) for processing and analyzing CTD data.
 The CLI simplifies many common tasks and allows you to process data without needing to write Python code.
 
-Below are the key functions from the :doc:`CTD` class used in the default processing CLI:
+Below are the key functions from the :class:`~ctdfjorder.CTD.CTD` class used in the default processing CLI:
 
 - :meth:`ctdfjorder.CTD.CTD.remove_upcasts`: Removes upcast data from the dataset.
 - :meth:`ctdfjorder.CTD.CTD.remove_non_positive_samples`: Removes samples with non-positive values.
@@ -66,4 +66,5 @@ References
 -----------
 
 [PaVR19]_
+
 [McBa11]_

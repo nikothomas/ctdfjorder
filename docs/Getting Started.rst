@@ -1,5 +1,7 @@
 Getting Started
 ===============
+.. role:: console(code)
+   :language: console
 
 The following tutorial is for CLI users, if you are a developer using the library then you'll want to read
 the :doc:`API` documentation.
@@ -43,7 +45,7 @@ Run ctdcli
 Now we will process our files.
 
 .. tip::
-    To see what options you have to process the files, type :code:`ctdcli default -h` or view the documentation for the :doc:`CLI`.
+    To see what options you have to process the files, type :console:`ctdcli default -h` or view the documentation for the :doc:`CLI`.
 
 For the purposes of this demo are assuming that you have the following:
 
@@ -55,7 +57,7 @@ If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
 
 .. tip::
-    Are you a member of Fjord Phyto? If so run command this instead :code:`ctdcli fjord -t MY_TOKEN`
+    Are you a member of Fjord Phyto? If so run command this instead :console:`ctdcli fjord -t MY_TOKEN`
 
 .. code-block:: console
 
@@ -68,10 +70,9 @@ for each file. Green means the file passed a step, yellow alerts you to unusual 
 such that the file could not continue to be processed. Once all files are completed, a map will open as well.
 The points are individual casts. The map can be filtered.
 
-.. tip::
-    Plots are in the **ctdplots** folder in the same place as your original CTD data.
-    There is also an **output.csv** file with the processed data in the same folder.
-    To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
+* Plots are in the **ctdplots** folder next to our original data.
+* There you will also find a **ctdfjorder_data.csv** with our processed data.
+* To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
 
 Congrats! You can now use CTDFjorder to investigate your ctd data.
 

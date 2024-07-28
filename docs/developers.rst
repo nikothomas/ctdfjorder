@@ -21,21 +21,21 @@ CTDFjorder includes capabilities for visualizing CTD profiles and derived quanti
 Interacting with the API
 ------------------------
 
-The primary way to interact with **CTDFjorder** is through the :doc:`CTD` class. This class provides a comprehensive
+The primary way to interact with **CTDFjorder** is through the :class:`~ctdfjorder.CTD.CTD` class. This class provides a comprehensive
 interface for loading, processing, and analyzing CTD data.
-Here’s a brief overview of what you can do with the :doc:`CTD` class:
+Here’s a brief overview of what you can do with the :class:`~ctdfjorder.CTD.CTD` class:
 
 - **Load Data**: Read CTD data from RSK (.rsk) and Castaway (.csv) files.
 - **Process Data**: Clean and filter data, remove non-positive samples, and handle various preprocessing tasks.
 - **Analyze Data**: Calculate derived quantities such as absolute salinity, density, and potential density.
 - **Visualize Data**: Generate plots to visualize CTD profiles and derived quantities.
 
-For detailed information on using the :doc:`CTD` class and other functionalities, refer to the :doc:`API` reference.
+For detailed information on using the :class:`~ctdfjorder.CTD.CTD` class and other functionalities, refer to the :doc:`API` reference.
 
 Key Methods in the CTD Class
 ------------------------------------
 
-The :doc:`CTD` class provides a comprehensive set of methods for handling CTD data:
+The :class:`~ctdfjorder.CTD.CTD` class provides a comprehensive set of methods for handling CTD data:
 
 - :meth:`ctdfjorder.CTD.CTD.remove_upcasts`: Removes upcast data from the dataset.
 - :meth:`ctdfjorder.CTD.CTD.filter_columns_by_range`: Filters data columns by specified ranges.
