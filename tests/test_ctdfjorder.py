@@ -36,7 +36,8 @@ def ctd_instance(mock_master_sheet):
 # Tests
 
 def test_ctd_initialization_castaway(mock_master_sheet):
-    ctd_instance = CTD('CC1531002_20181225_114931.csv')
+    test_file_path = os.path.join(Path(__file__).parent,'CC1531002_20181225_114931.csv')
+    ctd_instance = CTD(test_file_path)
     assert isinstance(ctd_instance, CTD)
     assert not ctd_instance.get_df().is_empty()
 
