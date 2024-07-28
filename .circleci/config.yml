@@ -15,7 +15,7 @@ executors:
       - image: cimg/base:stable
 
 jobs:
-  test-python:
+  build-test-and-deploy:
     executor: python-executor
     steps:
       - checkout
@@ -59,13 +59,12 @@ jobs:
             fi
 
 workflows:
-  build-and-test:
+  build-test-and-publish:
     jobs:
       - test-python
-
-  release:
-    jobs:
       - build-and-publish:
+          requires:
+            - test-python
           filters:
             tags:
               only: /^v.*/
