@@ -15,7 +15,7 @@ executors:
       - image: cimg/base:stable
 
 jobs:
-  build-test-and-deploy:
+  test-python:
     executor: python-executor
     steps:
       - checkout
