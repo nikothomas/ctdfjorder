@@ -3,6 +3,7 @@ API
 .. toctree::
     AI
     CLI
+    Constants
     CTD
     CTD Data Classes
     Exceptions
@@ -14,6 +15,7 @@ API
     :maxdepth: 2
     :titlesonly:
     :caption: Contents:
+
 References
 ===========
 .. rubric::
