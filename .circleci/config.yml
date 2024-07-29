@@ -20,16 +20,8 @@ jobs:
     executor: python-executor
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "poetry.lock" }}
-            - v1-dependencies-
       - python/install-packages:
           pkg-manager: poetry
-      - save_cache:
-          paths:
-            - "~/.cache/pypoetry"
-          key: v1-dependencies-{{ checksum "poetry.lock" }}
       - run:
           name: Run tests
           command: |
