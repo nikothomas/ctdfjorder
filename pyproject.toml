@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.5.4"
+version = "0.5.5"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -24,7 +24,7 @@ packages = [{include = "ctdfjorder"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11"
-torch = ">=2.4.0"
+torch = ">=2.2.2"
 polars = ">=1.1.0"
 psutil = "^6.0.0"
 pandas = ">=2.2.2"
