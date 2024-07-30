@@ -49,7 +49,7 @@ If you are a developer interested in interacting with the API, please refer to t
 Issues
 -------
 If you encounter an issue while running or using CTDFjorder, please submit a report on
-the `Issues <https://github.com/nikothomas/ctdfjorder/issues>` page. This is the fastest way to get your problem
+the `Issues <https://github.com/nikothomas/ctdfjorder/issues>`__ page. This is the fastest way to get your problem
 addressed.
 
 License

@@ -9,6 +9,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 - [<code>📦 Installation</code>](#-installation)
 - [<code>🗺️ Mapping</code>](#-mapping)
 - [<code>🚀 Usage</code>](#-usage)
+- [<code>⚠️ Issues</code>](#-issues)
 - [<code>📝 License</code>](#-license)
 - [<code>📢 Acknowledgments</code>](#-acknowledgments)
 
@@ -37,11 +38,15 @@ CTDFjorder provides a command-line interface (CLI) for processing and analyzing 
 as a python library. A tutorial has been setup [here](https://nikothomas.github.io/ctdfjorder/Getting%20Started.html)
 for running the CLI.
 
+## ⚠️Issues
+If you encounter an issue while running or using CTDFjorder, please submit a report on the 
+[Issues](https://github.com/nikothomas/ctdfjorder/issues) page. This is the fastest way to get your problem resolved.
+
 ## 📝 License
 CTDFjorder is released under the MIT License.
 
 ## 📢 Acknowledgments
-CTDFjorder was developed for the [Fjord Phyto]<https://fjordphyto.ucsd.edu> project. The gsw library was used for certain dervied calculations.
+CTDFjorder was developed for the [Fjord Phyto](https://fjordphyto.ucsd.edu) project. The gsw library was used for certain dervied calculations.
 
 ## Citations
 McDougall, T. J., & Barker, P. M. (2011). Getting started with TEOS-10 and the Gibbs Seawater (GSW) Oceanographic Toolbox. SCOR/IAPSO WG127.
