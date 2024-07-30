@@ -1,7 +1,9 @@
 CTD
-===
+====
 
-The :class:`~ctdfjorder.CTD.CTD` class in the **CTDFjorder** library provides a comprehensive interface for loading, processing, and analyzing CTD data. Below is a detailed breakdown of the key methods and functionalities provided by the :class:`~ctdfjorder.CTD.CTD` class.
+The :class:`~ctdfjorder.CTD.CTD` class in the **CTDFjorder** library provides a comprehensive interface for loading,
+processing, and analyzing CTD data. Below is a detailed breakdown of the key methods and functionalities provided by
+the :class:`~ctdfjorder.CTD.CTD` class.
 
 Initialization
 ---------------
@@ -10,7 +12,6 @@ Initialization
 
 Data Processing
 ----------------
-
 .. automethod:: ctdfjorder.CTD.CTD.remove_upcasts
 
 .. automethod:: ctdfjorder.CTD.CTD.filter_columns_by_range
@@ -23,7 +24,6 @@ Data Processing
 
 Derived Calculations
 ---------------------
-
 .. automethod:: ctdfjorder.CTD.CTD.add_absolute_salinity
 
 .. automethod:: ctdfjorder.CTD.CTD.add_density
@@ -40,7 +40,7 @@ Derived Calculations
 
 Data Export
 ------------
-
 .. automethod:: ctdfjorder.CTD.CTD.get_df
 
 .. automethod:: ctdfjorder.CTD.CTD.save_to_csv
+

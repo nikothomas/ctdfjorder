@@ -21,7 +21,7 @@ from rich import print as richprint
 from rich_argparse import RichHelpFormatter
 
 from ctdfjorder.visualize import ctd_plot
-from ctdfjorder.exceptions.ctd_exceptions import CTDError, Critical
+from ctdfjorder.exceptions.exceptions import CTDError, Critical
 from ctdfjorder.CTD import CTD
 from ctdfjorder.utils.utils import save_to_csv
 from ctdfjorder.constants.constants import *
@@ -262,7 +262,7 @@ def run_default(
         try:
             status_master_sheet.start()
             cached_master_sheet = (
-                MasterSheet(master_sheet_path, with_crosschecked_site_names=False)
+                MasterSheet(master_sheet_path, with_crosschecked_site_names=True)
                 if master_sheet_path
                 else None
             )
@@ -383,13 +383,13 @@ def process_results(
                 path.join(get_cwd(), "ISUNIQUE.csv")
             )
             richprint(panel)
-            df_exported = save_to_csv(df, output_file, None)
+            df = save_to_csv(df, output_file, None)
 
         if plot:
-            plot_results(df, plots_folder, df_exported, mapbox_access_token)
+            plot_results(df, mapbox_access_token)
 
 
-def plot_results(df, plots_folder, df_exported, mapbox_access_token):
+def plot_results(df, mapbox_access_token):
     """
     Generates plots for the processed CTD data and an interactive map view.
 
@@ -397,23 +397,13 @@ def plot_results(df, plots_folder, df_exported, mapbox_access_token):
     ----------
     df : pl.DataFrame
         The processed CTD data.
-    plots_folder : str
-        The folder to save plots in.
-    df_exported : pl.DataFrame
-        The exported CTD data.
     mapbox_access_token : str
         The Mapbox access token for generating interactive maps.
 
     Notes
     -----
-    This function generates several plots for the CTD data, including secchi depth vs chlorophyll-a,
-    both in linear and logarithmic scales, and depth vs potential density and salinity.
-    If a Mapbox access token is provided, it generates an interactive map to visualize the data.
+    This function generates an interactive map to visualize the data.
     """
-    if CHLOROPHYLL_LABEL in df.collect_schema():
-        ctd_plot.plot_secchi_chla(df, plots_folder)
-        ctd_plot.plot_secchi_chla_log(df, plots_folder)
-        ctd_plot.plot_secchi_log_chla_log(df, plots_folder)
     with Status(
         "Running interactive map view. To shutdown press CTRL+Z.",
         spinner="earth",
@@ -421,7 +411,7 @@ def plot_results(df, plots_folder, df_exported, mapbox_access_token):
     ) as status_spinner_map_view:
         if mapbox_access_token:
             try:
-                ctd_plot.plot_map(df_exported, mapbox_access_token)
+                ctd_plot.plot_map(df, mapbox_access_token)
             except KeyboardInterrupt:
                 for proc in psutil.process_iter():
                     if proc.name == "Python":
@@ -688,7 +678,7 @@ def add_arguments(parser):
         help="MapBox token to enable interactive map plot",
     )
     parser.add_argument(
-        "-o", "--output", type=str, default="ctdfjorder_data.csv", help="Output file path"
+        "-o", "--output", type=str, default=str(DEFAULT_OUTPUT_FILE), help="Output file path"
     )
     parser.add_argument(
         "--filtercolumns",
@@ -755,7 +745,7 @@ def main():
             master_sheet_path="mastersheet.csv",
             max_workers=4,
             verbosity=3,
-            output_file="ctdfjorder_data.csv",
+            output_file=DEFAULT_OUTPUT_FILE,
             debug_run=False,
             status_show=True,
             mapbox_access_token=args.token,

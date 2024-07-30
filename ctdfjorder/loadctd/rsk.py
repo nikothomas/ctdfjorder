@@ -1,7 +1,7 @@
 import polars as pl
 from ctdfjorder.pyrsktools import RSK, Geo, Region
 from ctdfjorder.constants.constants import *
-from ctdfjorder.exceptions.ctd_exceptions import CTDError
+from ctdfjorder.exceptions.exceptions import CTDError
 import numpy as np
 from os import path
 from typing import Any

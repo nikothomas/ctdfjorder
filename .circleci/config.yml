@@ -9,7 +9,6 @@ executors:
   python-executor:
     docker:
       - image: cimg/python:3.12.4
-    working_directory: ~/repo
 
   base-executor:
     docker:

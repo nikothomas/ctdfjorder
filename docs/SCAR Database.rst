@@ -1,4 +1,4 @@
 SCAR Database
 ==============
-.. automodule:: ctdfjorder.scardb.generate_sites_db
+.. automodule:: ctdfjorder.scardb
     :members:

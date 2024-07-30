@@ -31,8 +31,28 @@ exclude_patterns = []
 
 html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
-    "show_toc_level": 1,
+    "show_toc_level": 2,
     "content_footer_items": ["last-updated"],
+    "use_edit_page_button": True,
+    "icon_links": [
+        {
+            # Label for this link
+            "name": "GitHub",
+            # URL where the link will redirect
+            "url": "https://github.com/nikothomas/ctdfjorder",  # required
+            # Icon class (if "type": "fontawesome"), or path to local image (if "type": "local")
+            "icon": "fa-brands fa-github",
+            # The type of image to be used (see below for details)
+            "type": "fontawesome",
+        }
+    ],
+}
+html_context = {
+    "github_url": "https://github.com",
+    "github_user": "nikothomas",
+    "github_repo": "ctdfjorder",
+    "github_version": "main",
+    "doc_path": "./docs",
 }
 html_sidebars = {
     "Getting Started": [],

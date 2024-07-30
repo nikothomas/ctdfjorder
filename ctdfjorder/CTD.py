@@ -1,5 +1,5 @@
-from ctdfjorder.exceptions.ctd_exceptions import CTDError, Critical
-from ctdfjorder.exceptions.ctd_exceptions import raise_warning_calculatuion
+from ctdfjorder.exceptions.exceptions import CTDError, Critical
+from ctdfjorder.exceptions.exceptions import raise_warning_calculatuion
 from ctdfjorder.metadata.master_sheet import MasterSheet
 from ctdfjorder.constants.constants import *
 from ctdfjorder.loadctd.rsk import load_file_rsk

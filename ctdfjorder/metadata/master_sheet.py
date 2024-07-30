@@ -1,14 +1,14 @@
 import polars as pl
 from os import path
 
-import ctdfjorder.exceptions.ctd_exceptions
-from ctdfjorder.exceptions.ctd_exceptions import (
+import ctdfjorder.exceptions.exceptions
+from ctdfjorder.exceptions.exceptions import (
     CTDError,
     raise_warning_improbable_match,
 )
 from ctdfjorder.constants.constants import *
-from ctdfjorder.scardb.generate_sites_db import generate_sites_database
-from ctdfjorder.ctddataclasses.ctddataclasses import SitesDatabase, Metadata
+from ctdfjorder.scardb.scardb import generate_sites_database
+from ctdfjorder.dataclasses.dataclasses import SitesDatabase, Metadata
 
 from typing import Literal
 

@@ -1,4 +1,4 @@
 Exceptions
 ===========
-.. automodule:: ctdfjorder.exceptions.ctd_exceptions
+.. automodule:: ctdfjorder.exceptions.exceptions
     :members:

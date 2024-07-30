@@ -1,0 +1,49 @@
+package:
+  name: ctdfjorder
+  version: 0.5.5
+
+source:
+  url: https://pypi.io/packages/source/c/ctdfjorder/ctdfjorder-0.5.5.tar.gz
+  sha256: ce7a901879599c5f1db9d4db5daa66f55e5a3f8e94c88e4b4b45fad90f885f3c
+
+build:
+  entry_points:
+    - ctdcli = ctdfjorder.cli.cli:main
+  noarch: python
+  script: {{ PYTHON }} -m pip install .
+  number: 0
+
+requirements:
+  build:
+    - python
+    - poetry
+    - pip
+
+  host:
+    - python
+    - poetry
+
+  run:
+    - python
+    - poetry
+
+test:
+  imports:
+    - ctdfjorder
+  commands:
+    - pip check
+    - ctdcli --help
+  requires:
+    - pip
+
+about:
+  home: https://github.com/nikothomas/ctdfjorder
+  summary: A package for processing and analyzing CTD data.
+  license: Apache-2.0 AND MIT
+  license_file:
+    - LICENSE.txt
+    - ctdfjorder/pyrsktools/LICENSE.txt
+
+extra:
+  recipe-maintainers:
+    - nikothomas

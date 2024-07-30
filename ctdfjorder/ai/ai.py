@@ -1,7 +1,7 @@
 from torch import optim
 
 from ctdfjorder.constants.constants import *
-from ctdfjorder.exceptions.ctd_exceptions import CTDError
+from ctdfjorder.exceptions.exceptions import CTDError
 from ctdfjorder.visualize.ctd_plot import plot_original_data, plot_predicted_data
 import torch
 from torch.utils.data import TensorDataset, DataLoader

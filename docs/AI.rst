@@ -1,4 +1,5 @@
 AI
 ===
-.. automodule:: ctdfjorder.ai.ai
-    :members:
+.. autoclass:: ctdfjorder.ai.ai.AI
+   :members:
+

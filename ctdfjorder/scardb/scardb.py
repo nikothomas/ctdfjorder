@@ -1,8 +1,8 @@
 # List of site names
 import os
-from ctdfjorder.ctddataclasses.ctddataclasses import SitesDatabase, ResearchSite
+from ctdfjorder.dataclasses.dataclasses import SitesDatabase, ResearchSite
 import polars as pl
-from ctdfjorder.exceptions.ctd_exceptions import raise_warning_site_location
+from ctdfjorder.exceptions.exceptions import raise_warning_site_location
 
 
 def generate_sites_database(site_names: list[str]) -> SitesDatabase:

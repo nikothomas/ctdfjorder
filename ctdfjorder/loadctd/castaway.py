@@ -1,8 +1,7 @@
 from ctdfjorder.constants.constants import *
-from ctdfjorder.exceptions.ctd_exceptions import CTDError
+from ctdfjorder.exceptions.exceptions import CTDError
 
 from datetime import datetime, timedelta
-import numpy as np
 import polars as pl
 
 from os import path
