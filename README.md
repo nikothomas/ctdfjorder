@@ -41,7 +41,7 @@ for running the CLI.
 CTDFjorder is released under the MIT License.
 
 ## 📢 Acknowledgments
-CTDFjorder was developed for the Fjord Phyto project. The gsw library was used for certain dervied calculations.
+CTDFjorder was developed for the [Fjord Phyto]<https://fjordphyto.ucsd.edu> project. The gsw library was used for certain dervied calculations.
 
 ## Citations
 McDougall, T. J., & Barker, P. M. (2011). Getting started with TEOS-10 and the Gibbs Seawater (GSW) Oceanographic Toolbox. SCOR/IAPSO WG127.
