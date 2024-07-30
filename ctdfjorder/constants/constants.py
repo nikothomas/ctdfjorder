@@ -206,7 +206,7 @@ ERROR_CTD_FILENAME_ENDING: str = "CTD filename must end in '.rsk' or '.csv'"
 WARNING_DROPPED_PROFILE: str = "No samples in profile number "
 """str: Warning message for dropped profile due to no samples."""
 WARNING_CTD_SURFACE_MEASUREMENT: str = (
-    "First measurment lies below {end} dbar, cannot compute surface measurements"
+    "First measurment lies below 'end'parameter, cannot compute surface measurements"
 )
 """str: Warning message for invalid surface measurement."""
 WARNING_FILE_LACKS_LOCATION: str = "File lacks native location data"
