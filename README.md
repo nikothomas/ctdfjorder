@@ -1,4 +1,4 @@
-[![CircleCI](https://dl.circleci.com/insights-snapshot/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/main/build-test-and-publish/badge.svg?window=30d)](https://app.circleci.com/insights/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/workflows/build-test-and-publish/overview?branch=main&reporting-window=last-30-days&insights-snapshot=true)
+[![CircleCI](https://dl.circleci.com/status-badge/img/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/tree/main)
 [![PyPI version](https://badge.fury.io/py/ctdfjorder.svg)](https://badge.fury.io/py/ctdfjorder)
 
 # CTDFjorder
