@@ -50,7 +50,15 @@ Now we will process our files.
 For the purposes of this demo are assuming that you have the following:
 
 * Files with endings **.rsk** from an RBR instrument or **.csv** from a Castaway device.
-* A master sheet named **mastersheet.csv** in the same folder as your CTD data, this will be used to attach metadata to the CTD tables.
+* A master sheet which will be used to attach metadata to the CTD tables. This must be named mastersheet.csv and be located in the same folder as your CTD data. Additionally it must have the following fields:
+   * UNIQUE ID CODE
+   * location
+   * loc id
+   * date/time (ISO)
+   * longitude
+   * latitude
+   * sechhi depth
+
 * Access to a public `MapBox <https://docs.mapbox.com/help/getting-started/access-tokens/>`_ token.
 
 If you meet those conditions make your terminal window fullscreen.
@@ -70,11 +78,13 @@ for each file. Green means the file passed a step, yellow alerts you to unusual 
 such that the file could not continue to be processed. Once all files are completed, a map will open as well.
 The points are individual casts. The map can be filtered.
 
-* Plots are in the **ctdplots** folder next to our original data.
+* Plots are in the **ctdplots** folder next to our original data and were made with functions from the :doc:`Visualize`
+  module.
 * There you will also find a **ctdfjorder_data.csv** with our processed data.
 * To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
 
-Congrats! You can now use CTDFjorder to investigate your ctd data.
+Congrats! You can now use CTDFjorder to investigate your ctd data. For more in depth information on the processes
+executed here, read the :doc:`API`.
 
 CLI Commands
 =============

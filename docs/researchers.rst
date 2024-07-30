@@ -30,6 +30,7 @@ Command-Line Interface (CLI)
 
 The **CTDFjorder** library includes a command-line interface (CLI) for processing and analyzing CTD data.
 The CLI simplifies many common tasks and allows you to process data without needing to write Python code.
+To read in depth about the functions used in CTDFjorder read the :doc:`API`.
 
 Below are the key functions from the :class:`~ctdfjorder.CTD.CTD` class used in the default processing CLI:
 
