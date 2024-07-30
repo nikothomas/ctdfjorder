@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import polars as pl
 import pandas as pd
-from ctdfjorder.exceptions.ctd_exceptions import CTDError
+from ctdfjorder.exceptions.exceptions import CTDError
 from ctdfjorder.constants.constants import *
 from ctdfjorder.CTD import CTD  # Assuming CTD is in ctdfjorder.CTD
 
