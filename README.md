@@ -7,7 +7,6 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 
 - [<code>⭐ Features</code>](#-features)
 - [<code>📦 Installation</code>](#-installation)
-- [<code>🗺️ Mapping</code>](#-mapping)
 - [<code>🚀 Usage</code>](#-usage)
 - [<code>⚠️ Issues</code>](#-issues)
 - [<code>📝 License</code>](#-license)
@@ -38,7 +37,7 @@ CTDFjorder provides a command-line interface (CLI) for processing and analyzing 
 as a python library. A tutorial has been setup [here](https://nikothomas.github.io/ctdfjorder/Getting%20Started.html)
 for running the CLI.
 
-## ⚠️Issues
+## ⚠️ Issues
 If you encounter an issue while running or using CTDFjorder, please submit a report on the 
 [Issues](https://github.com/nikothomas/ctdfjorder/issues) page. This is the fastest way to get your problem resolved.
 
