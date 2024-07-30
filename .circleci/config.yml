@@ -1,7 +1,6 @@
 # This config was automatically generated from your source code
 # Stacks detected: cicd:github-actions:.github/workflows,deps:python:.,package_manager:poetry:.
-version: 0.5.6
-
+version: 2.1
 orbs:
   python: circleci/python@2.1.1
 
