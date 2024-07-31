@@ -319,7 +319,7 @@ def run_default(
                 spinner_style="red",
             ) as status_spinner:
                 status_spinner.start()
-                executor.shutdown(wait=True, cancel_futures=True)
+                executor.shutdown(wait=False, cancel_futures=True)
                 status_spinner.stop()
                 for proc in psutil.process_iter():
                     if proc.name == "Python":

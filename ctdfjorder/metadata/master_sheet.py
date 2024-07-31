@@ -278,17 +278,17 @@ class MasterSheet:
                     (pl.col(self.site_names_label))
                 ).item()
                 for site in self.site_names_db.sites:
-                    if site_name_of_sample_master_sheet is site.name:
+                    if site_name_of_sample_master_sheet == site.name:
                         if (
                             not abs(site.latitude - latitude_from_profile) < 0.2
-                            and not abs(site.longitude - longitude_from_profile) < 0.2
+                            or not abs(site.longitude - longitude_from_profile) < 0.2
                         ):
                             message = (
                                 f"Matched to Unique ID '{unique_id}' but crosschecking "
                                 f"site location from SCAR with location from file yields "
                                 f"inconsistent results."
                             )
-                            raise_warning_improbable_match(
+                            raise CTDError(
                                 message=message, filename=filename
                             )
         return Metadata(
