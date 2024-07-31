@@ -91,8 +91,8 @@ class MasterSheet:
         self,
         master_sheet_path: str,
         secchi_depth_label: str = "secchi depth",
-        latitude_label: str = "latitude",
-        longitude_label: str = "longitude",
+        latitude_label: str = "nominal latitude",
+        longitude_label: str = "nominal longitude",
         datetime_utc_label: str = "date/time (ISO)",
         unique_id_label: str = "UNIQUE ID CODE ",
         site_names_label: str = "location",
@@ -160,12 +160,12 @@ class MasterSheet:
             df = df.with_columns(pl.col(self.datetime_utc_label).replace(old=list_of_cols, new=None))
             df = df.with_columns(pl.col(self.datetime_utc_label).str.to_datetime(format='%Y-%m-%dT%H:%M:%S.%f%z',
                                                                             strict=False,
-                                                                            exact=False)
+                                                                                 exact=False)
                                  .cast(pl.Datetime)
                                  .dt.cast_time_unit(TIME_UNIT).dt.replace_time_zone(TIME_ZONE).alias(self.datetime_utc_label))
             df = df.drop_nulls(self.datetime_utc_label)
             if df.is_empty():
-                raise ctdfjorder.exceptions.ctd_exceptions.Critical(f"Could not read mastersheet data from {master_sheet_path}."
+                raise ctdfjorder.exceptions.exceptions.Critical(f"Could not read mastersheet data from {master_sheet_path}."
                                                                     f" If on mac download your mastersheet as a csv not an xlsx.")
 
         if ".csv" in path.basename(master_sheet_path):
@@ -174,12 +174,15 @@ class MasterSheet:
                 columns=list_of_cols,
                 try_parse_dates=True,
                 rechunk=True,
-                null_values=null_values
+                null_values=null_values,
             )
+            try:
+                df.select(pl.col(self.datetime_utc_label).dt.time())
+            except pl.exceptions.SchemaError:
+                raise ctdfjorder.exceptions.exceptions.Critical(f"Could not read mastersheet data from {master_sheet_path}."
+                                                                f" If on mac download your mastersheet as a csv not an xlsx.")
         if type(df) is type(None):
-            raise IOError(
-                f"Invalid master sheet filetype. {master_sheet_path} not an xlsx or csv file.",
-            )
+            raise IOError(f"Invalid master sheet filetype. {master_sheet_path} not an xlsx or csv file.")
         self.data = df.drop_nulls(self.datetime_utc_label)
         self.data = self.data.with_columns(
             pl.col(latitude_label).cast(pl.Float64).alias(latitude_label),

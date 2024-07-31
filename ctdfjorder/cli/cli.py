@@ -362,7 +362,7 @@ def process_results(
     Notes
     -----
     This function combines the processed data from all files, generates a summary of the data,
-    and saves the combined data to a CSV file. If plotting is enabled, it generates various plots
+    and saves the combined data to a CSV file. If mapbox access token is provided, it generates various plots
     and an interactive map using Mapbox.
     """
     with console.screen():
@@ -385,7 +385,7 @@ def process_results(
             richprint(panel)
             df = save_to_csv(df, output_file, None)
 
-        if plot:
+        if mapbox_access_token:
             plot_results(df, mapbox_access_token)
 
 
@@ -473,7 +473,7 @@ def reset_file_environment():
     the CTD file processing pipeline. It creates a new directory for plots.
     """
     cwd = get_cwd()
-    for filename in ["output.csv", "ctdfjorder.log"]:
+    for filename in [DEFAULT_OUTPUT_FILE, "ctdfjorder.log"]:
         file_path = path.join(cwd, filename)
         if path.isfile(file_path):
             remove(file_path)
