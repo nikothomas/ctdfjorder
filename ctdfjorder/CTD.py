@@ -1087,6 +1087,11 @@ class CTD:
         for this calculation. More information about this function can be found at the
         `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_Nsquared.html>`__.
 
+        Raises
+        ------
+        CTDError
+            When buoyancy frequency could not be calculated due to a ValueError.
+
         Examples
         --------
         >>> ctd_data = CTD('example.csv')
@@ -1115,7 +1120,11 @@ class CTD:
             p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
             lat = profile.select(pl.col(LATITUDE_LABEL)).to_numpy().flatten()
             ct = gsw.CT_from_t(sa, t, p).flatten()
-            n_2, p_mid = gsw.Nsquared(SA=sa, CT=ct, p=p, lat=lat)
+            try:
+                n_2, p_mid = gsw.Nsquared(SA=sa, CT=ct, p=p, lat=lat)
+            except ValueError:
+                raise CTDError(filename=self._filename,
+                               message=f"Unable to calculate buoyancy frequency, likely due to lat = {lat}")
             buoyancy_frequency = (
                 pl.Series(np.array(n_2).flatten())
                 .extend_constant(None, n=1)
