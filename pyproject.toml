@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.5.11"
+version = "0.6.0"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -25,7 +25,7 @@ packages = [{include = "ctdfjorder"}]
 [tool.poetry.dependencies]
 python = ">=3.11"
 torch = ">=2.4.0"
-polars = ">=1.1.0"
+polars = ">=1.4.1"
 psutil = "^6.0.0"
 pandas = ">=2.2.2"
 openpyxl = ">=3.1.4"
@@ -42,9 +42,6 @@ dash = "^2.17.1"
 flask = "^3.0.3"
 pytest = "^8.3.1"
 scikit-learn = "^1.5.1"
-dash-core-components = "^2.0.0"
-dash-html-components = "^2.0.0"
-dash-table = "^5.0.0"
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"

@@ -15,7 +15,7 @@ from typing import Literal
 
 class MasterSheet:
     """
-    Represents a master sheet for research site data, allowing for the integration and cross-checking of site data.
+    Represents a master sheet for research sample data, allowing for the integration and cross-checking of sample data.
 
     Attributes
     ----------
@@ -82,6 +82,7 @@ class MasterSheet:
     longitude_label: str
     date_utc_label: str
     time_utc_label: str
+    filename_label: str
     site_names_label: str
     site_names_short_label: str
     with_crosschecked_site_names: bool
@@ -95,6 +96,7 @@ class MasterSheet:
         longitude_label: str = "nominal longitude",
         datetime_utc_label: str = "date/time (ISO)",
         unique_id_label: str = "UNIQUE ID CODE ",
+        filename_label: str = "CTD cast file name",
         site_names_label: str = "location",
         site_names_short_label: str = "loc id",
         with_crosschecked_site_names: bool = False,
@@ -106,6 +108,7 @@ class MasterSheet:
         self.unique_id_label: str = unique_id_label
         self.site_names_label: str = site_names_label
         self.site_names_short_label: str = site_names_short_label
+        self.filename_label: str = filename_label
         list_of_cols = [
             self.secchi_depth_label,
             self.latitude_label,
@@ -114,6 +117,7 @@ class MasterSheet:
             self.unique_id_label,
             self.site_names_label,
             self.site_names_short_label,
+            self.filename_label
         ]
         self.with_crosschecked_site_names: bool = with_crosschecked_site_names
 
@@ -199,9 +203,8 @@ class MasterSheet:
         profile: pl.DataFrame,
     ) -> Metadata:
         """
-        Extracts the date and time components from the filename and compares them with the data
-        in the master sheet. Calculates the absolute differences between the dates and times to
-        find the closest match. Returns the estimated latitude, longitude, unique id, and secchi depth
+        Locates the row in the master sheet with a filename value that matches the profile parameter.
+        Returns the latitude, longitude, unique id, and secchi depth from that row.
         based on the closest match.
 
         Parameters
@@ -222,46 +225,23 @@ class MasterSheet:
             When the guessed unique ID or latitude is improbable or inconsistent.
         """
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
-        if TIMESTAMP_LABEL not in profile.collect_schema().names():
-            raise CTDError(message=ERROR_NO_TIMESTAMP_IN_FILE, filename=filename)
-        timestamp_in_profile = profile.select(
-            pl.last(TIMESTAMP_LABEL)
-            .dt.convert_time_zone(TIME_ZONE)
-            .cast(pl.Datetime(time_unit=TIME_UNIT, time_zone=TIME_ZONE))
-        ).item()
-        closest_row_overall = self.data.select(
-            pl.all()
-            .sort_by((pl.col(self.datetime_utc_label) - timestamp_in_profile).abs())
-            .first()
-        )
-        latitude = closest_row_overall.select(pl.col(self.latitude_label)).item()
-        longitude = closest_row_overall.select(pl.col(self.longitude_label)).item()
-        distance = (
-            closest_row_overall.select(pl.col(self.datetime_utc_label)).item()
-            - timestamp_in_profile
-        )
-        unique_id = closest_row_overall.select(pl.col("UNIQUE ID CODE ")).item()
+        closest_row_overall = self.data.filter(pl.col(self.filename_label).str.contains(filename))
+        if closest_row_overall.height < 1:
+            raise CTDError(message="No unique ID's associated with this cast", filename=filename)
+        if closest_row_overall.height > 1:
+            raise CTDError(message="Multiple unique ID's associated with this cast", filename=filename)
+        latitude = closest_row_overall.item(row=0, column=self.latitude_label)
+        longitude = closest_row_overall.item(row=0, column=self.longitude_label)
+        unique_id = closest_row_overall.select(pl.col(self.unique_id_label)).item(row=0, column=0)
         secchi_depth = closest_row_overall.select(
             pl.col(self.secchi_depth_label).cast(pl.Float32, strict=False).first()
-        ).item()
+        ).item(row=0, column=0)
         site_name = closest_row_overall.select(
             pl.col(self.site_names_label).cast(pl.String).first()
-        ).item()
+        ).item(row=0, column=0)
         site_id = closest_row_overall.select(
             pl.col(self.site_names_short_label).cast(pl.String).first()
-        ).item()
-        # Extract days, hours, and minutes from the time difference
-        days = abs(distance.days)
-        hours, remainder = divmod(distance.seconds, 3600)
-        minutes, _ = divmod(remainder, 60)
-        message = (
-            f"Guessed Unique ID : Matched to unique ID '{unique_id}' with "
-            f"distance {days} days and time difference {hours}:{minutes}"
-        )
-        if abs(days) > 2:
-            raise_warning_improbable_match(filename=filename, message=message)
-        if abs(days) > 30:
-            CTDError(filename=filename, message=message)
+        ).item(row=0, column=0)
         if not isinstance(latitude, float):
             raise_warning_improbable_match(
                 f"Latitude: {latitude} is not float", filename=filename

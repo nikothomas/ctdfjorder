@@ -31,7 +31,7 @@ console = Console(color_system="windows")
 
 
 def process_ctd_file(
-    file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder, filters
+        file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder, filters
 ):
     """
     Processes a CTD file through a series of data cleaning and analysis steps.
@@ -113,7 +113,7 @@ def process_ctd_file(
                     step_function(data)
                 status.append(
                     "yellow" if len(warning_list) > warning_list_length
-                    and warning_list[-1].category is not ChronoFormatWarning else "green"
+                                and warning_list[-1].category is not ChronoFormatWarning else "green"
                 )
                 warning_list_length = len(warning_list)
             except CTDError as error:
@@ -193,15 +193,15 @@ def generate_status_table(status_table):
 
 
 def run_default(
-    plot,
-    master_sheet_path,
-    max_workers,
-    verbosity,
-    output_file,
-    debug_run,
-    status_show,
-    mapbox_access_token,
-    filters,
+        plot,
+        master_sheet_path,
+        max_workers,
+        verbosity,
+        output_file,
+        debug_run,
+        status_show,
+        mapbox_access_token,
+        filters,
 ):
     """
     Runs the default processing pipeline for CTD files.
@@ -242,8 +242,8 @@ def run_default(
 
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
-        : 20 if debug_run else None
-    ]
+            : 20 if debug_run else None
+            ]
     total_files = len(files)
     remaining_files = total_files
 
@@ -255,14 +255,14 @@ def run_default(
         raise CTDError(message="No '.rsk' or '.csv' found in this folder", filename="")
 
     with Status(
-        f"Processing master sheet, this might take awhile",
-        spinner="earth",
-        console=console,
+            f"Processing master sheet, this might take awhile",
+            spinner="earth",
+            console=console,
     ) as status_master_sheet:
         try:
             status_master_sheet.start()
             cached_master_sheet = (
-                MasterSheet(master_sheet_path, with_crosschecked_site_names=True)
+                MasterSheet(master_sheet_path, with_crosschecked_site_names=False)
                 if master_sheet_path
                 else None
             )
@@ -273,17 +273,12 @@ def run_default(
             if not continue_no_mastersheet:
                 sys.exit()
 
-
-    with ExitStack() as stack:
-        executor = stack.enter_context(ProcessPoolExecutor(max_workers=max_workers))
-        status_spinner_processing = stack.enter_context(
-            Status(
-                f"Processing {total_files} files. Press CTRL+Z to shutdown.",
-                spinner="earth",
-                console=console,
-            )
-        )
-
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        status_spinner_processing = Status(f"Processing {total_files} files. Press CTRL+Z to shutdown.",
+                                           spinner="earth",
+                                           console=console,
+                                           )
+        status_spinner_processing.start()
         try:
             futures = {
                 executor.submit(
@@ -311,23 +306,16 @@ def run_default(
                     status_spinner_processing.update(
                         status=f"Processing {remaining_files} files"
                     )
-
-        except KeyboardInterrupt:
             status_spinner_processing.stop()
-            with Status(
-                "Shutdown message received, terminating open profile pipelines",
-                spinner_style="red",
-            ) as status_spinner:
-                status_spinner.start()
-                executor.shutdown(wait=False, cancel_futures=True)
-                status_spinner.stop()
-                for proc in psutil.process_iter():
-                    if proc.name == "Python":
-                        proc.kill()
-        finally:
-            stack.close()
             if status_show:
                 console.print(generate_status_table(status_table))
+            status_spinner_shutdown = Status(
+                "End of processing, terminating open profile pipelines",
+                spinner_style="red",
+            )
+            status_spinner_shutdown.start()
+            executor.shutdown(wait=True, cancel_futures=True)
+            status_spinner_shutdown.stop()
             process_results(
                 results,
                 total_files,
@@ -337,9 +325,22 @@ def run_default(
                 mapbox_access_token,
             )
 
+        except KeyboardInterrupt:
+            status_spinner_processing.stop()
+            status_spinner_shutdown = Status(
+                "Shutdown message received, terminating open profile pipelines",
+                spinner_style="red",
+            )
+            status_spinner_shutdown.start()
+            executor.shutdown(wait=True, cancel_futures=True)
+            status_spinner_shutdown.stop()
+            for proc in psutil.process_iter():
+                if proc.name == "Python":
+                    proc.kill()
+
 
 def process_results(
-    results, total_files, output_file, plot, plots_folder, mapbox_access_token
+        results, total_files, output_file, plot, plots_folder, mapbox_access_token
 ):
     """
     Processes the results of the CTD file processing pipeline.
@@ -367,7 +368,7 @@ def process_results(
     """
     with console.screen():
         with Status(
-            "Combining CTD profiles", spinner="earth", console=console
+                "Combining CTD profiles", spinner="earth", console=console
         ) as status_spinner_combining:
             df = pl.concat(results, how="diagonal")
             panel = Panel(
@@ -376,11 +377,11 @@ def process_results(
                 subtitle=f"Errors/Total: {total_files - len(results)}/{total_files}",
             )
             pl.Config.set_tbl_rows(-1)
-            df_test = df.unique("filename", keep="first").select(
-                pl.col("filename"), pl.col("unique_id")
+            df_test = df.unique(subset=["filename", PROFILE_ID_LABEL], keep="first").select(
+                pl.col("filename"), pl.col("unique_id"), pl.col(TIMESTAMP_LABEL), pl.col(PROFILE_ID_LABEL)
             )
-            df_test.filter(~pl.col("unique_id").is_unique()).write_csv(
-                path.join(get_cwd(), "ISUNIQUE.csv")
+            df_test.write_csv(
+                path.join(get_cwd(), "UniqueIDs")
             )
             richprint(panel)
             df = save_to_csv(df, output_file, None)
@@ -405,9 +406,9 @@ def plot_results(df, mapbox_access_token):
     This function generates an interactive map to visualize the data.
     """
     with Status(
-        "Running interactive map view. To shutdown press CTRL+Z.",
-        spinner="earth",
-        console=console,
+            "Running interactive map view. To shutdown press CTRL+Z.",
+            spinner="earth",
+            console=console,
     ) as status_spinner_map_view:
         if mapbox_access_token:
             try:
@@ -621,6 +622,7 @@ def build_parser_docs():
     add_arguments(parser_default)
     return parser
 
+
 def add_arguments(parser):
     """
     Adds arguments to the argument parser.
@@ -743,7 +745,7 @@ def main():
         run_default(
             plot=True,
             master_sheet_path="mastersheet.csv",
-            max_workers=4,
+            max_workers=8,
             verbosity=3,
             output_file=DEFAULT_OUTPUT_FILE,
             debug_run=False,
@@ -773,8 +775,8 @@ def create_filters(args):
     provided via command-line arguments. If not all required filter arguments are provided, it returns None.
     """
     if all(
-        arg is not None
-        for arg in [args.filtercolumns, args.filterupper, args.filterlower]
+            arg is not None
+            for arg in [args.filtercolumns, args.filterupper, args.filterlower]
     ):
         return zip(args.filtercolumns, args.filterupper, args.filterlower)
     return None

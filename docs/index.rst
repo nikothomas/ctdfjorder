@@ -48,6 +48,7 @@ If you are a developer interested in interacting with the API, please refer to t
 
 Issues
 -------
+
 If you encounter an issue while running or using CTDFjorder, please submit a report on
 the `Issues <https://github.com/nikothomas/ctdfjorder/issues>`__ page. This is the fastest way to get your problem
 addressed.
@@ -64,6 +65,7 @@ Acknowledgments
 
 References
 -----------
+
 .. [PaVR19] Pan, B.J.; Vernet, M.; Reynolds, R.A.; Mitchell, B.G.: The optical and biological properties of glacial meltwater in an Antarctic fjord. PLOS ONE 14(2): e0211107 (2019). https://doi.org/10.1371/journal.pone.0211107
 
 .. [McBa11] McDougall, T. J.; Barker, P. M.: Getting started with TEOS-10 and the Gibbs Seawater (GSW) Oceanographic Toolbox. SCOR/IAPSO WG127 (2011).
