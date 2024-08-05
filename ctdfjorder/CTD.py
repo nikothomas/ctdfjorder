@@ -308,7 +308,7 @@ class CTD:
 
         See Also
         --------
-        Other related methods for data cleaning or preprocessing within the CTD class.
+        CTD : To initialize an object
 
         """
         for profile_id in (
@@ -449,7 +449,7 @@ class CTD:
 
         See Also
         --------
-        Other related methods for data cleaning or preprocessing within the CTD class.
+        remove_invalid_salinity_values : method to remove salinity values < 10 PSU.
 
         """
         for profile_id in (
@@ -511,7 +511,7 @@ class CTD:
 
         See Also
         --------
-        Other related methods for data cleaning or preprocessing within the CTD class.
+        remove_non_positive_samples : method to remove non-positive values for certain fields
 
         """
         for profile_id in (
@@ -845,7 +845,8 @@ class CTD:
 
         See Also
         --------
-        Other related methods for data analysis or preprocessing within the CTD class.
+        add_density : method to calculate derived density.
+        add_potential_density : method to calculate derived potential density.
 
         """
         self._data = self._data.with_columns(
@@ -1008,7 +1009,8 @@ class CTD:
 
         See Also
         --------
-        Other related methods for data analysis or preprocessing within the CTD class.
+        add_density : method to calculate derived density.
+        add_potential_density : method to calculate derived potential density.
 
         """
         supported_methods = ["abs_density_avg", "potential_density_avg"]
