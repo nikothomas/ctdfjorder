@@ -52,11 +52,13 @@ For the purposes of this demo are assuming that you have the following:
 * Files with endings **.rsk** from an RBR instrument or **.csv** from a Castaway device.
 * A master sheet which will be used to attach metadata to the CTD tables. This must be named mastersheet.csv and be located in the same folder as your CTD data. Additionally it must have the following fields:
    * UNIQUE ID CODE
+   * nominal longitude
+   * nominal latitude
+   * CTD cast file name
    * location
    * loc id
    * date/time (ISO)
-   * longitude
-   * latitude
+
    * sechhi depth
 
 * Access to a public `MapBox <https://docs.mapbox.com/help/getting-started/access-tokens/>`_ token.
