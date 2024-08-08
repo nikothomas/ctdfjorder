@@ -83,7 +83,7 @@ def process_ctd_file(
         ("Remove Negative", lambda data: data.remove_non_positive_samples()),
         (
             "Remove Invalid Salinity Values",
-            lambda data: data.remove_invalid_salinity_values(),
+            lambda data: data.filter_columns_by_range(columns=['salinity'], upper_bounds=[None], lower_bounds=[10]),
         ),
         ("Clean Salinity AI", lambda data: data.clean("clean_salinity_ai")),
         (

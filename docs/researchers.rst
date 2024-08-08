@@ -1,7 +1,7 @@
 Researchers
 ===========
 
-Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
+Welcome to the CTDFjorder documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
 
 .. contents:: Table of Contents
@@ -13,7 +13,7 @@ designed to process and analyze CTD (Conductivity, Temperature, Depth) data effi
 Introduction
 ------------
 
-**CTDFjorder** is a Python package that simplifies the processing and analysis of CTD data. It supports reading data
+CTDFjorder is a Python package that simplifies the processing and analysis of CTD data. It supports reading data
 from various file formats such as RBR (.rsk) and SonTek Castaway (.csv), and offers tools for data cleaning, filtering, and
 calculation of derived oceanographic quantities like absolute salinity, density, and potential density. Additionally,
 CTDFjorder includes capabilities for visualizing CTD profiles and derived quantities through advanced plotting tools.
@@ -21,7 +21,7 @@ CTDFjorder includes capabilities for visualizing CTD profiles and derived quanti
 Getting Started
 ---------------
 
-If you're new to **CTDFjorder**, we recommend starting with the :doc:`Getting Started` guide. It provides a
+If you're new to CTDFjorder, we recommend starting with the :doc:`Getting Started` guide. It provides a
 comprehensive introduction to the library, including installation instructions, basic usage examples,
 and an overview of the key features. If you'd prefer to create scripts in Python or R using CTDFjorder then visit the
 :doc:`developers` page.
@@ -29,7 +29,7 @@ and an overview of the key features. If you'd prefer to create scripts in Python
 Command-Line Interface (CLI)
 ----------------------------
 
-The **CTDFjorder** library includes a command-line interface (CLI) for processing and analyzing CTD data.
+The CTDFjorder library includes a command-line interface (CLI) for processing and analyzing CTD data.
 The CLI simplifies many common tasks and allows you to process data without needing to write Python code.
 To read in depth about the functions used in CTDFjorder read the :doc:`API`.
 
@@ -37,7 +37,6 @@ Below are the key functions from the :class:`~ctdfjorder.CTD.CTD` class used in 
 
 - :meth:`ctdfjorder.CTD.CTD.remove_upcasts`: Removes upcast data from the dataset.
 - :meth:`ctdfjorder.CTD.CTD.remove_non_positive_samples`: Removes samples with non-positive values.
-- :meth:`ctdfjorder.CTD.CTD.remove_invalid_salinity_values`: Removes invalid salinity values.
 - :meth:`ctdfjorder.CTD.CTD.clean`: Cleans the dataset.
 - :meth:`ctdfjorder.CTD.CTD.add_absolute_salinity`: Adds absolute salinity to the dataset.
 - :meth:`ctdfjorder.CTD.CTD.add_density`: Adds density calculations to the dataset.
@@ -62,7 +61,7 @@ License
 Acknowledgments
 ---------------
 
-**CTDFjorder** was developed for the Fjord Phyto project. The gsw library was used for certain derived calculations.
+CTDFjorder was developed for the Fjord Phyto project. The gsw library was used for certain derived calculations.
 
 References
 -----------

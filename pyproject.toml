@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.7.2"
+version = "0.7.3"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -21,9 +21,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 packages = [{include = "ctdfjorder"}]
+
 exclude = [
-    "ctdfjorder/newsfragments"
+    "ctdfjorder/newsfragments",
+    "ctdfjorder/phyto"
 ]
+
 [tool.poetry.dependencies]
 python = ">=3.11"
 torch = ">=2.4.0"
@@ -51,6 +54,9 @@ sphinx = ">=8.0.2"
 pydata-sphinx-theme = ">=0.15.4"
 sphinx-design = "0.6.1"
 pytest-cov = "5.0.0"
+
+[tool.poetry.extras]
+phyto = ["ctdfjorder.phyto"]
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"

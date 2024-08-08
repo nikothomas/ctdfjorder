@@ -18,8 +18,6 @@ Data Processing
 
 .. automethod:: ctdfjorder.CTD.CTD.remove_non_positive_samples
 
-.. automethod:: ctdfjorder.CTD.CTD.remove_invalid_salinity_values
-
 .. automethod:: ctdfjorder.CTD.CTD.clean
 
 Derived Calculations

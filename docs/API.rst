@@ -23,7 +23,7 @@ Welcome to the CTDFjorder API documentation! This section provides a detailed ov
 +----------------------+-----------------------------------------------------------------------------------------+
 | :doc:`Metadata`      | Handling of metadata associated with CTD data.                                          |
 +----------------------+-----------------------------------------------------------------------------------------+
-| :doc:`SCAR Database` | Access and interaction with the SCAR database.                                          |
+| :doc:`Phyto`         | Optional package for FjordPhyto convenience methods.                                    |
 +----------------------+-----------------------------------------------------------------------------------------+
 | :doc:`Utils`         | Utility functions and helpers.                                                          |
 +----------------------+-----------------------------------------------------------------------------------------+
@@ -43,6 +43,6 @@ Welcome to the CTDFjorder API documentation! This section provides a detailed ov
    Exceptions
    Load CTD
    Metadata
-   SCAR Database
+   Phyto
    Utils
    Visualize
