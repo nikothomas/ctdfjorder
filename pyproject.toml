@@ -41,10 +41,6 @@ plotly = "^5.20.0"
 dash = "^2.17.1"
 flask = "^3.0.3"
 scikit-learn = "^1.5.1"
-netcdf4 = "^1.7.1.post1"
-seabird = "^0.12.0"
-pycnv = "^0.4.2"
-sphinxcontrib-towncrier = "^0.4.0a0"
 
 [tool.poetry.group.dev.dependencies]
 towncrier = "^24.7.1"
