@@ -466,56 +466,6 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.remove_non_positive_samples.__name__)
 
-    def remove_invalid_salinity_values(self) -> None:
-        r"""
-        Removes rows with practical salinity values less than or equal to 10.
-
-        Notes
-        -----
-        This method cleans the CTD (Conductivity, Temperature, Depth) dataset by removing any samples
-        that have practical salinity values that are less than or equal to 10. Salinity values in this
-        range are generally considered invalid for typical oceanographic studies and may indicate
-        erroneous measurements or freshwater influence.
-
-        The procedure is as follows:
-
-        1. For each unique profile identified by `profile_id`, the method extracts the profile's data.
-        2. It then filters out rows where the practical salinity value is less than or equal to 10.
-        3. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
-
-        Let :math:`( S_i )` represent the practical salinity at the :math:`( i )`-th sampling event. The condition for
-        retaining a data point is given by:
-
-        .. math::
-
-            S_i > 10
-
-        Rows not satisfying this condition are considered invalid and are removed.
-
-        Examples
-        --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.remove_invalid_salinity_values()
-        >>> # This will clean the dataset by removing samples with practical salinity values less than
-        >>> # or equal to 10.
-
-        See Also
-        --------
-        remove_non_positive_samples : method to remove non-positive values for certain fields
-
-        """
-        for profile_id in (
-            self._data.select(PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
-        ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            profile = profile.filter(pl.col(SALINITY_LABEL) > 10)
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
-            self._data = self._data.vstack(profile)
-        self._is_empty(CTD.remove_invalid_salinity_values.__name__)
-
     def clean(self, method) -> None:
         r"""
         Applies data cleaning methods to the specified feature using the selected method.
