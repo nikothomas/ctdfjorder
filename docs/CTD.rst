@@ -36,7 +36,17 @@ Derived Calculations
 
 .. automethod:: ctdfjorder.CTD.CTD.add_mld
 
-.. automethod:: ctdfjorder.CTD.CTD.add_bf_squared
+.. automethod:: ctdfjorder.CTD.CTD.add_brunt_vaisala_squared
+
+.. automethod:: ctdfjorder.CTD.CTD.add_potential_temperature
+
+.. automethod:: ctdfjorder.CTD.CTD.add_conservative_temperature
+
+.. automethod:: ctdfjorder.CTD.CTD.add_dynamic_height
+
+.. automethod:: ctdfjorder.CTD.CTD.add_thermal_expansion_coefficient
+
+.. automethod:: ctdfjorder.CTD.CTD.add_haline_contraction_coefficient
 
 Data Export
 ------------

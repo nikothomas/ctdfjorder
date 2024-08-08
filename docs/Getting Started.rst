@@ -3,8 +3,8 @@ Getting Started
 .. role:: console(code)
    :language: console
 
-The following tutorial is for CLI users, if you are a developer using the library then you'll want to read
-the :doc:`API`.
+The following tutorial is for CLI users, if you are using the library to write your own Python or R scripts then you'll want to read
+:doc:`developers`.
 
 Installation
 ------------

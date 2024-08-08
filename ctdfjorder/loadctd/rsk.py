@@ -40,11 +40,10 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
         If the RSK profile is empty or if no samples are found in the file.
     """
 
-
     def process_rsk(
-            rsk_profile: pl.DataFrame,
-            geo: [Geo, Any, Any] = None,
-            filename: str = None,
+        rsk_profile: pl.DataFrame,
+        geo: [Geo, Any, Any] = None,
+        filename: str = None,
     ) -> pl.DataFrame | None:
         """
         Processes an RSK profile dataframe, adding geospatial information.

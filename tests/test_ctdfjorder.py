@@ -29,13 +29,14 @@ def mock_master_sheet(monkeypatch):
 
 @pytest.fixture
 def ctd_instance_castaway(mock_master_sheet):
-    test_file_path = os.path.join(Path(__file__).parent,'CC1531002_20181225_114931.csv')
+    test_file_path = os.path.join(Path(__file__).parent, 'CC1531002_20181225_114931.csv')
     return CTD(str(test_file_path))
 
 @pytest.fixture
 def ctd_instance_rbr(mock_master_sheet):
-    test_file_path = os.path.join(Path(__file__).parent,'230975_20231206_1027.rsk')
+    test_file_path = os.path.join(Path(__file__).parent, '230975_20231206_1027.rsk')
     return CTD(str(test_file_path))
+
 # Tests
 
 def test_ctd_initialization_castaway(mock_master_sheet):
@@ -43,7 +44,6 @@ def test_ctd_initialization_castaway(mock_master_sheet):
     ctd_instance_castaway = CTD(test_file_path)
     assert isinstance(ctd_instance_castaway, CTD)
     assert not ctd_instance_castaway.get_df().is_empty()
-
 
 def test_ctd_initialization_multiprofile_rbr(mock_master_sheet):
     test_file_path = os.path.join(Path(__file__).parent,'208041_20230120_1643.rsk')
@@ -151,9 +151,9 @@ def test_add_mld(ctd_instance_castaway):
     assert any(label.startswith("MLD") for label in ctd_instance_castaway._data.columns)
 
 
-def test_add_bf_squared(ctd_instance_castaway):
+def test_add_brunt_vaisala_squared(ctd_instance_castaway):
     ctd_instance_castaway.add_absolute_salinity()
-    ctd_instance_castaway.add_bf_squared()
+    ctd_instance_castaway.add_brunt_vaisala_squared()
     assert BV_LABEL in ctd_instance_castaway._data.columns
 
 
@@ -257,9 +257,9 @@ def test_add_mld_rbr(ctd_instance_rbr):
     assert any(label.startswith("MLD") for label in ctd_instance_rbr._data.columns)
 
 
-def test_add_bf_squared_rbr(ctd_instance_rbr):
+def test_add_brunt_vaisala_squared_rbr(ctd_instance_rbr):
     ctd_instance_rbr.add_absolute_salinity()
-    ctd_instance_rbr.add_bf_squared()
+    ctd_instance_rbr.add_brunt_vaisala_squared()
     assert BV_LABEL in ctd_instance_rbr._data.columns
 
 

@@ -47,6 +47,7 @@ def generate_sites_database(site_names: list[str]) -> SitesDatabase:
         If a provided site name does not match exactly or similarly with any site name in the SCAR datasets.
 
     """
+
     def levenshtein_distance(s1, s2):
         s1 = str.lower(s1)
         s2 = str.lower(s2)

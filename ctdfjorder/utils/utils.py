@@ -24,77 +24,15 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
     """
 
     def relabel_ctd_data(label: str) -> str:
-        data_label_mapping = {
-            TIMESTAMP_LABEL: EXPORT_TIMESTAMP_LABEL,
-            YEAR_LABEL: EXPORT_YEAR_LABEL,
-            MONTH_LABEL: EXPORT_MONTH_LABEL,
-            TEMPERATURE_LABEL: EXPORT_TEMPERATURE_LABEL,
-            PRESSURE_LABEL: EXPORT_PRESSURE_LABEL,
-            CHLOROPHYLL_LABEL: EXPORT_CHLOROPHYLL_LABEL,
-            SEA_PRESSURE_LABEL: EXPORT_SEA_PRESSURE_LABEL,
-            DEPTH_LABEL: EXPORT_DEPTH_LABEL,
-            SALINITY_LABEL: EXPORT_SALINITY_LABEL,
-            SPEED_OF_SOUND_LABEL: EXPORT_SPEED_OF_SOUND_LABEL,
-            SPECIFIC_CONDUCTIVITY_LABEL: EXPORT_SPECIFIC_CONDUCTIVITY_LABEL,
-            CONDUCTIVITY_LABEL: EXPORT_CONDUCTIVITY_LABEL,
-            DENSITY_LABEL: EXPORT_DENSITY_LABEL,
-            POTENTIAL_DENSITY_LABEL: EXPORT_POTENTIAL_DENSITY_LABEL,
-            SALINITY_ABS_LABEL: EXPORT_SALINITY_ABS_LABEL,
-            SURFACE_DENSITY_LABEL: EXPORT_SURFACE_DENSITY_LABEL,
-            SURFACE_SALINITY_LABEL: EXPORT_SURFACE_SALINITY_LABEL,
-            SURFACE_TEMPERATURE_LABEL: EXPORT_SURFACE_TEMPERATURE_LABEL,
-            MELTWATER_FRACTION_LABEL: EXPORT_MELTWATER_FRACTION_LABEL,
-            LONGITUDE_LABEL: EXPORT_LONGITUDE_LABEL,
-            LATITUDE_LABEL: EXPORT_LATITUDE_LABEL,
-            FILENAME_LABEL: EXPORT_FILENAME_LABEL,
-            PROFILE_ID_LABEL: EXPORT_PROFILE_ID_LABEL,
-            UNIQUE_ID_LABEL: EXPORT_UNIQUE_ID_LABEL,
-            BV_LABEL: EXPORT_BV_LABEL,
-            P_MID_LABEL: EXPORT_P_MID_LABEL,
-            SECCHI_DEPTH_LABEL: EXPORT_SECCHI_DEPTH_LABEL,
-            SITE_NAME_LABEL: EXPORT_SITE_NAME_LABEL,
-            SITE_ID_LABEL: EXPORT_SITE_ID_LABEL
-        }
-        return data_label_mapping.get(label, label)
+        return DATA_LABEL_MAPPING.get(label, label)
 
     # Rename columns
     renamed_data = data.rename(relabel_ctd_data)
 
-    # Define the desired column order based on the mapping values
-    ordered_columns = [
-        EXPORT_FILENAME_LABEL,
-        EXPORT_PROFILE_ID_LABEL,
-        EXPORT_UNIQUE_ID_LABEL,
-        EXPORT_SITE_NAME_LABEL,
-        EXPORT_SITE_ID_LABEL,
-        EXPORT_LONGITUDE_LABEL,
-        EXPORT_LATITUDE_LABEL,
-        EXPORT_TIMESTAMP_LABEL,
-        EXPORT_YEAR_LABEL,
-        EXPORT_MONTH_LABEL,
-        EXPORT_TEMPERATURE_LABEL,
-        EXPORT_PRESSURE_LABEL,
-        EXPORT_DEPTH_LABEL,
-        EXPORT_SEA_PRESSURE_LABEL,
-        EXPORT_CHLOROPHYLL_LABEL,
-        EXPORT_SALINITY_LABEL,
-        EXPORT_SPECIFIC_CONDUCTIVITY_LABEL,
-        EXPORT_CONDUCTIVITY_LABEL,
-        EXPORT_DENSITY_LABEL,
-        EXPORT_POTENTIAL_DENSITY_LABEL,
-        EXPORT_SALINITY_ABS_LABEL,
-        EXPORT_SURFACE_DENSITY_LABEL,
-        EXPORT_SPEED_OF_SOUND_LABEL,
-        EXPORT_SURFACE_SALINITY_LABEL,
-        EXPORT_SURFACE_TEMPERATURE_LABEL,
-        EXPORT_MELTWATER_FRACTION_LABEL,
-        EXPORT_BV_LABEL,
-        EXPORT_P_MID_LABEL,
-        EXPORT_SECCHI_DEPTH_LABEL,
-    ]
-
     # Reorder columns if they are present in the DataFrame
-    present_columns = [col for col in ordered_columns if col in renamed_data.columns]
+    present_columns = [
+        col for col in EXPORT_COLUMN_ORDER if col in renamed_data.columns
+    ]
     reordered_data = renamed_data.select(present_columns)
 
     # Append any missing columns that were not in the specified order
@@ -107,11 +45,11 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
 
     # Create metadata
     if output_file == "ctdfjorder_data.csv":
-        creation_date = datetime.now().strftime('%Y%m%d%H%M%S')
+        creation_date = datetime.now().strftime("%Y%m%d%H%M%S")
         user = getpass.getuser()
         metadata = f"_{creation_date}_{user}.csv"
         file = os.path.splitext(output_file)[0]
-        reordered_data.write_csv(file+metadata, null_value=null_value)
+        reordered_data.write_csv(file + metadata, null_value=null_value)
     else:
         reordered_data.write_csv(output_file, null_value=null_value)
     return reordered_data

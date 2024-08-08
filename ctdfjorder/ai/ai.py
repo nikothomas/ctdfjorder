@@ -17,7 +17,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 class AI:
     """
-    This class should not be imported, see :func:`ctdfjorder.CTD.clean` to use the methods here.
+    This class should not be imported, see :func:`ctdfjorder.CTD.CTD.clean` to use the methods here.
 
     """
 
