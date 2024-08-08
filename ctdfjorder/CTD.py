@@ -195,15 +195,6 @@ class CTD:
                 self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
                 self._data = self._data.vstack(profile)
 
-        # Try casting location to float
-        try:
-            self._data = self._data.with_columns(
-                pl.col(LATITUDE_LABEL).cast(pl.Float64),
-                pl.col(LONGITUDE_LABEL).cast(pl.Float64),
-            )
-        except pl.exceptions.InvalidOperationError:
-            raise CTDError(message=ERROR_LOCATION_DATA_INVALID, filename=self._filename)
-
     def get_df(self, pandas=False) -> pl.DataFrame | Any:
         """
         Returns the dataframe of the CTD object for integration with custom pipelines.
