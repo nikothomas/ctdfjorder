@@ -23,7 +23,8 @@ Getting Started
 
 If you're new to **CTDFjorder**, we recommend starting with the :doc:`Getting Started` guide. It provides a
 comprehensive introduction to the library, including installation instructions, basic usage examples,
-and an overview of the key features.
+and an overview of the key features. If you'd prefer to create scripts in Python or R using CTDFjorder then visit
+:doc:`developers`
 
 Command-Line Interface (CLI)
 ----------------------------
@@ -44,7 +45,7 @@ Below are the key functions from the :class:`~ctdfjorder.CTD.CTD` class used in 
 - :meth:`ctdfjorder.CTD.CTD.add_surface_salinity_temp_meltwater`: Adds surface salinity and temperature meltwater data.
 - :meth:`ctdfjorder.CTD.CTD.add_mean_surface_density`: Adds mean surface density data.
 - :meth:`ctdfjorder.CTD.CTD.add_mld`: Adds mixed layer depth (MLD) to the dataset.
-- :meth:`ctdfjorder.CTD.CTD.add_bf_squared`: Adds buoyancy frequency squared (N²) to the dataset.
+- :meth:`ctdfjorder.CTD.CTD.add_brunt_vaisala_squared`: Adds Brunt–Väisälä frequency squared (N²) to the dataset.
 - :meth:`ctdfjorder.CTD.CTD.save_to_csv`: Saves the processed data to a CSV file.
 - :meth:`ctdfjorder.CTD.CTD.get_df`: Returns the dataset as a pandas DataFrame.
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class ResearchSite:
     """
@@ -18,11 +19,13 @@ class ResearchSite:
     narrative : str
         A descriptive narrative about the research site.
     """
+
     name: str
     short_name: str | None
     latitude: float
     longitude: float
     narrative: str
+
 
 @dataclass
 class SitesDatabase:
@@ -34,7 +37,9 @@ class SitesDatabase:
     sites : list[ResearchSite]
         A list of ResearchSite objects that make up the database.
     """
+
     sites: list[ResearchSite]
+
 
 @dataclass
 class Metadata:
@@ -56,6 +61,7 @@ class Metadata:
     site_id : str | None
         The short name the site, if available.
     """
+
     latitude: float | None
     longitude: float | None
     unique_id: str | None

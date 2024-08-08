@@ -1,11 +1,10 @@
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.9.0"]
 
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.0.0"
+version = "0.6.2"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -21,7 +20,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 packages = [{include = "ctdfjorder"}]
-
+exclude = [
+    "ctdfjorder/newsfragments"
+]
 [tool.poetry.dependencies]
 python = ">=3.11"
 torch = ">=2.4.0"
@@ -45,6 +46,9 @@ scikit-learn = "^1.5.1"
 towncrier = "^24.7.1"
 pytest = "^8.3.1"
 pandas = ">=2.2.2"
+sphinx = ">=8.0.2"
+pydata-sphinx-theme = ">=0.15.4"
+sphinx-design = "0.6.1"
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"
@@ -54,8 +58,42 @@ issues = "https://github.com/nikothomas/ctdfjorder/issues"
 ctdcli = "ctdfjorder.cli.cli:main"
 
 [tool.towncrier]
+name = "CTDFjorder"
 package = "ctdfjorder"
-version = { module = "ctdfjorder.__version__.__version__" }
+package_dir = "."
+filename = "docs/changelog.rst"
+version = "0.6.2"
+underlines = ["=", "^", "-", "~"]
 
-[tool.poetry-dynamic-versioning]
-enable = true
+[[tool.towncrier.section]]
+path = ""
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Bugfixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Features"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "deprecation"
+name = "Deprecations (removal in next major release)"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "Backward incompatible changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "doc"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "misc"
+name = "Miscellaneous"
+showcontent = true

@@ -73,6 +73,7 @@ class MasterSheet:
         If there are issues with the data, such as missing or invalid values.
 
     """
+
     TIME_UNIT: Literal["ns", "us", "ms"] = "ns"
     TIME_ZONE: str = "UTC"
     data = None
@@ -117,7 +118,7 @@ class MasterSheet:
             self.unique_id_label,
             self.site_names_label,
             self.site_names_short_label,
-            self.filename_label
+            self.filename_label,
         ]
         self.with_crosschecked_site_names: bool = with_crosschecked_site_names
 
@@ -156,21 +157,27 @@ class MasterSheet:
             " ",
         ]
         if ".xlsx" in path.basename(master_sheet_path):
-            df = pl.read_excel(
-                master_sheet_path,
-                engine="calamine"
-            )
+            df = pl.read_excel(master_sheet_path, engine="calamine")
             df = df.select(list_of_cols)
-            df = df.with_columns(pl.col(self.datetime_utc_label).replace(old=list_of_cols, new=None))
-            df = df.with_columns(pl.col(self.datetime_utc_label).str.to_datetime(format='%Y-%m-%dT%H:%M:%S.%f%z',
-                                                                            strict=False,
-                                                                                 exact=False)
-                                 .cast(pl.Datetime)
-                                 .dt.cast_time_unit(TIME_UNIT).dt.replace_time_zone(TIME_ZONE).alias(self.datetime_utc_label))
+            df = df.with_columns(
+                pl.col(self.datetime_utc_label).replace(old=list_of_cols, new=None)
+            )
+            df = df.with_columns(
+                pl.col(self.datetime_utc_label)
+                .str.to_datetime(
+                    format="%Y-%m-%dT%H:%M:%S.%f%z", strict=False, exact=False
+                )
+                .cast(pl.Datetime)
+                .dt.cast_time_unit(TIME_UNIT)
+                .dt.replace_time_zone(TIME_ZONE)
+                .alias(self.datetime_utc_label)
+            )
             df = df.drop_nulls(self.datetime_utc_label)
             if df.is_empty():
-                raise ctdfjorder.exceptions.exceptions.Critical(f"Could not read mastersheet data from {master_sheet_path}."
-                                                                    f" If on mac download your mastersheet as a csv not an xlsx.")
+                raise ctdfjorder.exceptions.exceptions.Critical(
+                    f"Could not read mastersheet data from {master_sheet_path}."
+                    f" If on mac download your mastersheet as a csv not an xlsx."
+                )
 
         if ".csv" in path.basename(master_sheet_path):
             df = pl.read_csv(
@@ -183,10 +190,14 @@ class MasterSheet:
             try:
                 df.select(pl.col(self.datetime_utc_label).dt.time())
             except pl.exceptions.SchemaError:
-                raise ctdfjorder.exceptions.exceptions.Critical(f"Could not read mastersheet data from {master_sheet_path}."
-                                                                f" If on mac download your mastersheet as a csv not an xlsx.")
+                raise ctdfjorder.exceptions.exceptions.Critical(
+                    f"Could not read mastersheet data from {master_sheet_path}."
+                    f" If on mac download your mastersheet as a csv not an xlsx."
+                )
         if type(df) is type(None):
-            raise IOError(f"Invalid master sheet filetype. {master_sheet_path} not an xlsx or csv file.")
+            raise IOError(
+                f"Invalid master sheet filetype. {master_sheet_path} not an xlsx or csv file."
+            )
         self.data = df.drop_nulls(self.datetime_utc_label)
         self.data = self.data.with_columns(
             pl.col(latitude_label).cast(pl.Float64).alias(latitude_label),
@@ -225,14 +236,23 @@ class MasterSheet:
             When the guessed unique ID or latitude is improbable or inconsistent.
         """
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
-        closest_row_overall = self.data.filter(pl.col(self.filename_label).str.contains(filename))
+        closest_row_overall = self.data.filter(
+            pl.col(self.filename_label).str.contains(filename)
+        )
         if closest_row_overall.height < 1:
-            raise CTDError(message="No unique ID's associated with this cast", filename=filename)
+            raise CTDError(
+                message="No unique ID's associated with this cast", filename=filename
+            )
         if closest_row_overall.height > 1:
-            raise CTDError(message="Multiple unique ID's associated with this cast", filename=filename)
+            raise CTDError(
+                message="Multiple unique ID's associated with this cast",
+                filename=filename,
+            )
         latitude = closest_row_overall.item(row=0, column=self.latitude_label)
         longitude = closest_row_overall.item(row=0, column=self.longitude_label)
-        unique_id = closest_row_overall.select(pl.col(self.unique_id_label)).item(row=0, column=0)
+        unique_id = closest_row_overall.select(pl.col(self.unique_id_label)).item(
+            row=0, column=0
+        )
         secchi_depth = closest_row_overall.select(
             pl.col(self.secchi_depth_label).cast(pl.Float32, strict=False).first()
         ).item(row=0, column=0)
@@ -268,14 +288,12 @@ class MasterSheet:
                                 f"site location from SCAR with location from file yields "
                                 f"inconsistent results."
                             )
-                            raise CTDError(
-                                message=message, filename=filename
-                            )
+                            raise CTDError(message=message, filename=filename)
         return Metadata(
             latitude=latitude,
             longitude=longitude,
             unique_id=unique_id,
             secchi_depth=secchi_depth,
             site_name=site_name,
-            site_id=site_id
+            site_id=site_id,
         )

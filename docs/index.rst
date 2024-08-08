@@ -44,7 +44,7 @@ If you are a researcher looking to use the command-line interface (CLI) for proc
 Documentation for Developers
 -----------------------------
 
-If you are a developer interested in interacting with the API, please refer to the :doc:`developers` page. It provides detailed information on the :class:`~ctdfjorder.CTD.CTD` class, including its methods and how to utilize them for loading, processing, analyzing, and visualizing CTD data.
+If you are a developer interested in interacting with the API, please refer to the :doc:`developers` page. It will help you get started with the library in Python or R.
 
 Issues
 -------

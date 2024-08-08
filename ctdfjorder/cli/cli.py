@@ -31,7 +31,7 @@ console = Console(color_system="windows")
 
 
 def process_ctd_file(
-        file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder, filters
+    file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder, filters
 ):
     """
     Processes a CTD file through a series of data cleaning and analysis steps.
@@ -94,7 +94,7 @@ def process_ctd_file(
         ("Add Density", lambda data: data.add_density()),
         ("Add Potential Density", lambda data: data.add_potential_density()),
         ("Add MLD", lambda data: data.add_mld(20, "potential_density_avg")),
-        ("Add BF Squared", lambda data: data.add_bf_squared()),
+        ("Add BV Squared", lambda data: data.add_brunt_vaisala_squared()),
         ("Plot", lambda data: plot_data(data.get_df(), plots_folder)),
         ("Exit", lambda data: data.get_df()),
     ]
@@ -112,8 +112,10 @@ def process_ctd_file(
                 else:
                     step_function(data)
                 status.append(
-                    "yellow" if len(warning_list) > warning_list_length
-                                and warning_list[-1].category is not ChronoFormatWarning else "green"
+                    "yellow"
+                    if len(warning_list) > warning_list_length
+                    and warning_list[-1].category is not ChronoFormatWarning
+                    else "green"
                 )
                 warning_list_length = len(warning_list)
             except CTDError as error:
@@ -179,7 +181,7 @@ def generate_status_table(status_table):
         "Add Density",
         "Add Potential Density",
         "Add MLD",
-        "Add BF Squared",
+        "Add BV Squared",
         "Plot",
         "Exit",
     ]
@@ -193,15 +195,15 @@ def generate_status_table(status_table):
 
 
 def run_default(
-        plot,
-        master_sheet_path,
-        max_workers,
-        verbosity,
-        output_file,
-        debug_run,
-        status_show,
-        mapbox_access_token,
-        filters,
+    plot,
+    master_sheet_path,
+    max_workers,
+    verbosity,
+    output_file,
+    debug_run,
+    status_show,
+    mapbox_access_token,
+    filters,
 ):
     """
     Runs the default processing pipeline for CTD files.
@@ -242,8 +244,8 @@ def run_default(
 
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
-            : 20 if debug_run else None
-            ]
+        : 20 if debug_run else None
+    ]
     total_files = len(files)
     remaining_files = total_files
 
@@ -255,9 +257,9 @@ def run_default(
         raise CTDError(message="No '.rsk' or '.csv' found in this folder", filename="")
 
     with Status(
-            f"Processing master sheet, this might take awhile",
-            spinner="earth",
-            console=console,
+        f"Processing master sheet, this might take awhile",
+        spinner="earth",
+        console=console,
     ) as status_master_sheet:
         try:
             status_master_sheet.start()
@@ -274,10 +276,11 @@ def run_default(
                 sys.exit()
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        status_spinner_processing = Status(f"Processing {total_files} files. Press CTRL+Z to shutdown.",
-                                           spinner="earth",
-                                           console=console,
-                                           )
+        status_spinner_processing = Status(
+            f"Processing {total_files} files. Press CTRL+Z to shutdown.",
+            spinner="earth",
+            console=console,
+        )
         status_spinner_processing.start()
         try:
             futures = {
@@ -340,7 +343,7 @@ def run_default(
 
 
 def process_results(
-        results, total_files, output_file, plot, plots_folder, mapbox_access_token
+    results, total_files, output_file, plot, plots_folder, mapbox_access_token
 ):
     """
     Processes the results of the CTD file processing pipeline.
@@ -368,7 +371,7 @@ def process_results(
     """
     with console.screen():
         with Status(
-                "Combining CTD profiles", spinner="earth", console=console
+            "Combining CTD profiles", spinner="earth", console=console
         ) as status_spinner_combining:
             df = pl.concat(results, how="diagonal")
             panel = Panel(
@@ -377,12 +380,15 @@ def process_results(
                 subtitle=f"Errors/Total: {total_files - len(results)}/{total_files}",
             )
             pl.Config.set_tbl_rows(-1)
-            df_test = df.unique(subset=["filename", PROFILE_ID_LABEL], keep="first").select(
-                pl.col("filename"), pl.col("unique_id"), pl.col(TIMESTAMP_LABEL), pl.col(PROFILE_ID_LABEL)
+            df_test = df.unique(
+                subset=["filename", PROFILE_ID_LABEL], keep="first"
+            ).select(
+                pl.col("filename"),
+                pl.col("unique_id"),
+                pl.col(TIMESTAMP_LABEL),
+                pl.col(PROFILE_ID_LABEL),
             )
-            df_test.write_csv(
-                path.join(get_cwd(), "UniqueIDs")
-            )
+            df_test.write_csv(path.join(get_cwd(), "UniqueIDs"))
             richprint(panel)
             df = save_to_csv(df, output_file, None)
 
@@ -406,9 +412,9 @@ def plot_results(df, mapbox_access_token):
     This function generates an interactive map to visualize the data.
     """
     with Status(
-            "Running interactive map view. To shutdown press CTRL+Z.",
-            spinner="earth",
-            console=console,
+        "Running interactive map view. To shutdown press CTRL+Z.",
+        spinner="earth",
+        console=console,
     ) as status_spinner_map_view:
         if mapbox_access_token:
             try:
@@ -562,9 +568,7 @@ def build_parser():
     This function sets up the argument parser for the command-line interface, defining the available
     commands and their respective options. It uses RichHelpFormatterPlus for enhanced help text formatting.
     """
-    parser = ArgumentParser(
-        description="CTDFjorder", formatter_class=RichHelpFormatter
-    )
+    parser = ArgumentParser(description="CTDFjorder", formatter_class=RichHelpFormatter)
     subparsers = parser.add_subparsers(dest="command", required=True)
     parser_default = subparsers.add_parser(
         "default",
@@ -600,9 +604,7 @@ def build_parser_docs():
     This function sets up the argument parser specifically for generating documentation, defining
     the available commands and their respective options without the enhanced formatting.
     """
-    parser = ArgumentParser(
-        description="CTDFjorder"
-    )
+    parser = ArgumentParser(description="CTDFjorder")
     subparsers = parser.add_subparsers(dest="command", required=True)
     parser_default = subparsers.add_parser(
         "default",
@@ -680,7 +682,11 @@ def add_arguments(parser):
         help="MapBox token to enable interactive map plot",
     )
     parser.add_argument(
-        "-o", "--output", type=str, default=str(DEFAULT_OUTPUT_FILE), help="Output file path"
+        "-o",
+        "--output",
+        type=str,
+        default=str(DEFAULT_OUTPUT_FILE),
+        help="Output file path",
     )
     parser.add_argument(
         "--filtercolumns",
@@ -775,8 +781,8 @@ def create_filters(args):
     provided via command-line arguments. If not all required filter arguments are provided, it returns None.
     """
     if all(
-            arg is not None
-            for arg in [args.filtercolumns, args.filterupper, args.filterlower]
+        arg is not None
+        for arg in [args.filtercolumns, args.filterupper, args.filterlower]
     ):
         return zip(args.filtercolumns, args.filterupper, args.filterlower)
     return None

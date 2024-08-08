@@ -12,7 +12,7 @@ from os import path
 import numpy as np
 import polars as pl
 import gsw
-from typing import Any
+from typing import Any, Union
 import logging
 import warnings
 
@@ -107,7 +107,6 @@ class CTD:
                 self._data = load_file_rsk(ctd_file_path)
             except OperationalError:
                 raise CTDError(filename=self._filename, message=ERROR_RSK_CORRUPT)
-
         # Processing Castaway Files
         elif CASTAWAY_FILE_MARKER in ctd_file_path:
             self._data = load_file_castaway(ctd_file_path)
@@ -591,6 +590,10 @@ class CTD:
 
         Notes
         -----
+        The `gsw.SA_from_SP` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_SA_from_SP.html>`__.
+
         This method computes the absolute salinity from practical salinity for each profile in the dataset
         using the TEOS-10 standard. Absolute salinity provides a more accurate representation of salinity
         by accounting for the variations in seawater composition.
@@ -610,10 +613,6 @@ class CTD:
             S_A = f(S_P, p, \phi, \lambda)
 
         where :math:`( p )` is the sea pressure, :math:`( \phi )` is the latitude, and :math:`( \lambda )` is the longitude.
-
-        The `gsw.conversions.SA_from_SP` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
-        for this conversion. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_SA_from_SP.html>`__.
 
         Examples
         --------
@@ -658,6 +657,10 @@ class CTD:
 
         Notes
         -----
+        The `gsw.rho_t_exact` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_rho_t_exact.html>`__.
+
         This method computes the density of seawater from absolute salinity, in-situ temperature,
         and sea pressure using the TEOS-10 standard. The density is a critical parameter for
         understanding the physical properties of seawater and its buoyancy characteristics.
@@ -678,10 +681,6 @@ class CTD:
             \rho = f(S_A, T, p)
 
         where :math:`( S_A )` is the absolute salinity, :math:`( T )` is the in-situ temperature, and :math:`( p )` is the sea pressure.
-
-        The `gsw.density.rho_t_exact` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
-        for this calculation. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_rho_t_exact.html>`__.
 
         Examples
         --------
@@ -712,7 +711,10 @@ class CTD:
             t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy()
             p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy()
             density = pl.Series(
-                np.array(gsw.density.rho_t_exact(sa, t, p)).flatten(), dtype=pl.Float64, strict=True).to_frame(DENSITY_LABEL)
+                np.array(gsw.density.rho_t_exact(sa, t, p)).flatten(),
+                dtype=pl.Float64,
+                strict=True,
+            ).to_frame(DENSITY_LABEL)
             profile = profile.with_columns(density)
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
@@ -725,6 +727,10 @@ class CTD:
 
         Notes
         -----
+        The `gsw.sigma0` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_sigma0.html>`__.
+
         This method computes the potential density of seawater from absolute salinity and in-situ temperature
         using the TEOS-10 standard. Potential density is the density a parcel of seawater would have if
         it were adiabatically brought to the sea surface, which helps in understanding the stability and
@@ -746,10 +752,6 @@ class CTD:
             \sigma_0 = f(S_A, T)
 
         where :math:`( S_A )` is the absolute salinity and :math:`( T )` is the in-situ temperature.
-
-        The `gsw.sigma0` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
-        for this calculation. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_sigma0.html>`__.
 
         Examples
         --------
@@ -879,6 +881,106 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
 
+    def add_speed_of_sound(self) -> None:
+        """
+        Calculates and adds sound speed to the CTD data using the TEOS-10 formula.
+
+        This method computes the speed of sound in seawater, which is influenced by factors such as
+        salinity, temperature, and pressure. The sound speed is a critical parameter for various
+        oceanographic studies, particularly in understanding acoustic propagation.
+
+        Notes
+        -----
+        The `gsw.sound_speed` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_sound_speed.html>`__.
+
+        The speed of sound, :math:`c`, in seawater is calculated using the TEOS-10 equation:
+
+        .. math::
+
+            c = f(S_A, T, p)
+
+        where:
+        - :math:`S_A` is the absolute salinity,
+        - :math:`T` is the in-situ temperature,
+        - :math:`p` is the sea pressure.
+
+        This method adds a new column for sound speed to the dataset, and it will overwrite any existing
+        column for speed of sound.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_speed_of_sound()
+        >>> # This will add a new column with sound speed values to the dataset, calculated using the TEOS-10 formula.
+        """
+        if SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
+        self._data = self._data.with_columns(
+            pl.lit(None).cast(pl.Float64).alias(SPEED_OF_SOUND_LABEL)
+        )
+        for profile_id in (
+            self._data.select(PROFILE_ID_LABEL)
+            .unique(keep="first")
+            .to_series()
+            .to_list()
+        ):
+            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
+            t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy()
+            p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy()
+            sound_speed = pl.Series(
+                np.array(gsw.sound_speed(sa, t, p)).flatten(),
+                dtype=pl.Float64,
+                strict=True,
+            ).to_frame(SPEED_OF_SOUND_LABEL)
+            profile = profile.with_columns(sound_speed)
+            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.vstack(profile)
+        self._is_empty(CTD.add_speed_of_sound.__name__)
+
+    def add_potential_temperature(self, p_ref: Union[float, np.ndarray] = 0) -> None:
+        r"""
+        Calculates and adds potential temperature to the CTD data using the TEOS-10 formula.
+
+        This method computes the potential temperature of seawater, which is the temperature
+        a parcel of water would have if moved adiabatically to the sea surface pressure.
+
+        Notes
+        -----
+        The `gsw.pt_from_t` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_pt_from_t.html>`__.
+
+        This method adds a new column for potential temperature in the dataset.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_potential_temperature()
+        >>> # This will add a new column with potential temperature values to the dataset, calculated using the TEOS-10 formula.
+        """
+        if SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
+
+        # Compute potential temperature across all profiles in one go
+        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        t = self._data.select(pl.col(TEMPERATURE_LABEL)).to_numpy().flatten()
+        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+
+        # Calculate potential temperature for all data points
+        potential_temperature_values = gsw.pt_from_t(sa, t, p, p_ref)
+
+        # Add the calculated potential temperature to the dataframe
+        self._data = self._data.with_columns(
+            pl.Series(potential_temperature_values, dtype=pl.Float64).alias(
+                "potential_temperature"
+            )
+        )
+
+        self._is_empty(CTD.add_potential_temperature.__name__)
+
     def add_mean_surface_density(self, start=10.1325, end=12.1325):
         """
         Calculates the mean surface density from the density values and adds it as a new column
@@ -924,7 +1026,9 @@ class CTD:
 
         """
         # Filtering data within the specified pressure range
-        self._data = self._data.with_columns(pl.lit(None).cast(pl.Float64).alias(SURFACE_DENSITY_LABEL))
+        self._data = self._data.with_columns(
+            pl.lit(None).cast(pl.Float64).alias(SURFACE_DENSITY_LABEL)
+        )
         for profile_id in (
             self._data.select(PROFILE_ID_LABEL)
             .unique(keep="first")
@@ -942,6 +1046,206 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.add_mean_surface_density.__name__)
+
+    def add_conservative_temperature(self) -> None:
+        """
+        Calculates and adds conservative temperature to the CTD data using the TEOS-10 formula.
+
+        This method computes the conservative temperature, which is a more accurate measure of heat content
+        in seawater compared to potential temperature.
+
+        Notes
+        -----
+        The `gsw.CT_from_t` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_CT_from_t.html>`__.
+
+        This method adds a new column for conservative temperature in the dataset.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_conservative_temperature()
+        >>> # This will add a new column with conservative temperature values to the dataset, calculated using the TEOS-10 formula.
+
+        """
+        if SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
+
+        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        t = self._data.select(pl.col(TEMPERATURE_LABEL)).to_numpy().flatten()
+
+        conservative_temperature_values = gsw.CT_from_t(sa, t, 0)
+
+        self._data = self._data.with_columns(
+            pl.Series(conservative_temperature_values, dtype=pl.Float64).alias(
+                "conservative_temperature"
+            )
+        )
+
+        self._is_empty(CTD.add_conservative_temperature.__name__)
+
+    def add_dynamic_height(self, p_ref: Union[float, np.ndarray] = 0) -> None:
+        r"""
+        Calculates and adds dynamic height anomaly to the CTD data using the TEOS-10 formula.
+
+        This method computes the dynamic height anomaly, which represents the geostrophic streamfunction
+        that indicates the difference in horizontal velocity between the pressure at the measurement
+        point (p) and a reference pressure (p_ref).
+
+        Parameters
+        ----------
+        p_ref : Union[float, np.ndarray], optional
+            Reference pressure, in dbar. The default is 0 dbar, corresponding to the sea surface.
+
+        Notes
+        -----
+        The `gsw.geo_strf_dyn_height` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/pdf/geo_strf_dyn_height.pdf>`__.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_dynamic_height()
+        >>> # This will add a new column with dynamic height values to the dataset, calculated using the TEOS-10 formula.
+        """
+        if SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
+
+        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        ct = (
+            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE_LABEL))
+            .to_numpy()
+            .flatten()
+        )
+        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+
+        dynamic_height = gsw.geo_strf_dyn_height(sa, ct, p, p_ref)
+
+        self._data = self._data.with_columns(
+            pl.Series(dynamic_height, dtype=pl.Float64).alias("dynamic_height")
+        )
+
+        self._is_empty(CTD.add_dynamic_height.__name__)
+
+    def add_thermal_expansion_coefficient(self) -> None:
+        r"""
+        Calculates and adds thermal expansion coefficient to the CTD data using the TEOS-10 formula.
+
+        The thermal expansion coefficient, :math:`\alpha`, is important for understanding how the volume of seawater
+        changes with temperature at constant pressure. It is derived from absolute salinity, conservative temperature,
+        and sea pressure.
+
+        Notes
+        -----
+        The `gsw.alpha` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_alpha.html>`__.
+
+        The thermal expansion coefficient is calculated using the following equation from TEOS-10:
+
+        .. math::
+
+            \alpha^\theta = -\frac{1}{\rho} \frac{\partial \rho}{\partial \theta} \bigg|_{S_A, P}
+
+        where:
+        - :math:`\rho` is the in-situ density of seawater,
+        - :math:`\theta` is the conservative temperature,
+        - :math:`S_{A}` is the absolute salinity,
+        - :math:`P` is the sea pressure.
+
+        This method adds a new column for the thermal expansion coefficient in the dataset. It ensures that absolute salinity
+        and conservative temperature are present in the data, calculating them if necessary, before computing the thermal expansion coefficient.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_thermal_expansion_coefficient()
+        >>> # This will add a new column with thermal expansion coefficient values to the dataset, calculated using the TEOS-10 formula.
+
+        """
+        if SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
+        if CONSERVATIVE_TEMPERATURE_LABEL not in self._data.columns:
+            self.add_conservative_temperature()
+
+        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        ct = (
+            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE_LABEL))
+            .to_numpy()
+            .flatten()
+        )
+        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+
+        thermal_expansion_coefficient_values = gsw.alpha(sa, ct, p)
+
+        self._data = self._data.with_columns(
+            pl.Series(thermal_expansion_coefficient_values, dtype=pl.Float64).alias(
+                "thermal_expansion_coefficient"
+            )
+        )
+
+        self._is_empty(CTD.add_thermal_expansion_coefficient.__name__)
+
+    def add_haline_contraction_coefficient(self) -> None:
+        r"""
+        Calculates and adds haline contraction coefficient to the CTD data using the TEOS-10 formula.
+
+        The haline contraction coefficient, :math:`\beta`, is important for understanding how the volume of seawater
+        changes with salinity at constant temperature. It is derived from absolute salinity, conservative temperature,
+        and sea pressure.
+
+        Notes
+        -----
+        The `gsw.beta` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_beta.html>`__.
+
+        The haline contraction coefficient is calculated using the following equation from TEOS-10:
+
+        .. math::
+
+            \beta^\theta = \frac{1}{\rho} \frac{\partial \rho}{\partial S_A} \bigg|_{\theta, P}
+
+        where:
+        - :math:`\rho` is the in-situ density of seawater,
+        - :math:`S_A` is the absolute salinity,
+        - :math:`\theta` is the conservative temperature,
+        - :math:`P` is the sea pressure.
+
+        This method adds a new column for the haline contraction coefficient in the dataset. It ensures that absolute salinity
+        and conservative temperature are present in the data, calculating them if necessary, before computing the haline contraction coefficient.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_haline_contraction_coefficient()
+        >>> # This will add a new column with haline contraction coefficient values to the dataset, calculated using the TEOS-10 formula.
+
+        """
+        if SALINITY_ABS_LABEL not in self._data.columns:
+            self.add_absolute_salinity()
+        if CONSERVATIVE_TEMPERATURE_LABEL not in self._data.columns:
+            self.add_conservative_temperature()
+
+        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        ct = (
+            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE_LABEL))
+            .to_numpy()
+            .flatten()
+        )
+        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+
+        haline_contraction_coefficient_values = gsw.beta(sa, ct, p)
+
+        self._data = self._data.with_columns(
+            pl.Series(haline_contraction_coefficient_values, dtype=pl.Float64).alias(
+                "haline_contraction_coefficient"
+            )
+        )
+
+        self._is_empty(CTD.add_haline_contraction_coefficient.__name__)
 
     def add_mld(self, reference: int, method="potential_density_avg", delta=0.05):
         r"""
@@ -1044,7 +1348,7 @@ class CTD:
             self._data = self._data.vstack(profile)
         self._is_empty(CTD.add_mld.__name__)
 
-    def add_bf_squared(self):
+    def add_brunt_vaisala_squared(self):
         r"""
         Calculates buoyancy frequency squared and adds it to the CTD data.
         Requires potential density to be calculated first.
@@ -1064,6 +1368,10 @@ class CTD:
 
         Notes
         -----
+        The `gsw.Nsquared` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_Nsquared.html>`__.
+
         The buoyancy frequency squared :math:`( N^2 )` is calculated using the formula:
 
         .. math::
@@ -1076,10 +1384,6 @@ class CTD:
         Note also that the pressure increment, dP, in the above formula is in
           Pa, so that it is 104 times the pressure increment dp in dbar.
 
-        The `gsw.Nsquared` function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
-        for this calculation. More information about this function can be found at the
-        `TEOS-10 website <https://www.teos-10.org/pubs/gsw/html/gsw_Nsquared.html>`__.
-
         Raises
         ------
         CTDError
@@ -1088,7 +1392,7 @@ class CTD:
         Examples
         --------
         >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_bf_squared()
+        >>> ctd_data.add_brunt_vaisala_squared()
         >>> # This will add new columns with buoyancy frequency squared values and mid-pressure values to the dataset,
         >>> # calculated using the TEOS-10 formula.
 
@@ -1116,8 +1420,10 @@ class CTD:
             try:
                 n_2, p_mid = gsw.Nsquared(SA=sa, CT=ct, p=p, lat=lat)
             except ValueError:
-                raise CTDError(filename=self._filename,
-                               message=f"Unable to calculate buoyancy frequency, likely due to lat = {lat}")
+                raise CTDError(
+                    filename=self._filename,
+                    message=f"Unable to calculate buoyancy frequency, likely due to lat = {lat}",
+                )
             buoyancy_frequency = (
                 pl.Series(np.array(n_2).flatten())
                 .extend_constant(None, n=1)
@@ -1129,7 +1435,7 @@ class CTD:
             )
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
-        self._is_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
+        self._is_empty(CTD.add_brunt_vaisala_squared.__name__)
 
     def save_to_csv(self, output_file: str, null_value: str | None):
         """
