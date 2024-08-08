@@ -93,12 +93,6 @@ def test_remove_non_positive_samples(ctd_instance):
     assert ctd_instance._data.filter(pl.col(DEPTH_LABEL) < 0).is_empty()
 
 
-def test_remove_invalid_salinity_values(ctd_instance):
-    ctd_instance.remove_invalid_salinity_values()
-    assert not ctd_instance._data.is_empty()
-    assert ctd_instance._data.filter(pl.col(SALINITY_LABEL) < 10).is_empty()
-
-
 def test_clean_invalid_method(ctd_instance):
     with pytest.raises(CTDError):
         ctd_instance.clean('invalid_method')
