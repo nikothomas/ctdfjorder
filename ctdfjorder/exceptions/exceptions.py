@@ -43,6 +43,10 @@ class Mastersheet(Warning):
     def __init__(self, message):
         self.message = message
 
+class SCARDatabase(Warning):
+    def __init__(self, message):
+        self.message = message
+
 
 class Calculation(Warning):
     def __init__(self, message):
@@ -105,5 +109,5 @@ def raise_warning_site_location(message, filename=None):
     message : str
         Explanation of the error.
     """
-    warnings.warn(message=f"{filename} - {message}", category=Mastersheet)
+    warnings.warn(message=f"{filename} - {message}", category=SCARDatabase)
     logger.warning(f"{filename} - {message}")

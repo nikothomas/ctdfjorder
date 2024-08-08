@@ -1,12 +1,7 @@
 API Documentation
 =================
 
-Welcome to the **CTDFjorder API** documentation! This section provides a detailed overview of the various modules, classes, and functions available in the CTDFjorder library. Use the navigation below to explore the different components of the API.
-
-Introduction
-------------
-
-The CTDFjorder API is organized into several modules, each focused on specific functionality. Below is a brief overview of what each module offers:
+Welcome to the CTDFjorder API documentation! This section provides a detailed overview of the various modules, classes, and functions available in the CTDFjorder library. Use the navigation below to explore the different components of the API.
 
 +----------------------+-----------------------------------------------------------------------------------------+
 | Module               | Description                                                                             |
@@ -38,6 +33,7 @@ The CTDFjorder API is organized into several modules, each focused on specific f
 .. toctree::
    :maxdepth: 2
    :caption: Contents
+   :hidden:
 
    AI
    CLI

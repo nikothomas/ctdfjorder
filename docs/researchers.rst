@@ -1,5 +1,5 @@
-CTDFjorder for Researchers
-==========================
+Researchers
+===========
 
 Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
@@ -23,8 +23,8 @@ Getting Started
 
 If you're new to **CTDFjorder**, we recommend starting with the :doc:`Getting Started` guide. It provides a
 comprehensive introduction to the library, including installation instructions, basic usage examples,
-and an overview of the key features. If you'd prefer to create scripts in Python or R using CTDFjorder then visit
-:doc:`developers`
+and an overview of the key features. If you'd prefer to create scripts in Python or R using CTDFjorder then visit the
+:doc:`developers` page.
 
 Command-Line Interface (CLI)
 ----------------------------

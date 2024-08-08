@@ -1,5 +1,5 @@
-CTDFjorder for Developers
-=========================
+Developers
+==========
 
 Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.

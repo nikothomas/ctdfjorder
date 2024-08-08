@@ -566,6 +566,7 @@ class CTD:
         See Also
         --------
         _AI.clean_salinity_ai : Method used to clean salinity with 'clean_salinity_ai' option.
+
         """
         for profile_id in (
             self._data.select(PROFILE_ID_LABEL)
