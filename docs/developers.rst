@@ -1,9 +1,9 @@
 Developers
 ==========
 
-Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
+Welcome to the CTDFjorder developer documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
-To see everything you can do with CTDFjorder or get more in depth information on the functions used in the tutorial read the :doc:`API` documentation.
+To see everything you can do with CTDFjorder or get more in depth information on the functions used in the tutorial read the :doc:`API`.
 CTDFjorder is not native to R, but can be used in R scripts with the reticulate package.
 
 Introduction
