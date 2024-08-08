@@ -58,12 +58,13 @@ jobs:
             fi
 
 workflows:
-  build-test-and-publish:
+  test:
     jobs:
       - test-python
+
+  publish:
+    jobs:
       - build-and-publish:
-          requires:
-            - test-python
           filters:
             tags:
               only: /^v.*/
