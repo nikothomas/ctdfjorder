@@ -1,4 +1,4 @@
-name: Test
+name: Testing
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  run-with-coverage:
     runs-on: ubuntu-latest
 
     steps:
