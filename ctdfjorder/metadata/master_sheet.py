@@ -7,10 +7,14 @@ from ctdfjorder.exceptions.exceptions import (
     raise_warning_improbable_match,
 )
 from ctdfjorder.constants.constants import *
-from ctdfjorder.scardb.scardb import generate_sites_database
 from ctdfjorder.dataclasses.dataclasses import SitesDatabase, Metadata
-
 from typing import Literal
+
+# Try to import optional dependencies
+try:
+    from ctdfjorder.phyto.scardb.scardb import generate_sites_database
+except ImportError:
+    generate_sites_database = None
 
 
 class MasterSheet:
@@ -40,9 +44,9 @@ class MasterSheet:
     site_names_short_label : str
         The label for short site names in the master sheet.
     with_crosschecked_site_names : bool
-        Indicates whether site names should be cross-checked with a database.
+        Indicates whether site names should be cross-checked with a database, requires 'phyto' optional dependency.
     site_names_db : SitesDatabase
-        The database of site names for cross-checking.
+        The database of site names for cross-checking, requires 'phyto' optional dependency.
 
     Parameters
     ----------
@@ -63,7 +67,7 @@ class MasterSheet:
     site_names_short_label : str, default "loc id"
         The label for short site names in the master sheet.
     with_crosschecked_site_names : bool, default False
-        Indicates whether site names should be cross-checked with a database.
+        Indicates whether site names should be cross-checked with a database, if true requires 'phyto' optional dependency.
 
     Raises
     ------
@@ -90,17 +94,17 @@ class MasterSheet:
     site_names_db: SitesDatabase
 
     def __init__(
-        self,
-        master_sheet_path: str,
-        secchi_depth_label: str = "secchi depth",
-        latitude_label: str = "nominal latitude",
-        longitude_label: str = "nominal longitude",
-        datetime_utc_label: str = "date/time (ISO)",
-        unique_id_label: str = "UNIQUE ID CODE ",
-        filename_label: str = "CTD cast file name",
-        site_names_label: str = "location",
-        site_names_short_label: str = "loc id",
-        with_crosschecked_site_names: bool = False,
+            self,
+            master_sheet_path: str,
+            secchi_depth_label: str = "secchi depth",
+            latitude_label: str = "nominal latitude",
+            longitude_label: str = "nominal longitude",
+            datetime_utc_label: str = "date/time (ISO)",
+            unique_id_label: str = "UNIQUE ID CODE ",
+            filename_label: str = "CTD cast file name",
+            site_names_label: str = "location",
+            site_names_short_label: str = "loc id",
+            with_crosschecked_site_names: bool = False,
     ):
         self.secchi_depth_label: str = secchi_depth_label
         self.latitude_label: str = latitude_label
@@ -203,15 +207,15 @@ class MasterSheet:
             pl.col(latitude_label).cast(pl.Float64).alias(latitude_label),
             pl.col(longitude_label).cast(pl.Float64).alias(longitude_label),
         )
-        if self.with_crosschecked_site_names:
+        if self.with_crosschecked_site_names and generate_sites_database is not None:
             sites_in_master_sheet = (
                 df.select(pl.col(site_names_label)).to_series().to_list()
             )
             self.site_names_db = generate_sites_database(sites_in_master_sheet)
 
     def find_match(
-        self,
-        profile: pl.DataFrame,
+            self,
+            profile: pl.DataFrame,
     ) -> Metadata:
         """
         Locates the row in the master sheet with a filename value that matches the profile parameter.
@@ -266,7 +270,7 @@ class MasterSheet:
             raise_warning_improbable_match(
                 f"Latitude: {latitude} is not float", filename=filename
             )
-        if self.with_crosschecked_site_names:
+        if self.with_crosschecked_site_names and generate_sites_database is not None:
             latitude_from_profile = profile.select(
                 pl.col(LATITUDE_LABEL).first()
             ).item()
@@ -280,8 +284,8 @@ class MasterSheet:
                 for site in self.site_names_db.sites:
                     if site_name_of_sample_master_sheet == site.name:
                         if (
-                            not abs(site.latitude - latitude_from_profile) < 0.2
-                            or not abs(site.longitude - longitude_from_profile) < 0.2
+                                not abs(site.latitude - latitude_from_profile) < 0.2
+                                or not abs(site.longitude - longitude_from_profile) < 0.2
                         ):
                             message = (
                                 f"Matched to Unique ID '{unique_id}' but crosschecking "

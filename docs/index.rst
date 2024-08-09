@@ -4,32 +4,89 @@ CTDFjorder
 Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
 
-.. contents:: Table of Contents
-   :depth: 2
-   :local:
-   :backlinks: none
+.. |fa-globe| raw:: html
+
+    <i class="fas fa-globe"></i>
+
+.. |fa-bolt| raw:: html
+
+   <i class="fas fa-bolt"></i>
+
+.. |fa-brain| raw:: html
+
+   <i class="fas fa-brain"></i>
+
+.. |fa-terminal| raw:: html
+
+   <i class="fas fa-terminal"></i>
+
+.. |fa-r| raw:: html
+
+    <i class="fa-brands fa-r-project"></i>
+
+.. |fa-lightbulb| raw:: html
+
+   <i class="fas fa-lightbulb"></i>
+
+.. grid:: 1 1 3 3
+    :gutter: 3
+    :margin: 0
+    :padding: 0
+
+    .. grid-item-card::
+
+       |fa-globe| Agnostic Inputs
+       ^^^
+       Supports `RBR <https://rbr-global.com>`_ and `SonTek Castaway <https://www.xylem.com/en-us/products--services/analytical-instruments-and-equipment/data-collection-mapping-profiling-survey-systems/ctds/castaway-ctd/>`_ files with broader support coming soon.
 
 
-Introduction
-------------
+    .. grid-item-card::
 
-**CTDFjorder** is a Python package that simplifies the processing and analysis of CTD data. It supports reading data
-from various file formats such as RBR (.rsk) and SonTek Castaway (.csv), and offers tools for data cleaning, filtering, and
-calculation of derived oceanographic quantities like absolute salinity, density, and potential density. Additionally,
-CTDFjorder includes capabilities for visualizing CTD profiles and derived quantities through advanced plotting tools.
+        |fa-bolt| Rapid Reads
+        ^^^
+        Uses polars as the data manipulation library for high throughput.
+
+
+    .. grid-item-card::
+
+        |fa-brain| AI Analytics
+        ^^^
+        Implements cutting edge small footprint AI models for data cleaning.
+
+
+    .. grid-item-card::
+
+        |fa-terminal| CLI Interface
+        ^^^
+        Provides a well-documented command line interface for ease of use and multicore processing when handling numerous files.
+
+
+    .. grid-item-card::
+
+        |fa-r| Cross-Language Compatibility
+        ^^^
+        Can be implemented in R scripts with no functionality lost.
+
+
+    .. grid-item-card::
+
+        |fa-lightbulb| Open Source
+        ^^^
+        Moving away from proprietary pipelines provides more insight into analysis, and greater assurance in results.
+
 
 .. raw:: html
 
-    <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+    <div style="display: flex; justify-content: space-around; margin-top: 60px; margin-bottom: 80px">
 
     <a href="researchers.html" style="text-decoration: none;">
-        <button style="font-size: 20px; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px;">
+        <button style="font-size: 20px; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
             Researchers Documentation
         </button>
     </a>
 
     <a href="developers.html" style="text-decoration: none;">
-        <button style="font-size: 20px; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px;">
+        <button style="font-size: 20px; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
             Developers Documentation
         </button>
     </a>

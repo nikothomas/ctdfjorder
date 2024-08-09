@@ -4,14 +4,10 @@
 
 .. towncrier release notes start
 
-CTDFjorder 0.7.0 (2024-08-08)
+CTDFjorder 0.7.2 (2024-08-08)
 =============================
 
-Miscellaneous
-^^^^^^^^^^^^^
+Backward incompatible changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Added changelogs :)
-
-
-
-----
+- Made optional 'phyto' package for FjordPhyto specific modules

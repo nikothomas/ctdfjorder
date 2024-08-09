@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class ResearchSite:
     """
     Represents a research site with its name, coordinates, and narrative description.
+    Only used when the optional 'phyto' package is installed.
 
     Attributes
     ----------
@@ -31,6 +32,7 @@ class ResearchSite:
 class SitesDatabase:
     """
     Represents a database of research sites.
+    Only used when the optional 'phyto' package is installed.
 
     Attributes
     ----------
