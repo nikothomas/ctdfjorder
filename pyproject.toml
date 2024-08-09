@@ -13,7 +13,7 @@ documentation = "https://nikothomas.github.io/ctdfjorder/"
 readme = "README.md"
 authors = ["Nikolas Yanek-Chrones <research@icarai.io>"]
 license = "MIT"
-keywords = ["CTD"]
+keywords = ["CTD", "Oceanography", "Python", "RBR", "Castaway"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
