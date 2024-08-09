@@ -2,7 +2,7 @@
 import os
 from ctdfjorder.dataclasses.dataclasses import SitesDatabase, ResearchSite
 import polars as pl
-from ctdfjorder.exceptions.exceptions import raise_warning_site_location
+from ctdfjorder.exceptions.exceptions import raise_warning_site_location, SCARDatabase
 
 
 def generate_sites_database(site_names: list[str]) -> SitesDatabase:
@@ -31,9 +31,9 @@ def generate_sites_database(site_names: list[str]) -> SitesDatabase:
     >>> site_names = ['Site A', 'Site B', 'Site C']
     >>> database = generate_sites_database(site_names)
     >>> print(database)
-    SitesDatabase with 3 sites
+    # SitesDatabase with 3 sites
 
-    Details
+    Notes
     -------
     - The function uses Levenshtein distance to compute similarities between site names.
     - It reads data from SCAR datasets stored in Parquet files.
@@ -43,7 +43,7 @@ def generate_sites_database(site_names: list[str]) -> SitesDatabase:
 
     Raises
     ------
-    Warning
+    SCARDatabase
         If a provided site name does not match exactly or similarly with any site name in the SCAR datasets.
 
     """

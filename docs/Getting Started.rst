@@ -18,6 +18,8 @@ To do this, open your terminal (MacOS/Linux) or command prompt (Windows) and run
    $ conda create --name ctdfjorder python=3.12
    $ conda activate ctdfjorder
 
+.. tip::
+    If you would like to use SCAR Database crosschecking, install with :console:`pip install ctdfjorder[phyto]`
 
 To use CTDFjorder, first install it using pip:
 

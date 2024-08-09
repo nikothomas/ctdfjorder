@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'CTDFjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.6.2'
+release = '0.7.3'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -33,6 +33,8 @@ html_theme_options = {
     "content_footer_items": ["last-updated"],
     "use_edit_page_button": True,
     "navbar_align": "left",
+    "footer_start": ["copyright"],
+    "footer_end": [],
     "icon_links": [
         {
             # Label for this link
