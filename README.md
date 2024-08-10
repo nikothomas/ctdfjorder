@@ -1,6 +1,6 @@
 [![CircleCI](https://dl.circleci.com/status-badge/img/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/circleci/BqQeY7gNQzLD7veRpM5Fpj/4nijPG3CZqyE8SAoqtPWZr/tree/main)
 [![PyPI version](https://badge.fury.io/py/ctdfjorder.svg)](https://badge.fury.io/py/ctdfjorder)
-[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/undefined)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.3)
+[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.3)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.3)
 
 <p style=text-align:center;>
   <img src="logo.png" alt="CTDFjorder Logo"/>
