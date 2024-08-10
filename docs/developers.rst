@@ -1,9 +1,9 @@
-CTDFjorder for Developers
-=========================
+Developers
+==========
 
-Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
+Welcome to the CTDFjorder developer documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
-To see everything you can do with CTDFjorder or get more in depth information on the functions used in the tutorial read the :doc:`API` documentation.
+To see everything you can do with CTDFjorder or get more in depth information on the functions used in the tutorial read the :doc:`API`.
 CTDFjorder is not native to R, but can be used in R scripts with the reticulate package.
 
 Introduction
@@ -20,19 +20,22 @@ Here’s a brief overview of what you can do with the :class:`~ctdfjorder.CTD.CT
 
 .. raw:: html
 
-    <div style="display: flex; justify-content: center; gap: 30px; margin-top: 20px; margin-bottom: 30px;">
-        <a href="#using-ctdfjorder-in-python" style="text-decoration: none;">
-            <button style="padding: 20px 30px; font-size: 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+    <div style="display: flex; justify-content: space-around; margin-top: 80px; margin-bottom: 80px">
+
+    <a href="#using-ctdfjorder-in-python" style="text-decoration: none;">
+        <button style="font-size: 20px; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
                 <i class="fab fa-python" style="font-size: 28px;"></i>
-                Python Documentation
-            </button>
-        </a>
-        <a href="#using-ctdfjorder-in-r" style="text-decoration: none;">
-            <button style="padding: 20px 30px; font-size: 20px; cursor: pointer; background-color: #276DC3; color: white; border: none; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+                Python Tutorial
+        </button>
+    </a>
+
+    <a href="#using-ctdfjorder-in-r" style="text-decoration: none;">
+        <button style="font-size: 20px; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
                 <i class="fab fa-r-project" style="font-size: 28px;"></i>
-                R Documentation
-            </button>
-        </a>
+                R Tutorial
+        </button>
+    </a>
+
     </div>
 
 Using CTDFjorder in Python

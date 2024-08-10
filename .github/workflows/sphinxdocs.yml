@@ -24,6 +24,7 @@ jobs:
           pip install build
           pip install pydata-sphinx-theme
           pip install sphinx-argparse
+          pip install sphinx-design
       - id: deployment
         uses: sphinx-notes/pages@v3
         with:
