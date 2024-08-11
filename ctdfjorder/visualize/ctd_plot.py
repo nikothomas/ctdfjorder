@@ -27,11 +27,10 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     Notes
     -----
     This function creates a Dash web application with interactive controls for filtering the data by year,
-    season, unique ID, latitude, longitude, and date range. The filtered data is displayed on a Mapbox map.
+    month, unique ID, latitude, longitude, and date range. The filtered data is displayed on a Mapbox map.
     """
     px.set_mapbox_access_token(mapbox_access_token)
 
-    df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12 + 3) // 3).alias("season"))
     lat_median = df.select(pl.col(EXPORT_LATITUDE_LABEL).median().first()).item()
     long_median = df.select(pl.col(EXPORT_LONGITUDE_LABEL).median().first()).item()
     pd_df = df.to_pandas()
@@ -55,14 +54,28 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                         multi=True,
                     ),
                     dcc.Dropdown(
-                        id="season-dropdown",
+                        id="month-dropdown",
                         options=[
-                            {"label": "Summer", "value": 1},
-                            {"label": "Autumn", "value": 2},
-                            {"label": "Winter", "value": 3},
-                            {"label": "Spring", "value": 4},
+                            {"label": month, "value": index}
+                            for index, month in enumerate(
+                                [
+                                    "January",
+                                    "February",
+                                    "March",
+                                    "April",
+                                    "May",
+                                    "June",
+                                    "July",
+                                    "August",
+                                    "September",
+                                    "October",
+                                    "November",
+                                    "December",
+                                ],
+                                1,
+                            )
                         ],
-                        placeholder="Select a season",
+                        placeholder="Select a month",
                         multi=True,
                     ),
                     dcc.Input(
@@ -118,7 +131,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         [Output("map", "figure"), Output("total-profiles", "children")],
         [
             Input("year-dropdown", "value"),
-            Input("season-dropdown", "value"),
+            Input("month-dropdown", "value"),
             Input("unique-id-input", "value"),
             Input("lat-range", "value"),
             Input("lon-range", "value"),
@@ -127,21 +140,21 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         ],
     )
     def update_map(
-        selected_years,
-        selected_seasons,
-        unique_id_filter,
-        lat_range,
-        lon_range,
-        start_date,
-        end_date,
+            selected_years,
+            selected_months,
+            unique_id_filter,
+            lat_range,
+            lon_range,
+            start_date,
+            end_date,
     ):
         filtered_df = pd_df.copy()
         if selected_years:
             filtered_df = filtered_df[
                 filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)
             ]
-        if selected_seasons:
-            filtered_df = filtered_df[filtered_df["season"].isin(selected_seasons)]
+        if selected_months:
+            filtered_df = filtered_df[filtered_df[EXPORT_MONTH_LABEL].isin(selected_months)]
         if unique_id_filter:
             unique_id_list = unique_id_filter.split()
             try:
@@ -158,7 +171,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 filtered_df = filtered_df[
                     (filtered_df["latitude"] >= lat_min)
                     & (filtered_df["latitude"] <= lat_max)
-                ]
+                    ]
             except ValueError:
                 pass
         if lon_range:
@@ -167,14 +180,14 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 filtered_df = filtered_df[
                     (filtered_df["longitude"] >= lon_min)
                     & (filtered_df["longitude"] <= lon_max)
-                ]
+                    ]
             except ValueError:
                 pass
         if start_date and end_date:
             filtered_df = filtered_df[
                 (filtered_df["timestamp"] >= start_date)
                 & (filtered_df["timestamp"] <= end_date)
-            ]
+                ]
 
         total_profiles = len(filtered_df)
         try:
@@ -208,7 +221,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         [Input("download-button", "n_clicks")],
         [
             State("year-dropdown", "value"),
-            State("season-dropdown", "value"),
+            State("month-dropdown", "value"),
             State("unique-id-input", "value"),
             State("lat-range", "value"),
             State("lon-range", "value"),
@@ -217,14 +230,14 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         ],
     )
     def download_csv(
-        n_clicks,
-        selected_years,
-        selected_seasons,
-        unique_id_filter,
-        lat_range,
-        lon_range,
-        start_date,
-        end_date,
+            n_clicks,
+            selected_years,
+            selected_months,
+            unique_id_filter,
+            lat_range,
+            lon_range,
+            start_date,
+            end_date,
     ):
         if n_clicks is None:
             raise dash.PreventUpdate
@@ -234,8 +247,8 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
             filtered_df = filtered_df[
                 filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)
             ]
-        if selected_seasons:
-            filtered_df = filtered_df[filtered_df["season"].isin(selected_seasons)]
+        if selected_months:
+            filtered_df = filtered_df[filtered_df[EXPORT_MONTH_LABEL].isin(selected_months)]
         if unique_id_filter:
             unique_id_list = unique_id_filter.split()
             try:
@@ -252,7 +265,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 filtered_df = filtered_df[
                     (filtered_df["latitude"] >= lat_min)
                     & (filtered_df["latitude"] <= lat_max)
-                ]
+                    ]
             except ValueError:
                 pass
         if lon_range:
@@ -261,14 +274,14 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 filtered_df = filtered_df[
                     (filtered_df["longitude"] >= lon_min)
                     & (filtered_df["longitude"] <= lon_max)
-                ]
+                    ]
             except ValueError:
                 pass
         if start_date and end_date:
             filtered_df = filtered_df[
                 (filtered_df["timestamp"] >= start_date)
                 & (filtered_df["timestamp"] <= end_date)
-            ]
+                ]
 
         return dcc.send_data_frame(filtered_df.to_csv, "selected_profiles.csv")
 

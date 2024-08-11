@@ -681,14 +681,37 @@ def build_parser_docs():
         "fjord",
         help="Run the Fjord Phyto processing pipeline",
     )
-    parser_fjord.add_argument(
-        "-t",
-        "--token",
-        type=str,
-        default=None,
-        help="MapBox token to enable interactive map plot",
+    add_arguments(parser_default)
+    add_arguments(parser_fjord)
+    return parser
+
+
+def add_arguments(parser):
+    """
+    Adds arguments to the argument parser.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The argument parser to add arguments to.
+
+    Notes
+    -----
+    This function adds various command-line arguments to the parser, including options for plotting,
+    verbosity, resetting the file environment, showing processing status, running in debug mode,
+    specifying the master sheet path, setting the number of worker processes, providing a Mapbox token,
+    and defining filters for data columns.
+    """
+    parser.add_argument("-p", "--plot", action="store_true", help="Generate plots")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        dest="verbosity",
+        default=0,
+        help="Verbose logger output to ctdfjorder.log (repeat for increased verbosity)",
     )
-    parser_fjord.add_argument(
+    parser.add_argument(
         "--mld-ref",
         type=int,
         nargs="+",
@@ -722,42 +745,13 @@ def build_parser_docs():
             25,
         ],
     )
-    parser_fjord.add_argument(
+    parser.add_argument(
         "--mld-delta",
         type=float,
         nargs="+",
         default=0.05,
         help="Delta value(s) for mld calculation.",
         choices=[0.01, 0.02, 0.03, 0.04, 0.05],
-    )
-    add_arguments(parser_default)
-    return parser
-
-
-def add_arguments(parser):
-    """
-    Adds arguments to the argument parser.
-
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser
-        The argument parser to add arguments to.
-
-    Notes
-    -----
-    This function adds various command-line arguments to the parser, including options for plotting,
-    verbosity, resetting the file environment, showing processing status, running in debug mode,
-    specifying the master sheet path, setting the number of worker processes, providing a Mapbox token,
-    and defining filters for data columns.
-    """
-    parser.add_argument("-p", "--plot", action="store_true", help="Generate plots")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        dest="verbosity",
-        default=0,
-        help="Verbose logger output to ctdfjorder.log (repeat for increased verbosity)",
     )
     parser.add_argument(
         "-q",

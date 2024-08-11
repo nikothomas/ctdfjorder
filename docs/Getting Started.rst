@@ -18,9 +18,6 @@ To do this, open your terminal (MacOS/Linux) or command prompt (Windows) and run
    $ conda create --name ctdfjorder python=3.12
    $ conda activate ctdfjorder
 
-.. tip::
-    If you would like to use SCAR Database crosschecking, install with :console:`pip install ctdfjorder[phyto]`
-
 To use CTDFjorder, first install it using pip:
 
 .. code-block:: console
@@ -69,7 +66,8 @@ If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
 
 .. tip::
-    Are you a member of Fjord Phyto? If so run command this instead :console:`ctdcli fjord -t MY_TOKEN`
+
+    Are you a member of Fjord Phyto? If so run command this instead :console:`poetry run ctdcli fjord --mld-ref 20 30 --mld-delta 0.05 --token pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiOiJjbHl2Z2JzbDQxZjEwMmpwd2c1cnJpYmRyIn0.j9l0EXWa2ik51AbAcIe5HQ`
 
 .. code-block:: console
 
@@ -78,9 +76,8 @@ Then copy and paste the following into your terminal, and replace :code:`MY_TOKE
 Interpret output
 ----------------
 If you see a spinning globe you did it! Once the files are done processing a table will print with pipeline information
-for each file. Green means the file passed a step, yellow alerts you to unusual data, and red means an error occurred
-such that the file could not continue to be processed. Once all files are completed, a map will open as well.
-The points are individual casts. The map can be filtered.
+for each file. Green means the file passed a step and red means an error occurred such that the file could not continue to be processed.
+Once all files are completed, a map will open as well. The points are individual casts. The map can be filtered.
 
 * Plots are in the **ctdplots** folder next to our original data and were made with functions from the :doc:`Visualize`
   module.
