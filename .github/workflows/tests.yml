@@ -11,17 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
-      - name: Run tests with coverage
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
           cache: 'poetry'
-        run: |
-          poetry install
-          poetry run pytest --cov=ctdfjorder --cov-report=html
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run tests with coverage
+        run: poetry run pytest --cov=ctdfjorder --cov-report=html
 
       - name: Upload coverage report as artifact
         if: success()  # This step will only run if previous steps succeeded
