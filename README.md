@@ -40,7 +40,7 @@ pip install ctdfjorder
 
 ## 🚀 Usage
 CTDFjorder provides a command-line interface (CLI) for processing and analyzing CTD data in addition to serving
-as a python library. A tutorial has been setup [here](https://nikothomas.github.io/ctdfjorder/Getting%20Started.html)
+as a python library. A tutorial has been setup [here](https://ctdfjorder.readthedocs.io/en/latest/Getting%20Started.html)
 for running the CLI.
 
 ## ⚠️ Issues
