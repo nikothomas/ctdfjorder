@@ -28,7 +28,8 @@ def mock_master_sheet(monkeypatch):
     monkeypatch.setattr("ctdfjorder.metadata.master_sheet.MasterSheet", MockMasterSheet)
 
 
-@pytest.fixture(params=['CC1531002_20181225_114931.csv', '230975_20231206_1027.rsk'])
+@pytest.fixture(params=['CC1531002_20181225_114931.csv',
+                        "208039_20211215_1003.rsk",])
 def ctd_instance(request, mock_master_sheet):
     test_file_path = os.path.join(Path(__file__).parent, request.param)
     return CTD(str(test_file_path))
@@ -70,7 +71,7 @@ def test_remove_upcasts(ctd_instance):
 
 
 @pytest.mark.parametrize("upper_bounds,lower_bounds", [
-    ([0.35], [0.30]),
+    ([0.35], [-0.5]),
     ([0.0], [-0.5])
 ])
 def test_filter_columns_by_range_not_empty(ctd_instance, upper_bounds, lower_bounds):

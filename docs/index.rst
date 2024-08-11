@@ -1,7 +1,7 @@
 CTDFjorder
 ==========
 
-Welcome to the **CTDFjorder** documentation! This guide will help you get started with using the CTDFjorder library,
+Welcome to the CTDFjorder documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
 
 .. |fa-globe| raw:: html
@@ -113,12 +113,17 @@ addressed.
 License
 -------
 
-**CTDFjorder** is released under the MIT License.
+CTDFjorder is released under the MIT License.
+
+Citing CTDFjorder
+-----------------
+
+Citation information for CTDFjorder can be found here `zenodo.13293665 <https://dx.doi.org10/zenodo.13293665>`__.
 
 Acknowledgments
 ---------------
 
-**CTDFjorder** was developed for the Fjord Phyto project. The gsw library was used for certain derived calculations.
+CTDFjorder was developed for the Fjord Phyto project. The `GSW-Python <https://github.com/TEOS-10/GSW-Python>` library was used for certain derived calculations.
 
 References
 -----------

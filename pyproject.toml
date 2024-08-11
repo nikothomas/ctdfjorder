@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.7.32"
+version = "0.7.4"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -24,15 +24,12 @@ packages = [{include = "ctdfjorder"}]
 
 exclude = [
     "ctdfjorder/newsfragments",
-    "ctdfjorder/phyto"
 ]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<4.0"
-torch = ">=2.4.0"
 polars = ">=1.4.1"
 psutil = "^6.0.0"
-openpyxl = ">=3.1.4"
 numpy = ">=2.0.0"
 gsw = ">=3.6.18"
 matplotlib = ">=3.9.1post1"
@@ -45,6 +42,15 @@ plotly = "^5.20.0"
 dash = "^2.17.1"
 flask = "^3.0.3"
 scikit-learn = "^1.5.1"
+torch = [
+    {version = ">=2.4.0", markers = "sys_platform == 'darwin'", source = "pypi"},
+    {version = ">=2.4.0", markers = "sys_platform != 'darwin'", source = "torchcpu240"}
+]
+
+[[tool.poetry.source]]
+name = "torchcpu240"
+url = "https://download.pytorch.org/whl/cpu/"
+priority = 'supplemental'
 
 [tool.poetry.group.dev.dependencies]
 towncrier = "^24.7.1"
@@ -56,10 +62,6 @@ pydata-sphinx-theme = ">=0.15.4"
 sphinx-design = "0.6.1"
 sphinx-social-previews = { git = "https://github.com/choldgraf/sphinx-social-previews" }
 pytest-cov = "5.0.0"
-grayskull = "2.6.0"
-
-[tool.poetry.extras]
-phyto = ["ctdfjorder.phyto"]
 
 [tool.poetry.urls]
 homepage = "https://github.com/nikothomas/ctdfjorder"
@@ -73,7 +75,7 @@ name = "CTDFjorder"
 package = "ctdfjorder"
 package_dir = "."
 filename = "docs/changelog.rst"
-version = "0.7.32"
+version = "0.7.4"
 template = "docs/_templates/changelog.rst.jinja"
 underlines = ["=", "^", "-", "~"]
 

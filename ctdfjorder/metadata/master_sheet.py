@@ -2,12 +2,9 @@ import polars as pl
 from os import path
 
 import ctdfjorder.exceptions.exceptions
-from ctdfjorder.exceptions.exceptions import (
-    CTDError,
-    raise_warning_improbable_match,
-)
+from ctdfjorder.exceptions.exceptions import CTDError
 from ctdfjorder.constants.constants import *
-from ctdfjorder.dataclasses.dataclasses import SitesDatabase, Metadata
+from ctdfjorder.dataclasses.dataclasses import Metadata
 from typing import Literal
 
 # Try to import optional dependencies
@@ -43,10 +40,6 @@ class MasterSheet:
         The label for site names in the master sheet.
     site_names_short_label : str
         The label for short site names in the master sheet.
-    with_crosschecked_site_names : bool
-        Indicates whether site names should be cross-checked with a database, requires 'phyto' optional dependency.
-    site_names_db : SitesDatabase
-        The database of site names for cross-checking, requires 'phyto' optional dependency.
 
     Parameters
     ----------
@@ -66,8 +59,6 @@ class MasterSheet:
         The label for site names in the master sheet.
     site_names_short_label : str, default "loc id"
         The label for short site names in the master sheet.
-    with_crosschecked_site_names : bool, default False
-        Indicates whether site names should be cross-checked with a database, if true requires 'phyto' optional dependency.
 
     Raises
     ------
@@ -91,20 +82,18 @@ class MasterSheet:
     site_names_label: str
     site_names_short_label: str
     with_crosschecked_site_names: bool
-    site_names_db: SitesDatabase
 
     def __init__(
-            self,
-            master_sheet_path: str,
-            secchi_depth_label: str = "secchi depth",
-            latitude_label: str = "nominal latitude",
-            longitude_label: str = "nominal longitude",
-            datetime_utc_label: str = "date/time (ISO)",
-            unique_id_label: str = "UNIQUE ID CODE ",
-            filename_label: str = "CTD cast file name",
-            site_names_label: str = "location",
-            site_names_short_label: str = "loc id",
-            with_crosschecked_site_names: bool = False,
+        self,
+        master_sheet_path: str,
+        secchi_depth_label: str = "secchi depth",
+        latitude_label: str = "nominal latitude",
+        longitude_label: str = "nominal longitude",
+        datetime_utc_label: str = "date/time (ISO)",
+        unique_id_label: str = "UNIQUE ID CODE ",
+        filename_label: str = "CTD cast file name",
+        site_names_label: str = "location",
+        site_names_short_label: str = "loc id",
     ):
         self.secchi_depth_label: str = secchi_depth_label
         self.latitude_label: str = latitude_label
@@ -124,7 +113,6 @@ class MasterSheet:
             self.site_names_short_label,
             self.filename_label,
         ]
-        self.with_crosschecked_site_names: bool = with_crosschecked_site_names
 
         # Generating polars dataframe representation of the master sheet
         df = None
@@ -207,20 +195,14 @@ class MasterSheet:
             pl.col(latitude_label).cast(pl.Float64).alias(latitude_label),
             pl.col(longitude_label).cast(pl.Float64).alias(longitude_label),
         )
-        if self.with_crosschecked_site_names and generate_sites_database is not None:
-            sites_in_master_sheet = (
-                df.select(pl.col(site_names_label)).to_series().to_list()
-            )
-            self.site_names_db = generate_sites_database(sites_in_master_sheet)
 
     def find_match(
-            self,
-            profile: pl.DataFrame,
+        self,
+        profile: pl.DataFrame,
     ) -> Metadata:
         """
         Locates the row in the master sheet with a filename value that matches the profile parameter.
-        Returns the latitude, longitude, unique id, and secchi depth from that row.
-        based on the closest match.
+        Returns the time, latitude, longitude, unique id, loc id, location  and secchi depth from that row.
 
         Parameters
         ----------
@@ -236,8 +218,6 @@ class MasterSheet:
         ------
         CTDError
             When there is no timestamp data in the master sheet and/or CTD file.
-        Warning
-            When the guessed unique ID or latitude is improbable or inconsistent.
         """
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
         closest_row_overall = self.data.filter(
@@ -266,33 +246,6 @@ class MasterSheet:
         site_id = closest_row_overall.select(
             pl.col(self.site_names_short_label).cast(pl.String).first()
         ).item(row=0, column=0)
-        if not isinstance(latitude, float):
-            raise_warning_improbable_match(
-                f"Latitude: {latitude} is not float", filename=filename
-            )
-        if self.with_crosschecked_site_names and generate_sites_database is not None:
-            latitude_from_profile = profile.select(
-                pl.col(LATITUDE_LABEL).first()
-            ).item()
-            longitude_from_profile = profile.select(
-                pl.col(LONGITUDE_LABEL).first()
-            ).item()
-            if latitude_from_profile is not None and longitude_from_profile is not None:
-                site_name_of_sample_master_sheet = closest_row_overall.select(
-                    (pl.col(self.site_names_label))
-                ).item()
-                for site in self.site_names_db.sites:
-                    if site_name_of_sample_master_sheet == site.name:
-                        if (
-                                not abs(site.latitude - latitude_from_profile) < 0.2
-                                or not abs(site.longitude - longitude_from_profile) < 0.2
-                        ):
-                            message = (
-                                f"Matched to Unique ID '{unique_id}' but crosschecking "
-                                f"site location from SCAR with location from file yields "
-                                f"inconsistent results."
-                            )
-                            raise CTDError(message=message, filename=filename)
         return Metadata(
             latitude=latitude,
             longitude=longitude,

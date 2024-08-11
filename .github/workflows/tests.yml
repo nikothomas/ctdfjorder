@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: ['*']
 
 jobs:
   run-with-coverage:
@@ -59,3 +59,21 @@ jobs:
         with:
           name: coverage-report
           path: htmlcov
+
+      - name: Get coverage percentage
+        id: get-coverage
+        run: |
+          coverage=$(poetry run pytest --cov=ctdfjorder --cov-report=term | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "ANSWER=$coverage" >> $GITHUB_ENV
+
+      - name: Create the Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 5ceb7e714da5151b751f668c4cc49013
+          filename: answer.json
+          label: Coverage
+          message: ${{ env.ANSWER }} %
+          valColorRange: ${{ env.ANSWER }}
+          maxColorRange: 100
+          minColorRange: 0

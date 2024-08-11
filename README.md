@@ -1,7 +1,7 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13293668.svg#2)](https://doi.org/10.5281/zenodo.13293668)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13293665.svg#3)](https://doi.org/10.5281/zenodo.13293665)
 ![Tests](https://github.com/nikothomas/ctdfjorder/actions/workflows/tests.yml/badge.svg?branch=main)
-[![PyPI version](https://badge.fury.io/py/ctdfjorder.svg#2)](https://badge.fury.io/py/ctdfjorder)
-[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.3#2)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.32)
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/nikothomas/5ceb7e714da5151b751f668c4cc49013/raw/answer.json)
+[![PyPI version](https://badge.fury.io/py/ctdfjorder.svg#3)](https://badge.fury.io/py/ctdfjorder)
 
 <p style=text-align:center;>
   <img src="https://raw.githubusercontent.com/nikothomas/ctdfjorder/main/logo.png" alt="CTDFjorder Logo"/>
@@ -15,6 +15,7 @@ Documentation: [Read the docs](https://nikothomas.github.io/ctdfjorder/)
 - [<code>🚀 Usage</code>](#-usage)
 - [<code>⚠️ Issues</code>](#-issues)
 - [<code>📝 License</code>](#-license)
+- [<code>📑 Citing CTDFjorder</code>](#-license)
 - [<code>📢 Acknowledgments</code>](#-acknowledgments)
 
 ## ⭐ Features
@@ -49,8 +50,11 @@ If you encounter an issue while running or using CTDFjorder, please submit a rep
 ## 📝 License
 CTDFjorder is released under the MIT License.
 
+## 📑 Citing CTDFjorder
+Citation information for CTDFjorder can be found here [zenodo.13293665](https://dx.doi.org10/zenodo.13293665>).
+
 ## 📢 Acknowledgments
-CTDFjorder was developed for the [Fjord Phyto](https://fjordphyto.ucsd.edu) project. The gsw library was used for certain dervied calculations.
+CTDFjorder was developed for the [Fjord Phyto](https://fjordphyto.ucsd.edu) project. The [GSW-python](https://github.com/TEOS-10/GSW-Python) library was used for certain dervied calculations.
 
 ## Citations
 McDougall, T. J., & Barker, P. M. (2011). Getting started with TEOS-10 and the Gibbs Seawater (GSW) Oceanographic Toolbox. SCOR/IAPSO WG127.
