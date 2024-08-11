@@ -64,21 +64,19 @@ jobs:
         id: get-coverage
         run: |
           coverage=$(poetry run pytest --cov=ctdfjorder --cov-report=term | grep TOTAL | awk '{print $4}' | sed 's/%//')
-          echo "coverage=$coverage" >> $GITHUB_ENV
-          if [ $coverage -ge 90 ]; then echo "color=brightgreen" >> $GITHUB_ENV; fi
-          if [ $coverage -ge 80 ] && [ $coverage -lt 90 ]; then echo "color=green" >> $GITHUB_ENV; fi
-          if [ $coverage -ge 70 ] && [ $coverage -lt 80 ]; then echo "color=yellowgreen" >> $GITHUB_ENV; fi
-          if [ $coverage -ge 60 ] && [ $coverage -lt 70 ]; then echo "color=yellow" >> $GITHUB_ENV; fi
-          if [ $coverage -ge 50 ] && [ $coverage -lt 60 ]; then echo "color=orange" >> $GITHUB_ENV; fi
-          if [ $coverage -lt 50 ]; then echo "color=red" >> $GITHUB_ENV; fi
+          echo "ANSWER=$coverage" >> $GITHUB_ENV
 
-      - name: Generate coverage badge
-        uses: schneegans/dynamic-badges-action@v1.4.0
+      - name: Create the Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          auth: ${{ secrets.GITHUB_TOKEN }}
-          label: coverage
-          message: ${{ env.coverage }}%
-          color: ${{ env.color }}
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: <gist-ID>
+          filename: answer.json
+          label: Coverage
+          message: ${{ env.ANSWER }} %
+          valColorRange: ${{ env.ANSWER }}
+          maxColorRange: 100
+          minColorRange: 0
 
       - name: Output coverage badge URL
         run: |
