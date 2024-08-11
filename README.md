@@ -1,7 +1,7 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13293668.svg)](https://doi.org/10.5281/zenodo.13293668)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13293668.svg#2)](https://doi.org/10.5281/zenodo.13293668)
 ![Tests](https://github.com/nikothomas/ctdfjorder/actions/workflows/tests.yml/badge.svg?branch=main)
-[![PyPI version](https://badge.fury.io/py/ctdfjorder.svg)](https://badge.fury.io/py/ctdfjorder)
-[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.32)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.32)
+[![PyPI version](https://badge.fury.io/py/ctdfjorder.svg#2)](https://badge.fury.io/py/ctdfjorder)
+[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.3#2)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.32)
 
 <p style=text-align:center;>
   <img src="https://raw.githubusercontent.com/nikothomas/ctdfjorder/main/logo.png" alt="CTDFjorder Logo"/>
