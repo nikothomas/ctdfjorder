@@ -20,7 +20,7 @@ jobs:
           python-version: "3.12"
 
       # Cache the installation of Poetry itself.
-      - name: cache poetry install
+      - name: Cache poetry installation
         uses: actions/cache@v3
         with:
           path: ~/.local
@@ -35,19 +35,20 @@ jobs:
           installer-parallel: true
 
       # Cache dependencies.
-      - name: cache deps
+
+      - name: Cache dependencies
         id: cache-deps
         uses: actions/cache@v3
         with:
           path: .venv
-          key: pydeps-${{ hashFiles('**/poetry.lock') }}
 
-      # Install dependencies.
-      - run: poetry install --no-interaction --no-root
+          key: pydeps-${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies and project
+        run: |
+          poetry install --no-interaction --no-root
+          poetry install --no-interaction
         if: steps.cache-deps.outputs.cache-hit != 'true'
-
-      # Install ctdfjorder.
-      - run: poetry install --no-interaction
 
       - name: Run tests with coverage
         run: poetry run pytest --cov=ctdfjorder --cov-report=html
