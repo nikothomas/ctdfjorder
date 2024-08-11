@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13293668.svg)](https://doi.org/10.5281/zenodo.13293668)
 ![Tests](https://github.com/nikothomas/ctdfjorder/actions/workflows/tests.yml/badge.svg?branch=main)
 [![PyPI version](https://badge.fury.io/py/ctdfjorder.svg)](https://badge.fury.io/py/ctdfjorder)
 [![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.32)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.32)
