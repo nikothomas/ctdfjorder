@@ -1,6 +1,6 @@
 ![Tests](https://github.com/nikothomas/ctdfjorder/actions/workflows/tests.yml/badge.svg?branch=main)
 [![PyPI version](https://badge.fury.io/py/ctdfjorder.svg)](https://badge.fury.io/py/ctdfjorder)
-[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.31)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.31)
+[![Socket Badge](https://socket.dev/api/badge/pypi/package/ctdfjorder/0.7.32)](https://socket.dev/pypi/package/ctdfjorder/overview/0.7.32)
 
 <p style=text-align:center;>
   <img src="https://raw.githubusercontent.com/nikothomas/ctdfjorder/main/logo.png" alt="CTDFjorder Logo"/>
