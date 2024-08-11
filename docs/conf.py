@@ -8,18 +8,33 @@
 
 import os
 import sys
-
-
+import matplotlib.pyplot as plt
+from matplotlib import font_manager
 sys.path.insert(0, os.path.abspath('..'))
+font_dirs = ["_static/fonts"]
+print(os.getcwd())
+font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
+for font_file in font_files:
+    font_manager.fontManager.addfont(font_file)
+# Set the font family globally for Matplotlib
+plt.rcParams['font.family'] = 'Roboto'
+print(plt.rcParams['font.family'])
+print(font_manager.findSystemFonts(fontpaths=font_dirs))
 project = 'CTDFjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.7.3'
+release = '0.7.31'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'pydata_sphinx_theme', 'sphinxarg.ext', 'sphinx_design', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'pydata_sphinx_theme', 'sphinxarg.ext', 'sphinx_design', 'sphinx.ext.viewcode', "sphinx_social_previews"]
+ogp_site_url="https://nikothomas.github.io/ctdfjorder/"
+ogp_image = "https://nikothomas.github.io/ctdfjorder/_static/logo.png"
+ogp_social_previews = {
+    "image_mini": "_static/github-brand.png",
+}
+ogp_description_length = 500
 autodoc_default_flags = ['members']
 templates_path = ['_templates']
 exclude_patterns = []
@@ -35,6 +50,7 @@ html_theme_options = {
     "navbar_align": "left",
     "footer_start": ["copyright"],
     "footer_end": [],
+    "announcement": f" v{release}",
     "icon_links": [
         {
             # Label for this link

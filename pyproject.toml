@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.7.3"
+version = "0.7.31"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -28,7 +28,7 @@ exclude = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.11,<4.0"
 torch = ">=2.4.0"
 polars = ">=1.4.1"
 psutil = "^6.0.0"
@@ -53,7 +53,9 @@ pandas = ">=2.2.2"
 sphinx = ">=8.0.2"
 pydata-sphinx-theme = ">=0.15.4"
 sphinx-design = "0.6.1"
+sphinx-social-previews = { git = "https://github.com/choldgraf/sphinx-social-previews" }
 pytest-cov = "5.0.0"
+grayskull = "2.6.0"
 
 [tool.poetry.extras]
 phyto = ["ctdfjorder.phyto"]
@@ -70,7 +72,7 @@ name = "CTDFjorder"
 package = "ctdfjorder"
 package_dir = "."
 filename = "docs/changelog.rst"
-version = "0.7.2"
+version = "0.7.31"
 template = "docs/_templates/changelog.rst.jinja"
 underlines = ["=", "^", "-", "~"]
 
@@ -106,3 +108,6 @@ showcontent = true
 directory = "misc"
 name = "Miscellaneous"
 showcontent = true
+
+[tool.poetry2conda]
+name = "ctdfjorder-conda"
