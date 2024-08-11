@@ -29,7 +29,7 @@ release = '0.7.4'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'pydata_sphinx_theme', 'sphinxarg.ext', 'sphinx_design', 'sphinx.ext.viewcode', "sphinx_social_previews"]
-ogp_site_url="https://ctdfjorder.readthedocs.io/en/latest/"
+ogp_site_url = "https://ctdfjorder.readthedocs.io/en/latest/"
 ogp_image = "https://ctdfjorder.readthedocs.io/en/latest/_static/logo.png"
 ogp_social_previews = {
     "image_mini": "_static/github-brand.png",
@@ -64,6 +64,7 @@ html_theme_options = {
         }
     ],
 }
+
 html_css_files = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
 ]
