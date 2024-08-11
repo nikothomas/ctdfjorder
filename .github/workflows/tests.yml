@@ -11,20 +11,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out code
+      - name: Check out
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
-          cache: 'poetry'
+          python-version: "3.12"
 
-      - name: Install Poetry
-        run: pipx install poetry
+      # Cache the installation of Poetry itself.
+      - name: cache poetry install
+        uses: actions/cache@v3
+        with:
+          path: ~/.local
+          key: poetry-1.3.2
 
-      - name: Install dependencies
-        run: poetry install
+      # Install Poetry.
+      - uses: snok/install-poetry@v1.3.3
+        with:
+          version: 1.3.2
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      # Cache dependencies.
+      - name: cache deps
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: pydeps-${{ hashFiles('**/poetry.lock') }}
+
+      # Install dependencies.
+      - run: poetry install --no-interaction --no-root
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+
+      # Install ctdfjorder.
+      - run: poetry install --no-interaction
 
       - name: Run tests with coverage
         run: poetry run pytest --cov=ctdfjorder --cov-report=html
