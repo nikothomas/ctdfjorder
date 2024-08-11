@@ -65,14 +65,25 @@ jobs:
           coverage=$(poetry run pytest --cov=ctdfjorder --cov-report=term | grep TOTAL | awk '{print $4}' | sed 's/%//')
           echo "coverage=$coverage" >> $GITHUB_ENV
 
+      - name: Get coverage percentage
+        id: coverage
+        run: |
+          coverage=$(poetry run pytest --cov=ctdfjorder --cov-report=term | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "coverage=$coverage" >> $GITHUB_ENV
+          if [ $coverage -ge 90 ]; then echo "color=brightgreen" >> $GITHUB_ENV; fi
+          if [ $coverage -ge 80 ] && [ $coverage -lt 90 ]; then echo "color=green" >> $GITHUB_ENV; fi
+          if [ $coverage -ge 70 ] && [ $coverage -lt 80 ]; then echo "color=yellowgreen" >> $GITHUB_ENV; fi
+          if [ $coverage -ge 60 ] && [ $coverage -lt 70 ]; then echo "color=yellow" >> $GITHUB_ENV; fi
+          if [ $coverage -ge 50 ] && [ $coverage -lt 60 ]; then echo "color=orange" >> $GITHUB_ENV; fi
+          if [ $coverage -lt 50 ]; then echo "color=red" >> $GITHUB_ENV; fi
+
       - name: Generate coverage badge
         uses: schneegans/dynamic-badges-action@v1.4.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          auth: ${{ secrets.GITHUB_TOKEN }}
           label: coverage
           message: ${{ env.coverage }}%
-          color: ${{ steps.coverage.outputs.color }}
-          named-outputs: badge-url
+          color: ${{ env.color }}
 
       - name: Output coverage badge URL
         run: |
