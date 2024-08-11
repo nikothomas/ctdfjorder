@@ -23,6 +23,4 @@ sphinx:
   configuration: docs/conf.py
 python:
   install:
-    - method: pip
-      requirements: pyproject.toml
-      path: .
+  - requirements: pyproject.toml
