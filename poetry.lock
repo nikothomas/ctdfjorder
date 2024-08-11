@@ -2315,6 +2315,27 @@ lint = ["flake8 (>=6.0)", "mypy (==1.11.0)", "pytest (>=6.0)", "ruff (==0.5.5)",
 test = ["cython (>=3.0)", "defusedxml (>=0.7.1)", "pytest (>=8.0)", "setuptools (>=70.0)", "typing_extensions (>=4.9)"]
 
 [[package]]
+name = "sphinx-argparse"
+version = "0.5.2"
+description = "A sphinx extension that automatically documents argparse commands and options"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "sphinx_argparse-0.5.2-py3-none-any.whl", hash = "sha256:d771b906c36d26dee669dbdbb5605c558d9440247a5608b810f7fa6e26ab1fd3"},
+    {file = "sphinx_argparse-0.5.2.tar.gz", hash = "sha256:e5352f8fa894b6fb6fda0498ba28a9f8d435971ef4bbc1a6c9c6414e7644f032"},
+]
+
+[package.dependencies]
+docutils = ">=0.19"
+sphinx = ">=5.1.0"
+
+[package.extras]
+docs = ["CommonMark (>=0.5.6)", "furo (>=2024)"]
+lint = ["lxml-stubs (>=0.4)", "mypy (>=1.10)", "ruff (>=0.5)", "types-docutils (>=0.21)"]
+markdown = ["CommonMark (>=0.5.6)"]
+test = ["coverage (>=6.5)", "lxml (>=4.9)", "pytest (>=8.0)", "setuptools (>=70.0)", "typing_extensions (>=4.9)"]
+
+[[package]]
 name = "sphinx-design"
 version = "0.6.1"
 description = "A sphinx extension for designing beautiful, view size responsive web components."
@@ -2774,4 +2795,4 @@ phyto = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<4.0"
-content-hash = "f1f028a1964de384860f84eda7264b7a76d3acb10c5c2ca504e51a42962c7ff7"
+content-hash = "f58922e0be91cc6707b35316debb05d3c8fc2711623b9492bbcbc3277898f6a4"
