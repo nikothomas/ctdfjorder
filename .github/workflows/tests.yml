@@ -1,4 +1,4 @@
-name: Testing
+name: Tests
 
 on:
   pull_request:
@@ -12,23 +12,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Set up Python
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Run tests with coverage
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          poetry config virtualenvs.in-project true
-
-      - name: Install dependencies
+          cache: 'poetry'
         run: |
           poetry install
-
-      - name: Run tests with coverage
-        run: |
           poetry run pytest --cov=ctdfjorder --cov-report=html
 
       - name: Upload coverage report as artifact
