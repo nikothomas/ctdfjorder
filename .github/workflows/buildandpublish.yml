@@ -38,26 +38,3 @@ jobs:
           else
             echo "Current version ($CURRENT_VERSION) is not greater than existing version ($EXISTING_VERSION). Skipping publish."
           fi
-
-      - name: Get the list of commits since the last release
-        id: get_commits
-        run: |
-          # Get the latest tag (or the last commit if no tags exist)
-          LATEST_TAG=$(git describe --tags --abbrev=0 --exclude v$CURRENT_VERSION 2>/dev/null || git rev-list --max-parents=0 HEAD)
-          
-          # Get the commits since the last tag
-          COMMITS=$(git log $LATEST_TAG..HEAD --oneline)
-          echo "::set-output name=commits::$COMMITS"
-
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "v${{ steps.get_commits.outputs.current_version }}"
-          release_name: "Release ${{ steps.get_commits.outputs.current_version }}"
-          body: |
-            ### Changelog
-            ${{ steps.get_commits.outputs.commits }}
-          draft: false
-          prerelease: false
