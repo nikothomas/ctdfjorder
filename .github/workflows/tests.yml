@@ -77,7 +77,3 @@ jobs:
           valColorRange: ${{ env.ANSWER }}
           maxColorRange: 100
           minColorRange: 0
-
-      - name: Output coverage badge URL
-        run: |
-          echo "Badge URL: ${{ steps.generate-badge.outputs.badge-url }}"
