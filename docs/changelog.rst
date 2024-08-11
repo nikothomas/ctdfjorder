@@ -4,8 +4,15 @@
 
 .. towncrier release notes start
 
+
 CTDFjorder 0.7.4 (2024-08-11)
 =============================
+
+Features
+^^^^^^^^
+
+- Changed MapBox plot to use months instead of seasons for filtering
+
 
 Bugfixes
 ^^^^^^^^
@@ -21,6 +28,11 @@ Backward incompatible changes
 - Removed poetry2conda in pyproject configuration
 - Removed scar database support
 
+
+Documentation
+^^^^^^^^^^^^^
+
+- Removed sphinx workflow, moving to read the docs
 
 Miscellaneous
 ^^^^^^^^^^^^^
