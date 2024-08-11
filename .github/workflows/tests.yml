@@ -11,17 +11,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
-      - name: Run tests with coverage
+      - name: Check out
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
-          cache: 'poetry'
+          python-version: "3.12"
+
+      # Cache the installation of Poetry itself.
+      - name: Cache poetry installation
+        uses: actions/cache@v3
+        with:
+          path: ~/.local
+          key: poetry-1.3.2
+
+      # Install Poetry.
+      - uses: snok/install-poetry@v1.3.3
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      # Cache dependencies.
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: .venv
+
+          key: pydeps-${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies and project
         run: |
-          poetry install
-          poetry run pytest --cov=ctdfjorder --cov-report=html
+          poetry install --no-interaction --no-root
+          poetry install --no-interaction
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+
+      - name: Run tests with coverage
+        run: poetry run pytest --cov=ctdfjorder --cov-report=html
 
       - name: Upload coverage report as artifact
         if: success()  # This step will only run if previous steps succeeded

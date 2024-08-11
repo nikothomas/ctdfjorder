@@ -93,7 +93,7 @@ executed here, read the :doc:`API`.
 CLI Commands
 =============
 .. argparse::
-    :filename: ../ctdfjorder/ctdfjorder/cli/cli.py
+    :module: ctdfjorder.cli.cli
     :func: build_parser_docs
     :prog: sample
 
