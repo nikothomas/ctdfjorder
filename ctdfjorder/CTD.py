@@ -314,11 +314,11 @@ class CTD:
         self._is_empty(CTD.remove_upcasts.__name__)
 
     def filter_columns_by_range(
-        self,
-        filters: zip = None,
-        columns: list[str] = None,
-        upper_bounds: list[float | int] = None,
-        lower_bounds: list[float | int] = None,
+            self,
+            filters: zip = None,
+            columns: list[str] = None,
+            upper_bounds: list[float | int] = None,
+            lower_bounds: list[float | int] = None,
     ):
         """
         Filters columns of the dataset based on specified upper and lower bounds.
@@ -342,11 +342,17 @@ class CTD:
         -----
         The method performs the following steps for each unique profile identified by `profile_id`:
 
-        1. Extracts the data for the profile.
-        2. If `columns` is provided, iterates over each column and applies the corresponding upper and lower bounds
-           to filter the data.
-        3. If `filters` is provided, iterates over each filter tuple and applies the specified bounds to the relevant column.
+        1. Extracts the data for the profile using the `profile_id`.
+        2. If `filters` is provided, it iterates over each filter tuple and applies the specified bounds
+           to the relevant column, filtering out data that does not meet the criteria.
+        3. If `columns`, `upper_bounds`, and `lower_bounds` are provided, it iterates over each column
+           and applies the corresponding upper and lower bounds to filter the data.
         4. Updates the dataset by removing the original profile data and reintegrating the filtered profile data.
+        5. Checks if the dataset is empty after filtering using the `_is_empty` method.
+
+        The method is designed to be flexible, allowing filtering through either a comprehensive set of filters
+        or by specifying individual columns and their bounds directly. This makes it adaptable to various
+        dataset structures and filtering requirements.
 
         Examples
         --------
@@ -364,43 +370,35 @@ class CTD:
         See Also
         --------
         remove_non_positive_samples : Method to remove rows with non-positive values for specific parameters.
-
         """
+        def apply_bounds(profile, column, upper_bound, lower_bound):
+            if upper_bound is not None:
+                profile = profile.filter(pl.col(column) <= upper_bound)
+            if lower_bound is not None:
+                profile = profile.filter(pl.col(column) >= lower_bound)
+            return profile
+
         for profile_id in (
-            self._data.select(PROFILE_ID_LABEL)
-            .unique(keep="first")
-            .to_series()
-            .to_list()
+                self._data.select(PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            if type(columns) is not type(None):
-                for x, column in enumerate(columns):
-                    upper_bound = upper_bounds[x]
-                    lower_bound = lower_bounds[x]
-                    if type(upper_bound) is not type(None) and type(
-                        lower_bound
-                    ) is not type(None):
-                        profile = profile.filter(
-                            pl.col(column) <= upper_bound, pl.col(column) >= lower_bound
-                        )
-                    elif type(upper_bound) is not type(None):
-                        profile = profile.filter(pl.col(column) <= upper_bound)
-                    elif type(lower_bound) is not type(None):
-                        profile = profile.filter(pl.col(column) >= lower_bound)
 
-            elif type(filters) is not type(None):
-                for filter in filters:
-                    if filter[0] not in profile.columns:
-                        continue
-                    column = filter[0]
-                    upper_bound = filter[1]
-                    lower_bound = filter[2]
-                    profile = profile.filter(
-                        pl.col(column) <= upper_bound, pl.col(column) >= lower_bound
-                    )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
-            self._data = self._data.vstack(profile)
+            if filters:
+                for column, upper_bound, lower_bound in filters:
+                    if column in profile.columns:
+                        profile = apply_bounds(profile, column, upper_bound, lower_bound)
+            elif columns and upper_bounds and lower_bounds:
+                for column, upper_bound, lower_bound in zip(columns, upper_bounds, lower_bounds):
+                    profile = apply_bounds(profile, column, upper_bound, lower_bound)
+
+            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id).vstack(profile)
+
         self._is_empty(CTD.filter_columns_by_range.__name__)
+
+
 
     def remove_non_positive_samples(self) -> None:
         r"""
@@ -1198,7 +1196,7 @@ class CTD:
 
         self._is_empty(CTD.add_haline_contraction_coefficient.__name__)
 
-    def add_mld(self, reference: int, method="potential_density_avg", delta=0.05):
+    def add_mld(self, reference: int, method: str = "potential_density_avg", delta: float = 0.05):
         r"""
         Calculates and adds the mixed layer depth (MLD) using the density threshold method.
 
@@ -1209,7 +1207,8 @@ class CTD:
         method : str, default "potential_density_avg"
             The MLD calculation method. Options are "abs_density_avg" or "potential_density_avg".
         delta : float, default 0.05
-            The change in density or potential density from the reference that would define the MLD.
+            The change in density or potential density from the reference that would define the MLD in units of
+            :math:`\frac{kg}{m^3}`.
 
         Notes
         -----
@@ -1260,7 +1259,7 @@ class CTD:
 
         """
         supported_methods = ["abs_density_avg", "potential_density_avg"]
-        self._mld_col_labels.append(f"MLD {reference} (m)")
+        self._mld_col_labels.append(f"MLD_Ref:{reference}_(m)_Thresh_{delta}_(kg/m^3)")
         self._data = self._data.with_columns(
             pl.lit(None, dtype=pl.Float64).alias(self._mld_col_labels[-1])
         )
@@ -1271,8 +1270,6 @@ class CTD:
             .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            unpack = None
-            mld = None
             df_filtered = profile.filter(pl.col(DEPTH_LABEL) <= reference)
             if method == supported_methods[0]:
                 reference_density = df_filtered.select(

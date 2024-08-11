@@ -6,6 +6,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import ExitStack
 from os import path, listdir, remove, mkdir, getcwd
 from warnings import catch_warnings
+from typing import List
 import signal
 
 import polars as pl
@@ -31,7 +32,8 @@ console = Console(color_system="windows")
 
 
 def process_ctd_file(
-    file, plot, cached_master_sheet, master_sheet_path, verbosity, plots_folder, filters
+        file: str, plot: bool, cached_master_sheet: MasterSheet | None, master_sheet_path: str | None, verbosity: int,
+        plots_folder: str, filters: zip | None, mld_ref: list[int] | None, mld_delta: list[float] | None
 ):
     """
     Processes a CTD file through a series of data cleaning and analysis steps.
@@ -52,6 +54,10 @@ def process_ctd_file(
         The folder to save plots in.
     filters : list
         List of filters to apply to the data.
+    mld_ref : list[int]
+        List of reference densities for calculating MLD.
+    mld_delta : list[float]
+        List of delta values for calculating MLD.
 
     Returns
     -------
@@ -68,66 +74,95 @@ def process_ctd_file(
     If plotting is enabled, it generates plots for potential density and salinity versus depth.
     """
     logger = setup_logging(verbosity)
-    steps = [
-        (
-            "Load File",
-            lambda: CTD(
-                file,
-                plot=plot,
-                cached_master_sheet=cached_master_sheet,
-                master_sheet_path=master_sheet_path,
-            ),
-        ),
-        ("Filter", lambda data: data.filter_columns_by_range(filters=filters)),
-        ("Remove Upcasts", lambda data: data.remove_upcasts()),
-        ("Remove Negative", lambda data: data.remove_non_positive_samples()),
-        (
-            "Remove Invalid Salinity Values",
-            lambda data: data.filter_columns_by_range(columns=['salinity'], upper_bounds=[None], lower_bounds=[10]),
-        ),
-        ("Clean Salinity AI", lambda data: data.clean("clean_salinity_ai")),
-        (
-            "Add Surface Measurements",
-            lambda data: data.add_surface_salinity_temp_meltwater(),
-        ),
-        ("Add Absolute Salinity", lambda data: data.add_absolute_salinity()),
-        ("Add Density", lambda data: data.add_density()),
-        ("Add Potential Density", lambda data: data.add_potential_density()),
-        ("Add MLD", lambda data: data.add_mld(20, "potential_density_avg")),
-        ("Add BV Squared", lambda data: data.add_brunt_vaisala_squared()),
-        ("Plot", lambda data: plot_data(data.get_df(), plots_folder)),
-        ("Exit", lambda data: data.get_df()),
-    ]
-
     status = []
     data = None
-    with catch_warnings(record=True, action="once") as warning_list:
-        warning_list_length = len(warning_list)
-        for step_name, step_function in steps:
-            try:
-                if step_name == "Load File":
-                    data = step_function()
-                elif step_name == "Exit":
-                    return step_function(data), status + ["green"]
-                else:
-                    step_function(data)
-                status.append(
-                    "yellow"
-                    if len(warning_list) > warning_list_length
-                    and warning_list[-1].category is not ChronoFormatWarning
-                    else "green"
-                )
-                warning_list_length = len(warning_list)
-            except CTDError as error:
-                logger.error(error)
-                status.extend(["red"] * (len(steps) - len(status)))
-                return None, status
-            except Exception as e:
-                print(e)
-                logger.exception(e)
-                status.extend(["red"] * (len(steps) - len(status)))
-                return None, status
-    return None, status
+    stage = 0
+    try:
+        # Load File
+        data = CTD(
+            file,
+            plot=plot,
+            cached_master_sheet=cached_master_sheet,
+            master_sheet_path=master_sheet_path,
+        )
+        status.append("green")
+        stage += 1
+
+        # Filter
+        data.filter_columns_by_range(filters=filters)
+        status.append("green")
+        stage += 1
+
+        # Remove Upcasts
+        data.remove_upcasts()
+        status.append("green")
+        stage += 1
+
+        # Remove Negative Samples
+        data.remove_non_positive_samples()
+        status.append("green")
+        stage += 1
+
+        # Remove Invalid Salinity Values
+        data.filter_columns_by_range(columns=['salinity'], upper_bounds=None, lower_bounds=[10])
+        status.append("green")
+        stage += 1
+
+        # Clean Salinity AI
+        data.clean("clean_salinity_ai")
+        status.append("green")
+        stage += 1
+
+        # Add Surface Measurements
+        data.add_surface_salinity_temp_meltwater()
+        status.append("green")
+        stage += 1
+
+        # Add Absolute Salinity
+        data.add_absolute_salinity()
+        status.append("green")
+        stage += 1
+
+        # Add Density
+        data.add_density()
+        status.append("green")
+        stage += 1
+
+        # Add Potential Density
+        data.add_potential_density()
+        status.append("green")
+        stage += 1
+        for ref in mld_ref:
+            for delta in mld_delta:
+                data.add_mld(reference=ref, delta=delta, method="potential_density_avg")
+        status.append("green")
+        stage += 1
+
+        # Add BV Squared
+        data.add_brunt_vaisala_squared()
+        status.append("green")
+        stage += 1
+
+        # Plot
+        plot_data(data.get_df(), plots_folder)
+        status.append("green")
+        stage += 1
+
+        # Exit
+        return data.get_df(), status
+
+    except CTDError as error:
+        logger.error(error)
+        status.extend(["red"] * (13 - stage))
+        return None, status
+    except KeyboardInterrupt:
+        status.extend(["red"] * (13 - stage))
+        return None, status
+    except Exception as e:
+        print(e)
+        logger.exception(e)
+        status.extend(["red"] * (13 - stage))
+        return None, status
 
 
 def plot_data(my_data, plots_folder):
@@ -183,7 +218,6 @@ def generate_status_table(status_table):
         "Add MLD",
         "Add BV Squared",
         "Plot",
-        "Exit",
     ]
     table = Table(box=box.SQUARE)
     table.add_column("File", width=30)
@@ -195,15 +229,17 @@ def generate_status_table(status_table):
 
 
 def run_default(
-    plot,
-    master_sheet_path,
-    max_workers,
-    verbosity,
-    output_file,
-    debug_run,
-    status_show,
-    mapbox_access_token,
-    filters,
+        plot: bool,
+        master_sheet_path: str | None,
+        max_workers: int,
+        verbosity: int,
+        output_file: str | None,
+        debug_run: bool,
+        status_show: bool,
+        mapbox_access_token: str | None,
+        filters: zip | None,
+        mld_ref: list[int] | None = None,
+        mld_delta: list[float] | None = None,
 ):
     """
     Runs the default processing pipeline for CTD files.
@@ -226,8 +262,12 @@ def run_default(
         Flag indicating whether to show the processing status.
     mapbox_access_token : str
         The Mapbox access token for generating interactive maps.
-    filters : list or None
-        List of filters to apply to the data.
+    filters : zip or None
+        Filters to apply to the data.
+    mld_ref : list[int]
+        Reference densities for calculating MLD.
+    mld_delta : list[float]
+        Delta values for calculating MLD.
 
     Notes
     -----
@@ -236,7 +276,6 @@ def run_default(
     The processing status of each file is tracked, and results are compiled and saved to a CSV file.
     If plotting is enabled, it generates plots and an interactive map.
     """
-    logger = setup_logging(verbosity)
     status_table, results = [], []
     cached_master_sheet = None
     if not status_show:
@@ -244,8 +283,8 @@ def run_default(
 
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
-        : 20 if debug_run else None
-    ]
+            : 20 if debug_run else None
+            ]
     total_files = len(files)
     remaining_files = total_files
 
@@ -257,9 +296,9 @@ def run_default(
         raise CTDError(message="No '.rsk' or '.csv' found in this folder", filename="")
 
     with Status(
-        f"Processing master sheet, this might take awhile",
-        spinner="earth",
-        console=console,
+            f"Processing master sheet, this might take awhile",
+            spinner="earth",
+            console=console,
     ) as status_master_sheet:
         try:
             status_master_sheet.start()
@@ -274,76 +313,76 @@ def run_default(
             continue_no_mastersheet = Confirm.ask("Continue without mastersheet?")
             if not continue_no_mastersheet:
                 sys.exit()
-
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        status_spinner_processing = Status(
-            f"Processing {total_files} files. Press CTRL+Z to shutdown.",
-            spinner="earth",
-            console=console,
-        )
-        status_spinner_processing.start()
         try:
-            futures = {
-                executor.submit(
-                    process_ctd_file,
-                    file,
-                    plot,
-                    cached_master_sheet,
-                    master_sheet_path,
-                    verbosity,
-                    plots_folder,
-                    filters,
-                ): file
-                for file in files
-            }
-            for future in as_completed(futures):
-                file = futures[future]
-                result, status = future.result()
-                if isinstance(result, pl.DataFrame):
-                    results.append(result)
-                    remaining_files -= 1
-                else:
-                    remaining_files -= 1
+            with Status(
+                    f"Processing {total_files} files. Press CTRL+Z to shutdown.",
+                    spinner="earth",
+                    console=console) as status_spinner_processing:
+                status_spinner_processing.start()
+                futures = {
+                    executor.submit(
+                        process_ctd_file,
+                        file=file,
+                        plot=plot,
+                        cached_master_sheet=cached_master_sheet,
+                        master_sheet_path=master_sheet_path,
+                        verbosity=verbosity,
+                        plots_folder=plots_folder,
+                        filters=filters,
+                        mld_ref=mld_ref,
+                        mld_delta=mld_delta
+                    ): file
+                    for file in files
+                }
+                for future in as_completed(futures):
+                    file = futures[future]
+                    result, status = future.result()
+                    if isinstance(result, pl.DataFrame):
+                        results.append(result)
+                        remaining_files -= 1
+                    else:
+                        remaining_files -= 1
+                    if status_show:
+                        status_table.append((path.basename(file), status))
+                        status_spinner_processing.update(
+                            status=f"Processing {remaining_files} files"
+                        )
+                status_spinner_processing.stop()
                 if status_show:
-                    status_table.append((path.basename(file), status))
-                    status_spinner_processing.update(
-                        status=f"Processing {remaining_files} files"
-                    )
-            status_spinner_processing.stop()
-            if status_show:
-                console.print(generate_status_table(status_table))
-            status_spinner_shutdown = Status(
-                "End of processing, terminating open profile pipelines",
-                spinner_style="red",
-            )
-            status_spinner_shutdown.start()
-            executor.shutdown(wait=True, cancel_futures=True)
-            status_spinner_shutdown.stop()
-            process_results(
-                results,
-                total_files,
-                output_file,
-                plot,
-                plots_folder,
-                mapbox_access_token,
-            )
+                    console.print(generate_status_table(status_table))
+                status_spinner_shutdown = Status(
+                    "Cleaning up",
+                    spinner_style="green",
+                )
+                status_spinner_shutdown.start()
+                executor.shutdown(wait=True, cancel_futures=True)
+                status_spinner_shutdown.stop()
+                process_results(
+                    results,
+                    total_files,
+                    output_file,
+                    plot,
+                    plots_folder,
+                    mapbox_access_token,
+                )
 
         except KeyboardInterrupt:
-            status_spinner_processing.stop()
-            status_spinner_shutdown = Status(
-                "Shutdown message received, terminating open profile pipelines",
-                spinner_style="red",
-            )
-            status_spinner_shutdown.start()
-            executor.shutdown(wait=True, cancel_futures=True)
-            status_spinner_shutdown.stop()
-            for proc in psutil.process_iter():
-                if proc.name == "Python":
-                    proc.kill()
+            with Status(
+                    "Shutdown message received, terminating open processes",
+                    spinner_style="red",
+            ) as status_spinner_terminated:
+                status_spinner_terminated.start()
+                executor.shutdown(wait=True, cancel_futures=True)
+                status_spinner_terminated.stop()
+                for proc in psutil.process_iter():
+                    if str(proc.name).startswith("Python"):
+                        proc.kill()
+
 
 
 def process_results(
-    results, total_files, output_file, plot, plots_folder, mapbox_access_token
+        results, total_files, output_file, plot, plots_folder, mapbox_access_token
 ):
     """
     Processes the results of the CTD file processing pipeline.
@@ -371,7 +410,7 @@ def process_results(
     """
     with console.screen():
         with Status(
-            "Combining CTD profiles", spinner="earth", console=console
+                "Combining CTD profiles", spinner="earth", console=console
         ) as status_spinner_combining:
             df = pl.concat(results, how="diagonal")
             panel = Panel(
@@ -412,9 +451,9 @@ def plot_results(df, mapbox_access_token):
     This function generates an interactive map to visualize the data.
     """
     with Status(
-        "Running interactive map view. To shutdown press CTRL+Z.",
-        spinner="earth",
-        console=console,
+            "Running interactive map view. To shutdown press CTRL+Z.",
+            spinner="earth",
+            console=console,
     ) as status_spinner_map_view:
         if mapbox_access_token:
             try:
@@ -510,6 +549,7 @@ def setup_logging(verbosity):
     """
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTSTP, signal_handler)
     level = max(30 - (verbosity * 10), 10)
     for logger_name in [
         "tensorflow",
@@ -549,8 +589,8 @@ def signal_handler(signal_received, frame):
     This function handles system signals such as SIGINT and SIGTERM to allow for graceful
     termination of the application, cleaning up resources as needed.
     """
-    if signal_received == signal.SIGINT:
-        return
+    if signal_received == signal.SIGINT or signal_received == signal.SIGTSTP or signal_received == signal.SIGTERM:
+        raise KeyboardInterrupt
     raise KeyboardInterrupt
 
 
@@ -586,6 +626,22 @@ def build_parser():
         default=None,
         help="MapBox token to enable interactive map plot",
     )
+    parser_fjord.add_argument(
+        "--mld-ref",
+        type=int,
+        nargs='+',
+        default=20,
+        help="Reference value(s) for mld calculation.",
+        choices=range(0, 50)
+    )
+    parser_fjord.add_argument(
+        "--mld-delta",
+        type=float,
+        nargs='+',
+        default=0.05,
+        help="Delta value(s) for mld calculation.",
+        choices=[0.01, 0.02, 0.03, 0.04, 0.05]
+    )
     add_arguments(parser_default)
     return parser
 
@@ -620,6 +676,22 @@ def build_parser_docs():
         type=str,
         default=None,
         help="MapBox token to enable interactive map plot",
+    )
+    parser_fjord.add_argument(
+        "--mld-ref",
+        type=int,
+        nargs='+',
+        default=20,
+        help="Reference value(s) for mld calculation.",
+        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+    )
+    parser_fjord.add_argument(
+        "--mld-delta",
+        type=float,
+        nargs='+',
+        default=0.05,
+        help="Delta value(s) for mld calculation.",
+        choices=[0.01, 0.02, 0.03, 0.04, 0.05]
     )
     add_arguments(parser_default)
     return parser
@@ -689,7 +761,7 @@ def add_arguments(parser):
         help="Output file path",
     )
     parser.add_argument(
-        "--filtercolumns",
+        "--filter-columns",
         nargs="*",
         type=str,
         required=False,
@@ -698,7 +770,7 @@ def add_arguments(parser):
         choices=LIST_LABELS,
     )
     parser.add_argument(
-        "--filterupper",
+        "--filter-upper",
         nargs="*",
         type=float,
         required=False,
@@ -706,7 +778,7 @@ def add_arguments(parser):
         help="Upper bounds for the filtered columns",
     )
     parser.add_argument(
-        "--filterlower",
+        "--filter-lower",
         nargs="*",
         type=float,
         required=False,
@@ -748,6 +820,14 @@ def main():
     if args.command == "fjord":
         reset_file_environment()
         display_config(args)
+        if isinstance(args.mld_ref, List):
+            mld_ref = args.mld_ref
+        else:
+            mld_ref = [args.mld_ref]
+        if isinstance(args.mld_delta, List):
+            mld_delta = args.mld_delta
+        else:
+            mld_delta = [args.mld_delta]
         run_default(
             plot=True,
             master_sheet_path="mastersheet.csv",
@@ -758,6 +838,8 @@ def main():
             status_show=True,
             mapbox_access_token=args.token,
             filters=None,
+            mld_ref=mld_ref,
+            mld_delta=mld_delta,
         )
 
 
@@ -781,10 +863,10 @@ def create_filters(args):
     provided via command-line arguments. If not all required filter arguments are provided, it returns None.
     """
     if all(
-        arg is not None
-        for arg in [args.filtercolumns, args.filterupper, args.filterlower]
+            arg is not None
+            for arg in [args.filter_columns, args.filter_upper, args.filter_lower]
     ):
-        return zip(args.filtercolumns, args.filterupper, args.filterlower)
+        return zip(args.filter_columns, args.filter_upper, args.filter_lower)
     return None
 
 

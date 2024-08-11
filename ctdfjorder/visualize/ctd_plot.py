@@ -10,7 +10,7 @@ import plotly.express as px
 import logging
 from flask import Flask
 import re
-
+import matplotlib.colors as mcolors
 
 def plot_map(df: pl.DataFrame, mapbox_access_token):
     """
@@ -30,12 +30,10 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     """
     px.set_mapbox_access_token(mapbox_access_token)
 
-    df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12 + 3) // 3).alias("season"))
+    df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12+3) // 3).alias("season"))
     lat_median = df.select(pl.col(EXPORT_LATITUDE_LABEL).median().first()).item()
     long_median = df.select(pl.col(EXPORT_LONGITUDE_LABEL).median().first()).item()
     pd_df = df.to_pandas()
-
-    season_dict = {1: "Autumn", 2: "Winter", 3: "Spring", 4: "Summer"}
 
     server = Flask(__name__)
     app = dash.Dash(__name__, server=server)
@@ -58,10 +56,10 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                     dcc.Dropdown(
                         id="season-dropdown",
                         options=[
-                            {"label": "Winter", "value": 1},
-                            {"label": "Spring", "value": 2},
-                            {"label": "Summer", "value": 3},
-                            {"label": "Autumn", "value": 4},
+                            {"label": "Summer", "value": 1},
+                            {"label": "Autumn", "value": 2},
+                            {"label": "Winter", "value": 3},
+                            {"label": "Spring", "value": 4},
                         ],
                         placeholder="Select a season",
                         multi=True,
@@ -312,6 +310,15 @@ def plot_depth_vs(
         df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
     ):
         profile = df.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+        # Calculate the standard deviation of the brunt_vaisala column if it exists
+        if BV_LABEL in profile.columns:
+            try:
+                brunt_vaisala_std = profile.select(pl.col(BV_LABEL)).std().item()
+            except Exception:
+                brunt_vaisala_std = "Undefined"
+        else:
+            brunt_vaisala_std = None
+
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
         fig, ax1 = plt.subplots(figsize=(18, 18))
         ax1.invert_yaxis()
@@ -352,24 +359,58 @@ def plot_depth_vs(
         ax1.set_xlabel(label_map[measurement], color=color_map[measurement])
         ax1.set_ylabel("Depth (m)")
         ax1.tick_params(axis="x", labelcolor=color_map[measurement])
-        mld = profile.select(pl.col(r"^.*MLD.*$").first()).item()
-        if mld is not None and not np.isnan(mld):
-            # Plot MLD line
-            ax1.axhline(
-                y=mld, color="green", linestyle="--", linewidth=2, label=f"{mld}"
-            )
-            ax1.text(
-                0.95,
-                mld,
-                f"{mld}",
-                va="center",
-                ha="right",
-                backgroundcolor="white",
-                color="green",
-                transform=ax1.get_yaxis_transform(),
-            )
+
+        # Select all columns that match the MLD pattern
+        mld_columns = profile.select(pl.col(r"^.*MLD.*$"))
+
+        # Extract and filter out None or NaN MLD values
+        mld_values = [
+            profile.select(pl.col(col).first()).item()
+            for col in mld_columns.columns
+            if profile.select(pl.col(col).first()).item() is not None and not np.isnan(profile.select(pl.col(col).first()).item())
+        ]
+
+        if mld_values:  # Proceed only if there are valid MLD values
+            # Determine the minimum and maximum MLD values for normalization
+            min_mld = min(mld_values)
+            max_mld = max(mld_values)
+
+            # Normalize function to map MLD values to a 0-1 range
+            normalize = mcolors.Normalize(vmin=min_mld, vmax=max_mld)
+
+            # Base color (light green) to start with
+            base_color = (0.2, 0.8, 0.2)  # RGB for a medium green
+
+            def adjust_color(base_color, intensity):
+                """Darken the base color based on intensity."""
+                return tuple(c * (1 - intensity * 0.5) for c in base_color)
+
+            # Iterate over each MLD column and plot the corresponding MLD line
+            for col in mld_columns.columns:
+                mld = profile.select(pl.col(col).first()).item()
+                if mld is not None and not np.isnan(mld):
+                    # Normalize MLD value to get intensity
+                    intensity = normalize(mld)
+
+                    # Adjust base color according to intensity
+                    color_intensity = adjust_color(base_color, intensity)
+
+                    # Plot MLD line
+                    ax1.axhline(
+                        y=mld, color=color_intensity, linestyle="--", linewidth=2, label=f"{col}: {mld}"
+                    )
+                    ax1.text(
+                        0.95,
+                        mld,
+                        f"{col}: {mld}",
+                        va="center",
+                        ha="right",
+                        backgroundcolor="white",
+                        color=color_intensity,
+                        transform=ax1.get_yaxis_transform(),
+                    )
         plt.title(
-            f"{filename} \n Profile {profile_id} \n Depth vs. {label_map[measurement]}\n MLD {mld}"
+            f"{filename} \n Profile {profile_id} \n Depth vs. {label_map[measurement]} \n BV STD: {brunt_vaisala_std}"
         )
         ax1.grid(True)
         ax1.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3)
