@@ -25,6 +25,7 @@ jobs:
           pip install pydata-sphinx-theme
           pip install sphinx-argparse
           pip install sphinx-design
+          pip install git+https://github.com/choldgraf/sphinx-social-previews
       - id: deployment
         uses: sphinx-notes/pages@v3
         with:
