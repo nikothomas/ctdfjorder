@@ -23,8 +23,6 @@ Welcome to the CTDFjorder API documentation! This section provides a detailed ov
 +----------------------+-----------------------------------------------------------------------------------------+
 | :doc:`Metadata`      | Handling of metadata associated with CTD data.                                          |
 +----------------------+-----------------------------------------------------------------------------------------+
-| :doc:`Phyto`         | Optional package for FjordPhyto convenience methods.                                    |
-+----------------------+-----------------------------------------------------------------------------------------+
 | :doc:`Utils`         | Utility functions and helpers.                                                          |
 +----------------------+-----------------------------------------------------------------------------------------+
 | :doc:`Visualize`     | Functions and classes for visualizing CTD data.                                         |
@@ -43,6 +41,5 @@ Welcome to the CTDFjorder API documentation! This section provides a detailed ov
    Exceptions
    Load CTD
    Metadata
-   Phyto
    Utils
    Visualize

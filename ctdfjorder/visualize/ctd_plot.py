@@ -12,6 +12,7 @@ from flask import Flask
 import re
 import matplotlib.colors as mcolors
 
+
 def plot_map(df: pl.DataFrame, mapbox_access_token):
     """
     Generates an interactive map using Plotly and Dash to visualize CTD profiles.
@@ -30,7 +31,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     """
     px.set_mapbox_access_token(mapbox_access_token)
 
-    df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12+3) // 3).alias("season"))
+    df = df.with_columns(((pl.col(EXPORT_MONTH_LABEL) % 12 + 3) // 3).alias("season"))
     lat_median = df.select(pl.col(EXPORT_LATITUDE_LABEL).median().first()).item()
     long_median = df.select(pl.col(EXPORT_LONGITUDE_LABEL).median().first()).item()
     pd_df = df.to_pandas()
@@ -367,7 +368,8 @@ def plot_depth_vs(
         mld_values = [
             profile.select(pl.col(col).first()).item()
             for col in mld_columns.columns
-            if profile.select(pl.col(col).first()).item() is not None and not np.isnan(profile.select(pl.col(col).first()).item())
+            if profile.select(pl.col(col).first()).item() is not None
+            and not np.isnan(profile.select(pl.col(col).first()).item())
         ]
 
         if mld_values:  # Proceed only if there are valid MLD values
@@ -397,7 +399,11 @@ def plot_depth_vs(
 
                     # Plot MLD line
                     ax1.axhline(
-                        y=mld, color=color_intensity, linestyle="--", linewidth=2, label=f"{col}: {mld}"
+                        y=mld,
+                        color=color_intensity,
+                        linestyle="--",
+                        linewidth=2,
+                        label=f"{col}: {mld}",
                     )
                     ax1.text(
                         0.95,

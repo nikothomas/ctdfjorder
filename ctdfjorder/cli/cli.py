@@ -32,8 +32,15 @@ console = Console(color_system="windows")
 
 
 def process_ctd_file(
-        file: str, plot: bool, cached_master_sheet: MasterSheet | None, master_sheet_path: str | None, verbosity: int,
-        plots_folder: str, filters: zip | None, mld_ref: list[int] | None, mld_delta: list[float] | None
+    file: str,
+    plot: bool,
+    cached_master_sheet: MasterSheet | None,
+    master_sheet_path: str | None,
+    verbosity: int,
+    plots_folder: str,
+    filters: zip | None,
+    mld_ref: list[int] | None,
+    mld_delta: list[float] | None,
 ):
     """
     Processes a CTD file through a series of data cleaning and analysis steps.
@@ -104,7 +111,9 @@ def process_ctd_file(
         stage += 1
 
         # Remove Invalid Salinity Values
-        data.filter_columns_by_range(columns=['salinity'], upper_bounds=None, lower_bounds=[10])
+        data.filter_columns_by_range(
+            columns=["salinity"], upper_bounds=None, lower_bounds=[10]
+        )
         status.append("green")
         stage += 1
 
@@ -229,17 +238,17 @@ def generate_status_table(status_table):
 
 
 def run_default(
-        plot: bool,
-        master_sheet_path: str | None,
-        max_workers: int,
-        verbosity: int,
-        output_file: str | None,
-        debug_run: bool,
-        status_show: bool,
-        mapbox_access_token: str | None,
-        filters: zip | None,
-        mld_ref: list[int] | None = None,
-        mld_delta: list[float] | None = None,
+    plot: bool,
+    master_sheet_path: str | None,
+    max_workers: int,
+    verbosity: int,
+    output_file: str | None,
+    debug_run: bool,
+    status_show: bool,
+    mapbox_access_token: str | None,
+    filters: zip | None,
+    mld_ref: list[int] | None = None,
+    mld_delta: list[float] | None = None,
 ):
     """
     Runs the default processing pipeline for CTD files.
@@ -283,8 +292,8 @@ def run_default(
 
     plots_folder = path.join(get_cwd(), "ctdplots")
     files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
-            : 20 if debug_run else None
-            ]
+        : 20 if debug_run else None
+    ]
     total_files = len(files)
     remaining_files = total_files
 
@@ -296,16 +305,14 @@ def run_default(
         raise CTDError(message="No '.rsk' or '.csv' found in this folder", filename="")
 
     with Status(
-            f"Processing master sheet, this might take awhile",
-            spinner="earth",
-            console=console,
+        f"Processing master sheet, this might take awhile",
+        spinner="earth",
+        console=console,
     ) as status_master_sheet:
         try:
             status_master_sheet.start()
             cached_master_sheet = (
-                MasterSheet(master_sheet_path, with_crosschecked_site_names=False)
-                if master_sheet_path
-                else None
+                MasterSheet(master_sheet_path) if master_sheet_path else None
             )
         except Critical as e:
             status_master_sheet.stop()
@@ -316,9 +323,10 @@ def run_default(
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         try:
             with Status(
-                    f"Processing {total_files} files. Press CTRL+Z to shutdown.",
-                    spinner="earth",
-                    console=console) as status_spinner_processing:
+                f"Processing {total_files} files. Press CTRL+Z to shutdown.",
+                spinner="earth",
+                console=console,
+            ) as status_spinner_processing:
                 status_spinner_processing.start()
                 futures = {
                     executor.submit(
@@ -331,7 +339,7 @@ def run_default(
                         plots_folder=plots_folder,
                         filters=filters,
                         mld_ref=mld_ref,
-                        mld_delta=mld_delta
+                        mld_delta=mld_delta,
                     ): file
                     for file in files
                 }
@@ -369,8 +377,8 @@ def run_default(
 
         except KeyboardInterrupt:
             with Status(
-                    "Shutdown message received, terminating open processes",
-                    spinner_style="red",
+                "Shutdown message received, terminating open processes",
+                spinner_style="red",
             ) as status_spinner_terminated:
                 status_spinner_terminated.start()
                 executor.shutdown(wait=True, cancel_futures=True)
@@ -380,9 +388,8 @@ def run_default(
                         proc.kill()
 
 
-
 def process_results(
-        results, total_files, output_file, plot, plots_folder, mapbox_access_token
+    results, total_files, output_file, plot, plots_folder, mapbox_access_token
 ):
     """
     Processes the results of the CTD file processing pipeline.
@@ -410,7 +417,7 @@ def process_results(
     """
     with console.screen():
         with Status(
-                "Combining CTD profiles", spinner="earth", console=console
+            "Combining CTD profiles", spinner="earth", console=console
         ) as status_spinner_combining:
             df = pl.concat(results, how="diagonal")
             panel = Panel(
@@ -451,9 +458,9 @@ def plot_results(df, mapbox_access_token):
     This function generates an interactive map to visualize the data.
     """
     with Status(
-            "Running interactive map view. To shutdown press CTRL+Z.",
-            spinner="earth",
-            console=console,
+        "Running interactive map view. To shutdown press CTRL+Z.",
+        spinner="earth",
+        console=console,
     ) as status_spinner_map_view:
         if mapbox_access_token:
             try:
@@ -589,7 +596,11 @@ def signal_handler(signal_received, frame):
     This function handles system signals such as SIGINT and SIGTERM to allow for graceful
     termination of the application, cleaning up resources as needed.
     """
-    if signal_received == signal.SIGINT or signal_received == signal.SIGTSTP or signal_received == signal.SIGTERM:
+    if (
+        signal_received == signal.SIGINT
+        or signal_received == signal.SIGTSTP
+        or signal_received == signal.SIGTERM
+    ):
         raise KeyboardInterrupt
     raise KeyboardInterrupt
 
@@ -629,18 +640,18 @@ def build_parser():
     parser_fjord.add_argument(
         "--mld-ref",
         type=int,
-        nargs='+',
+        nargs="+",
         default=20,
         help="Reference value(s) for mld calculation.",
-        choices=range(0, 50)
+        choices=range(0, 50),
     )
     parser_fjord.add_argument(
         "--mld-delta",
         type=float,
-        nargs='+',
+        nargs="+",
         default=0.05,
         help="Delta value(s) for mld calculation.",
-        choices=[0.01, 0.02, 0.03, 0.04, 0.05]
+        choices=[0.01, 0.02, 0.03, 0.04, 0.05],
     )
     add_arguments(parser_default)
     return parser
@@ -680,18 +691,44 @@ def build_parser_docs():
     parser_fjord.add_argument(
         "--mld-ref",
         type=int,
-        nargs='+',
+        nargs="+",
         default=20,
         help="Reference value(s) for mld calculation.",
-        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+        choices=[
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ],
     )
     parser_fjord.add_argument(
         "--mld-delta",
         type=float,
-        nargs='+',
+        nargs="+",
         default=0.05,
         help="Delta value(s) for mld calculation.",
-        choices=[0.01, 0.02, 0.03, 0.04, 0.05]
+        choices=[0.01, 0.02, 0.03, 0.04, 0.05],
     )
     add_arguments(parser_default)
     return parser
@@ -863,8 +900,8 @@ def create_filters(args):
     provided via command-line arguments. If not all required filter arguments are provided, it returns None.
     """
     if all(
-            arg is not None
-            for arg in [args.filter_columns, args.filter_upper, args.filter_lower]
+        arg is not None
+        for arg in [args.filter_columns, args.filter_upper, args.filter_lower]
     ):
         return zip(args.filter_columns, args.filter_upper, args.filter_lower)
     return None

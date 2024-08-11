@@ -23,14 +23,14 @@ print(font_manager.findSystemFonts(fontpaths=font_dirs))
 project = 'CTDFjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.7.32'
+release = '0.7.4'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'pydata_sphinx_theme', 'sphinxarg.ext', 'sphinx_design', 'sphinx.ext.viewcode', "sphinx_social_previews"]
-ogp_site_url="https://nikothomas.github.io/ctdfjorder/"
-ogp_image = "https://nikothomas.github.io/ctdfjorder/_static/logo.png"
+ogp_site_url="https://ctdfjorder.readthedocs.io/en/latest/"
+ogp_image = "https://ctdfjorder.readthedocs.io/en/latest/_static/logo.png"
 ogp_social_previews = {
     "image_mini": "_static/github-brand.png",
 }
@@ -83,6 +83,5 @@ html_sidebars = {
 }
 
 html_static_path = ['_static']
-
 
 
