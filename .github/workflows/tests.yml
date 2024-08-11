@@ -59,3 +59,21 @@ jobs:
         with:
           name: coverage-report
           path: htmlcov
+      - name: Get coverage percentage
+        id: coverage
+        run: |
+          coverage=$(poetry run pytest --cov=ctdfjorder --cov-report=term | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "coverage=$coverage" >> $GITHUB_ENV
+
+      - name: Generate coverage badge
+        uses: schneegans/dynamic-badges-action@v1.4.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          label: coverage
+          message: ${{ env.coverage }}%
+          color: ${{ steps.coverage.outputs.color }}
+          named-outputs: badge-url
+
+      - name: Output coverage badge URL
+        run: |
+          echo "Badge URL: ${{ steps.dynamic-badges.outputs.badge-url }}"
