@@ -78,8 +78,6 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
             .cast(pl.Datetime(time_unit=TIME_UNIT))
             .dt.convert_time_zone(time_zone=TIME_ZONE)
         )
-        if rsk_profile.is_empty():
-            raise CTDError(filename=filename, message=ERROR_NO_SAMPLES)
         data = rsk_profile
         try:
             profile_geodata = next(geo)
@@ -150,6 +148,5 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
         elif processed_profile is not None:
             data = pl.concat([processed_profile, data], how=CONCAT_HOW)
             num_profiles += 1
-        else:
-            CTDError(message=ERROR_NO_SAMPLES, filename=filename)
+
     return data

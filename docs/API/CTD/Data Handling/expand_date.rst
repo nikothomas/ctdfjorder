@@ -1,0 +1,1 @@
+.. automethod:: ctdfjorder.CTD.CTD.expand_date

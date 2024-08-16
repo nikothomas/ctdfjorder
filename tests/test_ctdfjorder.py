@@ -70,22 +70,22 @@ def test_remove_upcasts(ctd_instance):
     assert not ctd_instance._data.is_empty()
 
 
-@pytest.mark.parametrize("upper_bounds,lower_bounds", [
-    ([0.35], [-0.5]),
-    ([0.0], [-0.5])
+@pytest.mark.parametrize("upper_bound,lower_bound", [
+    (0.35, -0.5),
+    (0.0, -0.5)
 ])
-def test_filter_columns_by_range_not_empty(ctd_instance, upper_bounds, lower_bounds):
-    columns = [TEMPERATURE_LABEL]
-    ctd_instance.filter_columns_by_range(columns=columns, upper_bounds=upper_bounds, lower_bounds=lower_bounds)
+def test_filter_columns_by_range_not_empty(ctd_instance, upper_bound, lower_bound):
+    column = TEMPERATURE_LABEL
+    ctd_instance.filter_columns_by_range(column=column, upper_bound=upper_bound, lower_bound=lower_bound)
     assert not ctd_instance._data.is_empty()
 
 
 def test_filter_columns_by_range_empty(ctd_instance):
-    with pytest.raises(CTDError):
-        columns = [TEMPERATURE_LABEL]
-        upper_bounds = [10]
-        lower_bounds = [9]
-        ctd_instance.filter_columns_by_range(columns=columns, upper_bounds=upper_bounds, lower_bounds=lower_bounds)
+    column = TEMPERATURE_LABEL
+    upper_bound = 10
+    lower_bound = 9
+    ctd_instance.filter_columns_by_range(column=column, upper_bound=upper_bound, lower_bound=lower_bound)
+    assert ctd_instance._data.is_empty()
 
 
 def test_remove_non_positive_samples(ctd_instance):
@@ -95,7 +95,7 @@ def test_remove_non_positive_samples(ctd_instance):
 
 
 def test_clean_invalid_method(ctd_instance):
-    with pytest.raises(CTDError):
+    with pytest.raises(ValueError):
         ctd_instance.clean('invalid_method')
 
 

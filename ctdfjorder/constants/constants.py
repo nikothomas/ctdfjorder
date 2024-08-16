@@ -149,6 +149,9 @@ AMMONIUM_LABEL: str = "ammonium"
 ORP_LABEL: str = "orp"
 """str: Label for oxidation-reduction potential (ORP) column."""
 
+CLASSIFICATION_LABEL: str = "profile_type"
+"""str: Label for profile type (A, B, C) column."""
+
 LIST_LABELS: list[str] = [
     TIMESTAMP_LABEL,
     YEAR_LABEL,
@@ -195,6 +198,7 @@ LIST_LABELS: list[str] = [
     PAR_LABEL,
     AMMONIUM_LABEL,
     ORP_LABEL,
+    CLASSIFICATION_LABEL
 ]
 """list[str]: List of all internal column labels."""
 
@@ -336,6 +340,9 @@ EXPORT_AMMONIUM_LABEL = "Ammonium_(µmol/L)"
 EXPORT_ORP_LABEL = "ORP_(mV)"
 """str: Export label for oxidation-reduction potential (ORP)."""
 
+EXPORT_CLASSIFICATION_LABEL: str = "Profile_Type"
+"""str: Export label for profile type (A, B, C) column."""
+
 # ------------------------------------
 # Mapping of internal labels to export labels
 # ------------------------------------
@@ -385,6 +392,7 @@ DATA_LABEL_MAPPING: dict[str, str] = {
     PAR_LABEL: EXPORT_PAR_LABEL,
     AMMONIUM_LABEL: EXPORT_AMMONIUM_LABEL,
     ORP_LABEL: EXPORT_ORP_LABEL,
+    CLASSIFICATION_LABEL: EXPORT_CLASSIFICATION_LABEL
 }
 """dict[str, str]: Mapping of internal column labels to export column labels."""
 
@@ -437,6 +445,7 @@ EXPORT_COLUMN_ORDER: list[str] = [
     EXPORT_PAR_LABEL,
     EXPORT_AMMONIUM_LABEL,
     EXPORT_ORP_LABEL,
+    EXPORT_CLASSIFICATION_LABEL
 ]
 """list[str]: Desired column order for CSV export."""
 
@@ -451,54 +460,6 @@ TIME_UNIT: Literal["ns", "us", "ms"] = "ns"
 
 TIME_FORMAT: str = "%Y-%m-%d %H:%M:%S.%f"
 """str: Format for timestamps."""
-
-# ------------------------------------
-# Error messages
-# ------------------------------------
-ERROR_NO_SAMPLES: str = "No samples in file"
-"""str: Error message for no samples in file."""
-
-ERROR_NO_LOCATION: str = "No location could be found"
-"""str: Error message for no location found."""
-
-ERROR_DENSITY_CALCULATION: str = "Could not calculate density on this dataset"
-"""str: Error message for density calculation failure."""
-
-ERROR_SALINITY_ABS: str = "Could not calculate salinity absolute on this dataset"
-"""str: Error message for salinity absolute calculation failure."""
-
-ERROR_NO_MASTER_SHEET: str = (
-    "No mastersheet provided, could not update the file's missing location data"
-)
-"""str: Error message for missing master sheet."""
-
-ERROR_RSK_CORRUPT: str = "Ruskin file is corrupted and could not be read"
-"""str: Error message for corrupted Ruskin file."""
-
-ERROR_LOCATION_DATA_INVALID: str = (
-    "Location data invalid, probably due to malformed master sheet data"
-)
-"""str: Error message for invalid location data."""
-
-ERROR_NO_TIMESTAMP_IN_FILE: str = "No timestamp in file, could not get location"
-"""str: Error message for missing timestamp in file."""
-
-ERROR_NO_TIMESTAMP_IN_MASTER_SHEET: str = (
-    "No timestamp in master sheet, could not get location"
-)
-"""str: Error message for missing timestamp in master sheet."""
-
-ERROR_MLD_DEPTH_RANGE: str = "Insufficient depth range to calculate MLD"
-"""str: Error message for insufficient depth range to calculate MLD."""
-
-ERROR_GRU_INSUFFICIENT_DATA: str = "Not enough values to run the GRU on this data"
-"""str: Error message for insufficient data to run the GRU."""
-
-ERROR_CASTAWAY_START_TIME: str = "Castaway file has no time data"
-"""str: Error message for missing time data in Castaway file."""
-
-ERROR_CTD_FILENAME_ENDING: str = "CTD filename must end in '.rsk', '.csv' or '.cnv'"
-"""str: Error message for invalid CTD filename ending."""
 
 # ------------------------------------
 # Warning messages

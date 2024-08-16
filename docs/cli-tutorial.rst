@@ -1,5 +1,5 @@
-Getting Started
-===============
+CLI Tutorial
+=============
 .. role:: console(code)
    :language: console
 
@@ -44,7 +44,7 @@ Run ctdcli
 Now we will process our files.
 
 .. tip::
-    To see what options you have to process the files, type :console:`ctdcli default -h` or view the documentation for the :doc:`CLI`.
+    To see what options you have to process the files, type :console:`ctdcli default -h` or view the documentation for the :doc:`/API/CLI/index`.
 
 For the purposes of this demo are assuming that you have the following:
 
@@ -79,13 +79,13 @@ If you see a spinning globe you did it! Once the files are done processing a tab
 for each file. Green means the file passed a step and red means an error occurred such that the file could not continue to be processed.
 Once all files are completed, a map will open as well. The points are individual casts. The map can be filtered.
 
-* Plots are in the **ctdplots** folder next to our original data and were made with functions from the :doc:`Visualize`
+* Plots are in the **ctdplots** folder next to our original data and were made with functions from the :doc:`./API/Visualize/index`
   module.
 * There you will also find a **ctdfjorder_data.csv** with our processed data.
 * To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
 
 Congrats! You can now use CTDFjorder to investigate your ctd data. For more in depth information on the processes
-executed here, read the :doc:`API`.
+executed here, read the :doc:`./API/index`.
 
 CLI Commands
 =============

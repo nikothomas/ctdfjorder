@@ -174,45 +174,6 @@ Constants
 .. autodata:: ctdfjorder.constants.constants.TIME_FORMAT
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.ERROR_NO_SAMPLES
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_NO_LOCATION
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_DENSITY_CALCULATION
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_SALINITY_ABS
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_NO_MASTER_SHEET
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_RSK_CORRUPT
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_LOCATION_DATA_INVALID
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_NO_TIMESTAMP_IN_FILE
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_NO_TIMESTAMP_IN_MASTER_SHEET
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_MLD_DEPTH_RANGE
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_GRU_INSUFFICIENT_DATA
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_CASTAWAY_START_TIME
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.ERROR_CTD_FILENAME_ENDING
-   :annotation:
-
 .. autodata:: ctdfjorder.constants.constants.WARNING_DROPPED_PROFILE
    :annotation:
 

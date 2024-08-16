@@ -3,15 +3,15 @@ Developers
 
 Welcome to the CTDFjorder developer documentation! This guide will help you get started with using the CTDFjorder library,
 designed to process and analyze CTD (Conductivity, Temperature, Depth) data efficiently.
-To see everything you can do with CTDFjorder or get more in depth information on the functions used in the tutorial read the :doc:`API`.
+To see everything you can do with CTDFjorder or get more in depth information on the functions used in the tutorial go to the :doc:`./API/index` page.
 CTDFjorder is not native to R, but can be used in R scripts with the reticulate package.
 
 Introduction
 ------------------------
 
-The primary way to interact with **CTDFjorder** is through the :class:`~ctdfjorder.CTD.CTD` class. This class provides a comprehensive
+The primary way to interact with CTDFjorder is through the :doc:`/API/CTD/index` class. This class provides a comprehensive
 interface for loading, processing, and analyzing CTD data.
-Here’s a brief overview of what you can do with the :class:`~ctdfjorder.CTD.CTD` class:
+Here’s a brief overview of what you can do with the CTD class:
 
 - **Load Data**: Read CTD data from RBR (.rsk) and SonTek Castaway (.csv) files.
 - **Process Data**: Clean and filter data, remove non-positive samples, and handle various preprocessing tasks.
@@ -20,18 +20,18 @@ Here’s a brief overview of what you can do with the :class:`~ctdfjorder.CTD.CT
 
 .. raw:: html
 
-    <div style="display: flex; justify-content: space-around; margin-top: 80px; margin-bottom: 80px">
+    <div style="display: flex; justify-content: space-around; margin-top: 80px; margin-bottom: 80px; flex-wrap: wrap; gap: 20px;">
 
-    <a href="#using-ctdfjorder-in-python" style="text-decoration: none;">
-        <button style="font-size: 20px; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
-                <i class="fab fa-python" style="font-size: 28px;"></i>
+    <a href="#using-ctdfjorder-in-python" style="text-decoration: none; flex: 1 1 45%; max-width: 45%;">
+        <button style="width: 100%; font-size: 1.5vw; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px;">
+                <i class="fab fa-python" style="font-size: 1.5vw;"></i>
                 Python Tutorial
         </button>
     </a>
 
-    <a href="#using-ctdfjorder-in-r" style="text-decoration: none;">
-        <button style="font-size: 20px; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
-                <i class="fab fa-r-project" style="font-size: 28px;"></i>
+    <a href="#using-ctdfjorder-in-r" style="text-decoration: none; flex: 1 1 45%; max-width: 45%;">
+        <button style="width: 100%; font-size: 1.5vw; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px;">
+                <i class="fab fa-r-project" style="font-size: 1.5vw;"></i>
                 R Tutorial
         </button>
     </a>
@@ -58,7 +58,7 @@ If you haven't already installed the CTDFjorder package you can do so with pip.
 Creating a CTD Object
 ----------------------------------------------
 
-The first step in working with the :class:`~ctdfjorder.CTD.CTD` class is to create an object. This object represents a single CTD profile, loaded from a file. The :class:`~ctdfjorder.CTD.CTD` class automatically handles different file formats, such as RSK and Castaway.
+The first step in working with the CTD class is to create an object. This object represents a single CTD profile, loaded from a file. The CTD class automatically handles different file formats, such as RSK and Castaway.
 
 **Example:**
 
@@ -74,7 +74,7 @@ When you instantiate a CTD object, it reads and processes the file. If the file 
 Accessing the Data
 ------------------
 
-After creating the :class:`~ctdfjorder.CTD.CTD` object, you may want to inspect the data. The following method allows you to retrieve the data as either a Polars or Pandas DataFrame, depending on your preference.
+After creating the CTD object, you may want to inspect the data. The following method allows you to retrieve the data as either a Polars or Pandas DataFrame, depending on your preference.
 
 **Example:**
 
@@ -116,7 +116,7 @@ You can also access the data as a Pandas DataFrame:
 Cleaning the Data
 -----------------
 
-CTD data often requires cleaning to remove invalid or erroneous samples. The :class:`~ctdfjorder.CTD.CTD` class provides several methods to clean the data.
+CTD data often requires cleaning to remove invalid or erroneous samples. The CTD class provides several methods to clean the data.
 
 Removing Non-Positive Samples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -170,7 +170,7 @@ Filtering by Temperature and Salinity Range
 Advanced Analysis
 -----------------
 
-The :class:`~ctdfjorder.CTD.CTD` class also supports more advanced analysis, such as calculating derived parameters like density or mixed layer depth (MLD).
+The CTD class also supports more advanced analysis, such as calculating derived parameters like density or mixed layer depth (MLD).
 
 Adding Absolute Salinity and Density
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -219,9 +219,9 @@ Once you’ve cleaned and analyzed your data, you can save the results to a CSV 
 Conclusion
 ----------
 
-This tutorial has walked you through the key functionalities of the :class:`~ctdfjorder.CTD.CTD` class in CTDFjorder. With these tools, you can load, clean, analyze, and save CTD data efficiently for your oceanographic studies.
+This tutorial has walked you through the key functionalities of the CTD class in CTDFjorder. With these tools, you can load, clean, analyze, and save CTD data efficiently for your oceanographic studies.
 
-For detailed information on using the :class:`~ctdfjorder.CTD.CTD` class and other functionalities, refer to the :doc:`API` reference.
+For detailed information on using the CTD class and other functionalities, refer to the :doc:`./API/index` reference.
 
 Using CTDFjorder in R
 ===========================
@@ -264,7 +264,7 @@ To use the CTDFjorder Python package in R, follow these steps to set up your env
 Loading the CTD Class
 ---------------------
 
-Once the environment is set up, you can import the **CTDFjorder** package and start working with the :class:`~ctdfjorder.CTD.CTD` class.
+Once the environment is set up, you can import the **CTDFjorder** package and start working with the CTD class.
 
 **Example:**
 
@@ -276,7 +276,7 @@ Once the environment is set up, you can import the **CTDFjorder** package and st
 Creating a CTD Object
 ---------------------
 
-The first step in working with the :class:`~ctdfjorder.CTD.CTD` class is to create an object. This object represents a single CTD profile, loaded from a file. The :class:`~ctdfjorder.CTD.CTD` class automatically handles different file formats, such as RSK and Castaway.
+The first step in working with the CTD class is to create an object. This object represents a single CTD profile, loaded from a file. The CTD class automatically handles different file formats, such as RSK and Castaway.
 
 **Example:**
 
@@ -285,12 +285,12 @@ The first step in working with the :class:`~ctdfjorder.CTD.CTD` class is to crea
     # Create a CTD object from a Castaway file
     ctd_data <- CTDFjorder$CTD('CC1531002_20181225_114931.csv')
 
-When you instantiate a :class:`~ctdfjorder.CTD.CTD` object, it reads and processes the file. If the file is valid, the data is loaded into a DataFrame within the object.
+When you instantiate a CTD object, it reads and processes the file. If the file is valid, the data is loaded into a DataFrame within the object.
 
 Accessing the Data
 ------------------
 
-After creating the :class:`~ctdfjorder.CTD.CTD` object, you may want to inspect the data. The following method allows you to retrieve the data as either a Polars or Pandas DataFrame, depending on your preference.
+After creating the CTD object, you may want to inspect the data. The following method allows you to retrieve the data as either a Polars or Pandas DataFrame, depending on your preference.
 
 **Example:**
 
@@ -315,7 +315,7 @@ You can also access the data as a Pandas DataFrame:
 Cleaning the Data
 -----------------
 
-CTD data often requires cleaning to remove invalid or erroneous samples. The :class:`~ctdfjorder.CTD.CTD` class provides several methods to clean the data.
+CTD data often requires cleaning to remove invalid or erroneous samples. The CTD class provides several methods to clean the data.
 
 Removing Non-Positive Samples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -369,7 +369,7 @@ Filtering by Temperature and Salinity Range
 Advanced Analysis
 -----------------
 
-The :class:`~ctdfjorder.CTD.CTD` class also supports more advanced analysis, such as calculating derived parameters like density or mixed layer depth (MLD).
+The CTD class also supports more advanced analysis, such as calculating derived parameters like density or mixed layer depth (MLD).
 
 Adding Absolute Salinity and Density
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -418,6 +418,6 @@ Once you’ve cleaned and analyzed your data, you can save the results to a CSV 
 Conclusion
 ----------
 
-This tutorial has walked you through the key functionalities of the :class:`~ctdfjorder.CTD.CTD` class in CTDFjorder and how to use it within R using the ``reticulate`` package. With these tools, you can load, clean, analyze, and save CTD data efficiently for your oceanographic studies.
+This tutorial has walked you through the key functionalities of the CTD class in CTDFjorder and how to use it within R using the ``reticulate`` package. With these tools, you can load, clean, analyze, and save CTD data efficiently for your oceanographic studies.
 
-For detailed information on using the :class:`~ctdfjorder.CTD.CTD` class and other functionalities, refer to the :doc:`API` reference.
+For detailed information on using the CTD class and other functionalities, refer to the :doc:`./API/index` reference.
