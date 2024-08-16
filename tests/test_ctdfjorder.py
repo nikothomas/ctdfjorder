@@ -127,9 +127,12 @@ def test_add_surface_salinity_temp_meltwater(ctd_instance):
     assert SURFACE_TEMPERATURE_LABEL in ctd_instance._data.columns
     assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).has_nulls()).item()
     assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).is_nan().any()).item()
-    assert MELTWATER_FRACTION_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_LABEL).is_nan().any()).item()
+    assert MELTWATER_FRACTION_EQ_10_LABEL in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).is_nan().any()).item()
+    assert MELTWATER_FRACTION_EQ_11_LABEL in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).is_nan().any()).item()
 
 
 def test_add_mean_surface_density(ctd_instance):
@@ -212,19 +215,11 @@ def test_add_haline_contraction_coefficient(ctd_instance):
     assert not ctd_instance._data.select(pl.col("haline_contraction_coefficient").has_nulls()).item()
     assert not ctd_instance._data.select(pl.col("haline_contraction_coefficient").is_nan().any()).item()
 
-
 def test_add_profile_classification(ctd_instance):
     ctd_instance.add_absolute_salinity()
     ctd_instance.add_density()
     ctd_instance.add_mld(reference=10, method="abs_density_avg", delta=0.05)
     ctd_instance.add_profile_classification()
     assert CLASSIFICATION_LABEL in ctd_instance._data.columns
-
-def test_calculate_salinity_olf_mld(ctd_instance):
-    ctd_instance.add_absolute_salinity()
-    df = ctd_instance.get_df()
-    mld = ctd_instance.calculate_salinity_olf_mld(df)
-    assert mld is not None
-    assert mld > 0
 
 

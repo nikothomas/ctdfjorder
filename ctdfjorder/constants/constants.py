@@ -62,8 +62,11 @@ SURFACE_TEMPERATURE_LABEL: str = "surface_temperature"
 SURFACE_DENSITY_LABEL: str = "surface_density"
 """str: Label for surface density column."""
 
-MELTWATER_FRACTION_LABEL: str = "meltwater_fraction"
-"""str: Label for meltwater fraction column."""
+MELTWATER_FRACTION_EQ_10_LABEL: str = "meltwater_fraction_eq_10"
+"""str: Label for meltwater fraction equation 10 column."""
+
+MELTWATER_FRACTION_EQ_11_LABEL: str = "meltwater_fraction_eq_11"
+"""str: Label for meltwater fraction equation 11 column."""
 
 DENSITY_LABEL: str = "density"
 """str: Label for density column."""
@@ -170,7 +173,8 @@ LIST_LABELS: list[str] = [
     SURFACE_SALINITY_LABEL,
     SURFACE_TEMPERATURE_LABEL,
     SURFACE_DENSITY_LABEL,
-    MELTWATER_FRACTION_LABEL,
+    MELTWATER_FRACTION_EQ_10_LABEL,
+    MELTWATER_FRACTION_EQ_11_LABEL,
     DENSITY_LABEL,
     POTENTIAL_DENSITY_LABEL,
     BV_LABEL,
@@ -259,8 +263,11 @@ EXPORT_SURFACE_SALINITY_LABEL = "Surface_Salinity_(PSU)"
 EXPORT_SURFACE_TEMPERATURE_LABEL = "Surface_Temperature_(°C)"
 """str: Export label for surface temperature."""
 
-EXPORT_MELTWATER_FRACTION_LABEL = "Meltwater_Fraction_(%)"
-"""str: Export label for meltwater fraction."""
+EXPORT_MELTWATER_FRACTION_EQ_10_LABEL = "Meltwater_Fraction_EQ_10_(%)"
+"""str: Export label for meltwater fraction equation 10."""
+
+EXPORT_MELTWATER_FRACTION_EQ_11_LABEL = "Meltwater_Fraction_EQ_11_(%)"
+"""str: Export label for meltwater fraction equation 11."""
 
 EXPORT_LONGITUDE_LABEL = "longitude"
 """str: Export label for longitude."""
@@ -366,7 +373,8 @@ DATA_LABEL_MAPPING: dict[str, str] = {
     SURFACE_SALINITY_LABEL: EXPORT_SURFACE_SALINITY_LABEL,
     SURFACE_TEMPERATURE_LABEL: EXPORT_SURFACE_TEMPERATURE_LABEL,
     SURFACE_DENSITY_LABEL: EXPORT_SURFACE_DENSITY_LABEL,
-    MELTWATER_FRACTION_LABEL: EXPORT_MELTWATER_FRACTION_LABEL,
+    MELTWATER_FRACTION_EQ_10_LABEL: EXPORT_MELTWATER_FRACTION_EQ_10_LABEL,
+    MELTWATER_FRACTION_EQ_11_LABEL: EXPORT_MELTWATER_FRACTION_EQ_11_LABEL,
     LONGITUDE_LABEL: EXPORT_LONGITUDE_LABEL,
     LATITUDE_LABEL: EXPORT_LATITUDE_LABEL,
     UNIQUE_ID_LABEL: EXPORT_UNIQUE_ID_LABEL,
@@ -425,7 +433,8 @@ EXPORT_COLUMN_ORDER: list[str] = [
     EXPORT_SPEED_OF_SOUND_LABEL,
     EXPORT_SURFACE_SALINITY_LABEL,
     EXPORT_SURFACE_TEMPERATURE_LABEL,
-    EXPORT_MELTWATER_FRACTION_LABEL,
+    EXPORT_MELTWATER_FRACTION_EQ_10_LABEL,
+    EXPORT_MELTWATER_FRACTION_EQ_11_LABEL,
     EXPORT_BV_LABEL,
     EXPORT_P_MID_LABEL,
     EXPORT_SECCHI_DEPTH_LABEL,
