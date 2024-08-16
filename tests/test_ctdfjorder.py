@@ -215,7 +215,6 @@ def test_add_haline_contraction_coefficient(ctd_instance):
     assert not ctd_instance._data.select(pl.col("haline_contraction_coefficient").has_nulls()).item()
     assert not ctd_instance._data.select(pl.col("haline_contraction_coefficient").is_nan().any()).item()
 
-
 def test_add_profile_classification(ctd_instance):
     ctd_instance.add_absolute_salinity()
     ctd_instance.add_density()
