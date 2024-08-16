@@ -1428,8 +1428,8 @@ class CTD:
 
         Parameters
         ----------
-        stratification_threshold : float, default 0.02
-            The threshold for determining if a profile is stratified.
+        stratification_threshold : float, default 0.5
+            The threshold for determining if a profile is stratified/type C.
 
         Raises
         ------
