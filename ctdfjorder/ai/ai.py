@@ -126,7 +126,7 @@ class AI:
             optimizer = optim.Adam(model.parameters(), lr=0.01)
             return model, optimizer
 
-        def run_gru(data: pl.DataFrame, show_plots=True):
+        def run_gru(data: pl.DataFrame, show_plots=False):
             """
             Runs the GRU.
 
