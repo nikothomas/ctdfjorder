@@ -1444,7 +1444,7 @@ class CTD:
         C - Stratified MLD from surface to bottom of ML
 
         The classification criteria are:
-        - A: if MLD < 2.75 meters
+        - A: if salinity_at_mld - surface_salinity > 0.5 meters
         - C: if max(salinity) - min(salinity) < 0.5 PSU
         - B: otherwise
 
@@ -1480,7 +1480,7 @@ class CTD:
             # Classify profile based on the criteria
             if type(salinity_diff) is not type(None) and salinity_diff > 0.5:
                 classification = 'A - Very shallow low salinity surface ML'
-            elif profile.select((pl.col(SALINITY_LABEL).max() - pl.col(SALINITY_LABEL).min()).abs() < 0.5).item():
+            elif profile.select((pl.col(SALINITY_LABEL).max() - pl.col(SALINITY_LABEL).min()).abs() < stratification_threshold).item():
                 classification = 'C - Stratified MLD from surface to bottom of ML'
             else:
                 classification = 'B - Normal well mixed ML'
