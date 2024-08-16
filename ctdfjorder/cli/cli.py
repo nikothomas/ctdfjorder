@@ -125,6 +125,8 @@ def process_ctd_file(
         status.append("green")
         stage += 1
 
+        data.expand_date()
+
         # Filter
         data.filter_columns_by_range(filters=filters)
         status.append("green")

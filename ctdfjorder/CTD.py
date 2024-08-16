@@ -354,7 +354,12 @@ class CTD:
                         .to_list()
         ):
             profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            profile = profile.filter((pl.col(PRESSURE_LABEL).diff()) > 0.0)
+            profile = profile.filter((pl.col(PRESSURE_LABEL).diff()) > 0.0,
+                                     ~(pl.col(PRESSURE_LABEL).diff().is_nan()),
+                                     ~(pl.col(PRESSURE_LABEL).diff().is_null()),
+                                     (pl.col(SEA_PRESSURE_LABEL).diff()) > 0.0,
+                                     ~(pl.col(SEA_PRESSURE_LABEL).diff().is_nan()),
+                                     ~(pl.col(SEA_PRESSURE_LABEL).diff().is_null()),)
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
 

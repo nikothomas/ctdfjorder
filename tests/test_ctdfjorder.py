@@ -141,18 +141,90 @@ def test_add_mean_surface_density(ctd_instance):
 
 def test_add_mld(ctd_instance):
     ctd_instance.add_absolute_salinity()
-    ctd_instance.add_potential_density()
-    ctd_instance.add_mld(reference=10, method="potential_density_avg", delta=0.05)
+    ctd_instance.add_density()
+    ctd_instance.add_mld(reference=1, method="abs_density_avg", delta=0.05)
     assert any(label.startswith("MLD") for label in ctd_instance._data.columns)
 
 
 def test_add_brunt_vaisala_squared(ctd_instance):
     ctd_instance.add_absolute_salinity()
+    ctd_instance.add_density()
     ctd_instance.add_brunt_vaisala_squared()
     assert BV_LABEL in ctd_instance._data.columns
+    assert P_MID_LABEL in ctd_instance._data.columns
 
 
 def test_save_to_csv(ctd_instance, tmp_path):
     output_file = tmp_path / "output.csv"
     ctd_instance.save_to_csv(str(output_file), null_value="")
     assert output_file.exists()
+
+
+def test_add_speed_of_sound(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_speed_of_sound()
+    assert SPEED_OF_SOUND_LABEL in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(SPEED_OF_SOUND_LABEL).has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col(SPEED_OF_SOUND_LABEL).is_nan().any()).item()
+
+
+def test_add_potential_temperature(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_potential_temperature()
+    assert "potential_temperature" in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col("potential_temperature").has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col("potential_temperature").is_nan().any()).item()
+
+
+def test_add_conservative_temperature(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_conservative_temperature()
+    assert "conservative_temperature" in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col("conservative_temperature").has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col("conservative_temperature").is_nan().any()).item()
+
+
+def test_add_dynamic_height(ctd_instance):
+    ctd_instance.remove_non_positive_samples()
+    ctd_instance.remove_upcasts()
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_conservative_temperature()
+    ctd_instance.add_dynamic_height()
+    assert "dynamic_height" in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col("dynamic_height").has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col("dynamic_height").is_nan().any()).item()
+
+
+def test_add_thermal_expansion_coefficient(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_conservative_temperature()
+    ctd_instance.add_thermal_expansion_coefficient()
+    assert "thermal_expansion_coefficient" in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col("thermal_expansion_coefficient").has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col("thermal_expansion_coefficient").is_nan().any()).item()
+
+
+def test_add_haline_contraction_coefficient(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_conservative_temperature()
+    ctd_instance.add_haline_contraction_coefficient()
+    assert "haline_contraction_coefficient" in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col("haline_contraction_coefficient").has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col("haline_contraction_coefficient").is_nan().any()).item()
+
+
+def test_add_profile_classification(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    ctd_instance.add_density()
+    ctd_instance.add_mld(reference=10, method="abs_density_avg", delta=0.05)
+    ctd_instance.add_profile_classification()
+    assert CLASSIFICATION_LABEL in ctd_instance._data.columns
+
+def test_calculate_salinity_olf_mld(ctd_instance):
+    ctd_instance.add_absolute_salinity()
+    df = ctd_instance.get_df()
+    mld = ctd_instance.calculate_salinity_olf_mld(df)
+    assert mld is not None
+    assert mld > 0
+
+
