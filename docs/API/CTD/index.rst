@@ -19,7 +19,7 @@ Data Cleaning
 -------------
 Methods to clean and prepare CTD data for analysis.
 
-* :method:`filter_columns_by_range <./Data Cleaning/filter_columns_by_range>`
+* :doc:`filter_columns_by_range <./Data Cleaning/filter_columns_by_range>`
 * :doc:`remove_non_positive_samples <./Data Cleaning/remove_non_positive_samples>`
 * :doc:`remove_upcasts <./Data Cleaning/remove_upcasts>`
 * :doc:`clean <./Data Cleaning/clean>`
