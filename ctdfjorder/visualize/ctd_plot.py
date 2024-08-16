@@ -326,12 +326,13 @@ def plot_depth_vs(
         profile = df.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
         # Calculate the standard deviation of the brunt_vaisala column if it exists
         if BV_LABEL in profile.columns:
-            try:
-                brunt_vaisala_std = profile.select(pl.col(BV_LABEL)).std().item()
-            except Exception:
-                brunt_vaisala_std = "Undefined"
+            brunt_vaisala_std = profile.select(pl.col(BV_LABEL)).std().item()
         else:
             brunt_vaisala_std = None
+        if CLASSIFICATION_LABEL in profile.columns:
+            profile_type = profile.select(pl.col(CLASSIFICATION_LABEL).first()).item()
+        else:
+            profile_type = None
 
         filename = profile.select(pl.first(FILENAME_LABEL)).item()
         fig, ax1 = plt.subplots(figsize=(18, 18))
@@ -429,7 +430,7 @@ def plot_depth_vs(
                         transform=ax1.get_yaxis_transform(),
                     )
         plt.title(
-            f"{filename} \n Profile {profile_id} \n Depth vs. {label_map[measurement]} \n BV STD: {brunt_vaisala_std}"
+            f"{filename} \n Profile {profile_id} \n Depth vs. {label_map[measurement]} \n BV STD: {brunt_vaisala_std} \n Profile Type: {profile_type}"
         )
         ax1.grid(True)
         ax1.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3)

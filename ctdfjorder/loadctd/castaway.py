@@ -1,5 +1,5 @@
 from ctdfjorder.constants.constants import *
-from ctdfjorder.exceptions.exceptions import CTDError
+from ctdfjorder.exceptions.exceptions import CTDCorruptError, MissingTimestampError
 
 from datetime import datetime, timedelta
 import polars as pl
@@ -41,8 +41,6 @@ def load_file_castaway(castaway_file_path):
     filename = path.basename(castaway_file_path)
     with open(castaway_file_path) as file:
         profile = pl.read_csv(file, comment_prefix="%", null_values=["#N/A", "null"])
-    if profile.is_empty():
-        raise CTDError(message=ERROR_NO_SAMPLES, filename=filename)
     if CASTAWAY_DATETIME_LABEL in profile.columns:
         profile = profile.with_columns(
             pl.col(CASTAWAY_DATETIME_LABEL)
@@ -58,16 +56,19 @@ def load_file_castaway(castaway_file_path):
     else:
         start_time = extract_utc_cast_time(castaway_file_path)
     if type(start_time) == type(None):
-        raise CTDError(filename=filename, message=ERROR_CASTAWAY_START_TIME)
+        raise CTDCorruptError(filename=filename)
     timestamps = [
         start_time + timedelta(milliseconds=200 * i) for i in range(profile.height)
     ]
-    profile = profile.with_columns(
-        pl.Series(timestamps)
-        .dt.convert_time_zone(TIME_ZONE)
-        .dt.cast_time_unit(TIME_UNIT)
-        .alias(TIMESTAMP_LABEL)
-    )
+    try:
+        profile = profile.with_columns(
+            pl.Series(timestamps)
+            .dt.convert_time_zone(TIME_ZONE)
+            .dt.cast_time_unit(TIME_UNIT)
+            .alias(TIMESTAMP_LABEL)
+        )
+    except pl.exceptions.ComputeError:
+        raise
     for header, maps_to in csvLabels_to_labelInternal.items():
         if header in profile.columns:
             profile = profile.rename({header: maps_to})

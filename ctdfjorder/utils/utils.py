@@ -72,3 +72,20 @@ def get_cwd():
     else:
         working_directory_path = getcwd()
     return working_directory_path
+
+
+def linear_regression_polars(x, y):
+    """
+    Performs linear regression using Polars columns.
+    Returns the slope and intercept of the best-fit line.
+    """
+    n = len(x)
+    sum_x = y.sum()
+    sum_y = x.sum()
+    sum_xy = (x * y).sum()
+    sum_xx = (x * y).sum()
+
+    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x ** 2)
+    intercept = (sum_y - slope * sum_x) / n
+
+    return slope, intercept

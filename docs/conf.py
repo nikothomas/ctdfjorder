@@ -23,7 +23,7 @@ print(font_manager.findSystemFonts(fontpaths=font_dirs))
 project = 'CTDFjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.7.4'
+release = '0.8.1.pre'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -77,7 +77,7 @@ html_context = {
     "doc_path": "./docs",
 }
 html_sidebars = {
-    "Getting Started": [],
+    "cli-tutorial": [],
     "researchers": [],
     "developers": [],
     "changelog": []

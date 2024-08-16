@@ -4,7 +4,7 @@ from os import path
 import ctdfjorder.exceptions.exceptions
 from ctdfjorder.exceptions.exceptions import CTDError
 from ctdfjorder.constants.constants import *
-from ctdfjorder.dataclasses.dataclasses import Metadata
+from ctdfjorder.dataclasses.dataclasses import SamplingEvent
 from typing import Literal
 
 # Try to import optional dependencies
@@ -59,7 +59,8 @@ class MasterSheet:
         The label for site names in the master sheet.
     site_names_short_label : str, default "loc id"
         The label for short site names in the master sheet.
-
+    null_values : list[str], default None
+        Specifies which values should be considered null while reading master sheet.
     Raises
     ------
     IOError
@@ -94,6 +95,7 @@ class MasterSheet:
         filename_label: str = "CTD cast file name",
         site_names_label: str = "location",
         site_names_short_label: str = "loc id",
+        null_values: list[str] = None,
     ):
         self.secchi_depth_label: str = secchi_depth_label
         self.latitude_label: str = latitude_label
@@ -116,38 +118,6 @@ class MasterSheet:
 
         # Generating polars dataframe representation of the master sheet
         df = None
-        null_values = [
-            "-999",
-            "NA",
-            "#N/A",
-            "",
-            "2022-10-29 -999",
-            "14-11-2022 11:50",
-            "14-11-2022 12:20",
-            "2022-11-28 -999",
-            "28-11-2022 13:00",
-            "23-12-2022 20:30",
-            "16-1-2023 11:37",
-            "19-1-2023 13:23",
-            "2023-01-22 -999",
-            "17-2-2023 12:01",
-            "17-2-2023 17:10",
-            "18-2-2023 17:05",
-            "19-2-2023 12:03",
-            "20-2-2023 12:05",
-            "20-2-2023 22:00",
-            "20-2-2023 16:00",
-            "22-2-2023 11:30",
-            "22-2-2023 18:30",
-            "24-2-2023 18:00",
-            "25-2-2023 17:00",
-            "26-2-2023 11:28",
-            "27-2-2023 11:06",
-            "27-2-2023 18:00",
-            "28-Jan--22 18:30",
-            "OCt-NOV ",
-            " ",
-        ]
         if ".xlsx" in path.basename(master_sheet_path):
             df = pl.read_excel(master_sheet_path, engine="calamine")
             df = df.select(list_of_cols)
@@ -166,10 +136,7 @@ class MasterSheet:
             )
             df = df.drop_nulls(self.datetime_utc_label)
             if df.is_empty():
-                raise ctdfjorder.exceptions.exceptions.Critical(
-                    f"Could not read mastersheet data from {master_sheet_path}."
-                    f" If on mac download your mastersheet as a csv not an xlsx."
-                )
+                raise ctdfjorder.exceptions.exceptions.CorruptMasterSheetError(filename=master_sheet_path)
 
         if ".csv" in path.basename(master_sheet_path):
             df = pl.read_csv(
@@ -182,10 +149,7 @@ class MasterSheet:
             try:
                 df.select(pl.col(self.datetime_utc_label).dt.time())
             except pl.exceptions.SchemaError:
-                raise ctdfjorder.exceptions.exceptions.Critical(
-                    f"Could not read mastersheet data from {master_sheet_path}."
-                    f" If on mac download your mastersheet as a csv not an xlsx."
-                )
+                raise ctdfjorder.exceptions.exceptions.CorruptMasterSheetError(filename=master_sheet_path)
         if type(df) is type(None):
             raise IOError(
                 f"Invalid master sheet filetype. {master_sheet_path} not an xlsx or csv file."
@@ -199,7 +163,7 @@ class MasterSheet:
     def find_match(
         self,
         profile: pl.DataFrame,
-    ) -> Metadata:
+    ) -> SamplingEvent:
         """
         Locates the row in the master sheet with a filename value that matches the profile parameter.
         Returns the time, latitude, longitude, unique id, loc id, location  and secchi depth from that row.
@@ -211,7 +175,7 @@ class MasterSheet:
 
         Returns
         -------
-        Metadata
+        MetadataMastersheet
             An object containing the estimated latitude, longitude, unique id, and secchi depth.
 
         Raises
@@ -246,7 +210,7 @@ class MasterSheet:
         site_id = closest_row_overall.select(
             pl.col(self.site_names_short_label).cast(pl.String).first()
         ).item(row=0, column=0)
-        return Metadata(
+        return SamplingEvent(
             latitude=latitude,
             longitude=longitude,
             unique_id=unique_id,

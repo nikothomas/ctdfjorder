@@ -77,16 +77,16 @@ designed to process and analyze CTD (Conductivity, Temperature, Depth) data effi
 
 .. raw:: html
 
-    <div style="display: flex; justify-content: space-around; margin-top: 60px; margin-bottom: 80px">
+    <div style="display: flex; justify-content: space-around; margin-top: 60px; margin-bottom: 80px; flex-wrap: wrap; gap: 20px;">
 
-    <a href="researchers.html" style="text-decoration: none;">
-        <button style="font-size: 20px; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
+    <a href="researchers.html" style="text-decoration: none; flex: 1 1 45%; max-width: 45%;">
+        <button style="width: 100%; font-size: 1.5vw; padding: 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px;">
             Researchers Documentation
         </button>
     </a>
 
-    <a href="developers.html" style="text-decoration: none;">
-        <button style="font-size: 20px; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px; min-width: 400px;">
+    <a href="developers.html" style="text-decoration: none; flex: 1 1 45%; max-width: 45%;">
+        <button style="width: 100%; font-size: 1.5vw; padding: 20px; background-color: #2196F3; color: white; border: none; cursor: pointer; border-radius: 5px;">
             Developers Documentation
         </button>
     </a>
@@ -137,8 +137,8 @@ References
    :caption: Contents:
    :hidden:
 
-   Getting Started
    researchers
    developers
-   API
+   API/index
+   cli-tutorial
    changelog

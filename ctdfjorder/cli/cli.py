@@ -22,7 +22,7 @@ from rich import print as richprint
 from rich_argparse import RichHelpFormatter
 
 from ctdfjorder.visualize import ctd_plot
-from ctdfjorder.exceptions.exceptions import CTDError, Critical
+from ctdfjorder.exceptions.exceptions import CTDError, MissingMasterSheetError, CTDCorruptError
 from ctdfjorder.CTD import CTD
 from ctdfjorder.utils.utils import save_to_csv
 from ctdfjorder.constants.constants import *
@@ -30,6 +30,39 @@ from ctdfjorder.metadata.master_sheet import MasterSheet
 
 console = Console(color_system="windows")
 
+# TEMPORARY, for Fjord Phyto's master sheet
+null_values = [
+    "-999",
+    "NA",
+    "#N/A",
+    "",
+    "2022-10-29 -999",
+    "14-11-2022 11:50",
+    "14-11-2022 12:20",
+    "2022-11-28 -999",
+    "28-11-2022 13:00",
+    "23-12-2022 20:30",
+    "16-1-2023 11:37",
+    "19-1-2023 13:23",
+    "2023-01-22 -999",
+    "17-2-2023 12:01",
+    "17-2-2023 17:10",
+    "18-2-2023 17:05",
+    "19-2-2023 12:03",
+    "20-2-2023 12:05",
+    "20-2-2023 22:00",
+    "20-2-2023 16:00",
+    "22-2-2023 11:30",
+    "22-2-2023 18:30",
+    "24-2-2023 18:00",
+    "25-2-2023 17:00",
+    "26-2-2023 11:28",
+    "27-2-2023 11:06",
+    "27-2-2023 18:00",
+    "28-Jan--22 18:30",
+    "OCt-NOV ",
+    " ",
+]
 
 def process_ctd_file(
     file: str,
@@ -88,12 +121,11 @@ def process_ctd_file(
         # Load File
         data = CTD(
             file,
-            plot=plot,
-            cached_master_sheet=cached_master_sheet,
-            master_sheet_path=master_sheet_path,
         )
         status.append("green")
         stage += 1
+
+        data.expand_date()
 
         # Filter
         data.filter_columns_by_range(filters=filters)
@@ -112,8 +144,13 @@ def process_ctd_file(
 
         # Remove Invalid Salinity Values
         data.filter_columns_by_range(
-            columns=["salinity"], upper_bounds=None, lower_bounds=[10]
+            column="salinity", upper_bound=None, lower_bound=10
         )
+        status.append("green")
+        stage += 1
+
+        # Add Metadata
+        data.add_metadata(master_sheet_path="mastersheet.csv", master_sheet_polars=cached_master_sheet)
         status.append("green")
         stage += 1
 
@@ -141,9 +178,19 @@ def process_ctd_file(
         data.add_potential_density()
         status.append("green")
         stage += 1
-        for ref in mld_ref:
-            for delta in mld_delta:
-                data.add_mld(reference=ref, delta=delta, method="potential_density_avg")
+
+        # Add MLD
+        if mld_ref and mld_delta:
+            for ref in mld_ref:
+                for delta in mld_delta:
+                    data.add_mld(reference=ref, delta=delta, method="salinity_olf")
+        else:
+            data.add_mld(reference=mld_ref, delta=mld_delta, method="salinity_olf")
+        status.append("green")
+        stage += 1
+
+        # Classify Profile
+        data.add_profile_classification()
         status.append("green")
         stage += 1
 
@@ -162,15 +209,19 @@ def process_ctd_file(
 
     except CTDError as error:
         logger.error(error)
-        status.extend(["red"] * (13 - stage))
+        status.extend(["red"] * (15 - stage))
+        return None, status
+    except ValueError as error:
+        logger.error(CTDError(str(error)))
+        status.extend(["red"] * (15 - stage))
         return None, status
     except KeyboardInterrupt:
-        status.extend(["red"] * (13 - stage))
+        status.extend(["red"] * (15 - stage))
         return None, status
     except Exception as e:
         print(e)
         logger.exception(e)
-        status.extend(["red"] * (13 - stage))
+        status.extend(["red"] * (15 - stage))
         return None, status
 
 
@@ -219,12 +270,14 @@ def generate_status_table(status_table):
         "Remove Upcasts",
         "Remove Negative Values",
         "Remove Invalid Salinity Values",
+        "Add Metadata",
         "Clean Salinity Data",
         "Add Surface Measurements",
         "Add Absolute Salinity",
         "Add Density",
         "Add Potential Density",
         "Add MLD",
+        "Classify Profile",
         "Add BV Squared",
         "Plot",
     ]
@@ -291,9 +344,10 @@ def run_default(
         Console(quiet=True)
 
     plots_folder = path.join(get_cwd(), "ctdplots")
-    files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[
-        : 20 if debug_run else None
-    ]
+    if debug_run:
+        files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])[0:40]
+    else:
+        files = get_ctd_filenames_in_dir(get_cwd(), [".rsk", ".csv"])
     total_files = len(files)
     remaining_files = total_files
 
@@ -312,9 +366,9 @@ def run_default(
         try:
             status_master_sheet.start()
             cached_master_sheet = (
-                MasterSheet(master_sheet_path) if master_sheet_path else None
+                MasterSheet(master_sheet_path, null_values=null_values) if master_sheet_path else None
             )
-        except Critical as e:
+        except MissingMasterSheetError as e:
             status_master_sheet.stop()
             console.print(e, style="white on red")
             continue_no_mastersheet = Confirm.ask("Continue without mastersheet?")
@@ -630,30 +684,8 @@ def build_parser():
         "fjord",
         help="Run the Fjord Phyto processing pipeline",
     )
-    parser_fjord.add_argument(
-        "-t",
-        "--token",
-        type=str,
-        default=None,
-        help="MapBox token to enable interactive map plot",
-    )
-    parser_fjord.add_argument(
-        "--mld-ref",
-        type=int,
-        nargs="+",
-        default=20,
-        help="Reference value(s) for mld calculation.",
-        choices=range(0, 50),
-    )
-    parser_fjord.add_argument(
-        "--mld-delta",
-        type=float,
-        nargs="+",
-        default=0.05,
-        help="Delta value(s) for mld calculation.",
-        choices=[0.01, 0.02, 0.03, 0.04, 0.05],
-    )
-    add_arguments(parser_default)
+    add_arguments_default(parser_default)
+    add_arguments_fjord(parser_fjord)
     return parser
 
 
@@ -681,14 +713,14 @@ def build_parser_docs():
         "fjord",
         help="Run the Fjord Phyto processing pipeline",
     )
-    add_arguments(parser_default)
-    add_arguments(parser_fjord)
+    add_arguments_default(parser_default)
+    add_arguments_fjord(parser_fjord)
     return parser
 
 
-def add_arguments(parser):
+def add_arguments_default(parser):
     """
-    Adds arguments to the argument parser.
+    Adds arguments to the default argument parser.
 
     Parameters
     ----------
@@ -818,6 +850,96 @@ def add_arguments(parser):
     )
 
 
+def add_arguments_fjord(parser):
+    """
+    Adds arguments to the fjord argument parser.
+
+    Parameters
+    ----------
+    parser : argparse.ArgumentParser
+        The argument parser to add arguments to.
+
+    Notes
+    -----
+    This function adds various command-line arguments to the parser, including options for plotting,
+    verbosity, resetting the file environment, showing processing status, running in debug mode,
+    specifying the master sheet path, setting the number of worker processes, providing a Mapbox token,
+    and defining filters for data columns.
+    """
+    parser.add_argument("-p", "--plot", action="store_true", help="Generate plots")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        dest="verbosity",
+        default=3,
+        help="Verbose logger output to ctdfjorder.log (repeat for increased verbosity)",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_const",
+        const=-1,
+        default=0,
+        dest="verbosity",
+        help="Quiet output (show errors only)",
+    )
+    parser.add_argument(
+        "-r", "--reset", action="store_true", help="Reset file environment"
+    )
+    parser.add_argument(
+        "-s",
+        "--show-status",
+        action="store_true",
+        help="Show processing status and pipeline status",
+    )
+    parser.add_argument(
+        "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
+    )
+    parser.add_argument("-m", "--mastersheet", type=str, default="mastersheet.csv",  help="Path to mastersheet")
+    parser.add_argument(
+        "-w", "--workers", type=int, nargs="?", const=8, help="Max workers"
+    )
+    parser.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="MapBox token to enable interactive map plot",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=str(DEFAULT_OUTPUT_FILE),
+        help="Output file path",
+    )
+    parser.add_argument(
+        "--filter-columns",
+        nargs="*",
+        type=str,
+        required=False,
+        default=None,
+        help="List of columns to filter",
+        choices=LIST_LABELS,
+    )
+    parser.add_argument(
+        "--filter-upper",
+        nargs="*",
+        type=float,
+        required=False,
+        default=None,
+        help="Upper bounds for the filtered columns",
+    )
+    parser.add_argument(
+        "--filter-lower",
+        nargs="*",
+        type=float,
+        required=False,
+        default=None,
+        help="Lower bounds for the filtered columns",
+    )
+
+
 def main():
     """
     The main entry point for the application. Parses arguments and runs the appropriate processing pipeline.
@@ -850,27 +972,20 @@ def main():
         sys.exit()
     if args.command == "fjord":
         reset_file_environment()
+        filters = create_filters(args)
         display_config(args)
-        if isinstance(args.mld_ref, List):
-            mld_ref = args.mld_ref
-        else:
-            mld_ref = [args.mld_ref]
-        if isinstance(args.mld_delta, List):
-            mld_delta = args.mld_delta
-        else:
-            mld_delta = [args.mld_delta]
         run_default(
-            plot=True,
-            master_sheet_path="mastersheet.csv",
-            max_workers=8,
-            verbosity=3,
-            output_file=DEFAULT_OUTPUT_FILE,
-            debug_run=False,
+            plot=args.plot,
+            master_sheet_path=args.mastersheet,
+            max_workers=args.workers,
+            verbosity=args.verbosity,
+            output_file=args.output,
+            debug_run=args.debug_run,
             status_show=True,
             mapbox_access_token=args.token,
-            filters=None,
-            mld_ref=mld_ref,
-            mld_delta=mld_delta,
+            filters=filters,
+            mld_ref=None,
+            mld_delta=None,
         )
 
 

@@ -1,7 +1,6 @@
 from torch import optim
 
 from ctdfjorder.constants.constants import *
-from ctdfjorder.exceptions.exceptions import CTDError
 from ctdfjorder.visualize.ctd_plot import plot_original_data, plot_predicted_data
 import torch
 from torch.utils.data import TensorDataset, DataLoader
@@ -188,10 +187,7 @@ class AI:
             ).agg(list(available_columns.values()))
             data_binned = data_binned.rename({"pressure_bin": PRESSURE_LABEL})
             if data_binned.limit(4).height < 2:
-                raise CTDError(
-                    message=ERROR_GRU_INSUFFICIENT_DATA,
-                    filename=filename,
-                )
+                raise ValueError(f"{filename} - Insufficient data for the GRU, profile must contain at least 5m of samples.")
             salinity = np.array(data_binned.select(pl.col(SALINITY_LABEL)).to_numpy())
             scaler = MinMaxScaler(feature_range=(-1, 1))
             scaler.fit(salinity)
