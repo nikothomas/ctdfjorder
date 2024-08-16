@@ -1422,7 +1422,7 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
 
-    def add_profile_classification(self, stratification_threshold=0.02):
+    def add_profile_classification(self, stratification_threshold=0.5):
         """
         Classifies each profile based on salinity and depth into one of three categories.
 
