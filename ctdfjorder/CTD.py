@@ -845,8 +845,8 @@ class CTD:
 
         Notes
         -----
-        This method adds three new columns to the dataset: surface salinity, surface temperature, and
-        meltwater fraction. The values are calculated as follows:
+        This method adds four new columns to the dataset: surface salinity, surface temperature, and
+        meltwater fraction using EQ. 10 and EQ. 11 The values are calculated as follows:
 
         - Surface temperature is the mean temperature from pressure `start` to `end`.
         - Surface salinity is the salinity value at the lowest pressure within the range from `start` to `end`.
@@ -854,7 +854,8 @@ class CTD:
 
         .. math::
 
-            \text{Meltwater fraction} = (-0.021406 \cdot S_0 + 0.740392) \cdot 100
+            \text{Meltwater fraction EQ 11} = (-0.021406 \cdot S_0 + 0.740392) \cdot 100
+            \text{Meltwater fraction EQ 10} = (-0.016 \cdot S_0 + 0.544) \cdot 100
 
         where :math:`( S_0 )` is the surface salinity.
 
@@ -884,7 +885,8 @@ class CTD:
         self._data = self._data.with_columns(
             pl.lit(None, dtype=pl.Float64).alias(SURFACE_SALINITY_LABEL),
             pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE_LABEL),
-            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_LABEL),
+            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_10_LABEL),
+            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_11_LABEL)
         )
         for profile_id in (
                 self._data.select(PROFILE_ID_LABEL)
@@ -903,18 +905,17 @@ class CTD:
                 )
                 self.assert_data_not_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
                 continue
-            surface_salinity = np.array(
-                surface_data.select(pl.col(SALINITY_LABEL)).to_numpy()
-            )
-            surface_salinity = surface_salinity.item(0)
+            surface_salinity = surface_data.select(pl.col(SALINITY_LABEL).first()).item()
             surface_temperature = np.array(
                 surface_data.select(pl.col(TEMPERATURE_LABEL).mean()).to_numpy()
             ).item(0)
-            mwf = (-0.021406 * surface_salinity + 0.740392) * 100
+            mwf10 = (-0.021406 * surface_salinity + 0.740392) * 100
+            mwf11 = (-0.016 * surface_salinity + 0.544) * 100
             profile = profile.with_columns(
                 pl.lit(surface_salinity).alias(SURFACE_SALINITY_LABEL),
                 pl.lit(surface_temperature).alias(SURFACE_TEMPERATURE_LABEL),
-                pl.lit(mwf).alias(MELTWATER_FRACTION_LABEL),
+                pl.lit(mwf10).alias(MELTWATER_FRACTION_EQ_10_LABEL),
+                pl.lit(mwf11).alias(MELTWATER_FRACTION_EQ_11_LABEL)
             )
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
@@ -1492,7 +1493,7 @@ class CTD:
             self._data = self._data.vstack(profile)
 
     def calculate_salinity_olf_mld(self, profile: pl.DataFrame,
-                                   n: int = 20) -> float | None:
+                                   n: int = 4) -> float | None:
         r"""
         Calculates the mixed layer depth (MLD) using the Optimal Linear Fitting (OLF) method based on salinity profiles.
 
@@ -1554,10 +1555,10 @@ class CTD:
         add_mld : Method to calculate and add MLD to a dataset using different methods, including density threshold.
 
         """
-        salinity_profile = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        salinity_profile = profile.select(pl.col(SALINITY_LABEL)).to_numpy().flatten()
         depth_profile = profile.select(pl.col(DEPTH_LABEL)).to_numpy().flatten()
         max_depth_index = len(depth_profile) - n  # Ensure there are enough points for extrapolation
-        min_depth_index = 4
+        min_depth_index = 2
 
         if max_depth_index < min_depth_index:
             raise ValueError(f"{self._filename} - Profile must have at least {min_depth_index + n} samples, profile has {len(depth_profile)} samples.")
@@ -1565,21 +1566,20 @@ class CTD:
         slopes = []
         intercepts = []
         for k in range(min_depth_index, max_depth_index):
-            linear = stats.linregress(depth_profile[:k], salinity_profile[:k])
+            linear = stats.linregress(x=salinity_profile[:k], y=depth_profile[:k])
             slopes.append(linear.slope)
             intercepts.append(linear.intercept)
-
         # Step 2: Calculate E1(k) for each zk
         # Step 3: Extrapolate and calculate E2(k) for each zk
         E1_errors = []
         E2_errors = []
         for k in range(min_depth_index, max_depth_index):
-            S_hat = intercepts[k - min_depth_index] + slopes[k - min_depth_index] * np.array(depth_profile[:k])
-            E1 = np.sqrt(np.mean((np.array(salinity_profile[:k]) - S_hat) ** 2))
+            S_hat = intercepts[k - min_depth_index] + slopes[k - min_depth_index] * np.array(salinity_profile[:k])
+            E1 = np.sqrt(np.mean((np.array(depth_profile[:k]) - S_hat) ** 2))
             E1_errors.append(E1)
             S_hat_extrapolated = intercepts[k - min_depth_index] + slopes[k - min_depth_index] * np.array(
-                depth_profile[k:k + n])
-            bias = np.mean(S_hat_extrapolated - np.array(salinity_profile[k:k + n]))
+                salinity_profile[k:k + n])
+            bias = np.mean(S_hat_extrapolated - np.array(depth_profile[k:k + n]))
             E2 = np.abs(bias)
             E2_errors.append(E2)
 
@@ -1587,8 +1587,10 @@ class CTD:
         E2_E1_ratios = np.array(E2_errors) / np.array(E1_errors)
         try:
             optimal_k = np.argmax(
-                E2_E1_ratios[min_depth_index:])  # Adding min_depth_index because k started from min_depth_index
+                E2_E1_ratios)
         except ValueError:
+            return None
+        if slopes[optimal_k] < 200 and depth_profile[optimal_k+min_depth_index]:
             return None
         mld = depth_profile[optimal_k + min_depth_index]
         return mld
