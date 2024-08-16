@@ -67,7 +67,7 @@ Then copy and paste the following into your terminal, and replace :code:`MY_TOKE
 
 .. tip::
 
-    Are you a member of Fjord Phyto? If so run command this instead :console:`poetry run ctdcli fjord --mld-ref 20 30 --mld-delta 0.05 --token pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiOiJjbHl2Z2JzbDQxZjEwMmpwd2c1cnJpYmRyIn0.j9l0EXWa2ik51AbAcIe5HQ`
+    Are you a member of Fjord Phyto? If so run command this instead :console:`ctdcli fjord --token pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiOiJjbHl2Z2JzbDQxZjEwMmpwd2c1cnJpYmRyIn0.j9l0EXWa2ik51AbAcIe5HQ`
 
 .. code-block:: console
 

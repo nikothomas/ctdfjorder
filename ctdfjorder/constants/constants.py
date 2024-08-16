@@ -20,6 +20,9 @@ YEAR_LABEL: str = "year"
 MONTH_LABEL: str = "month"
 """str: Label for month column."""
 
+DAY_LABEL: str = "day"
+"""str: Label for day column."""
+
 FILENAME_LABEL: str = "filename"
 """str: Label for filename column."""
 
@@ -218,6 +221,9 @@ EXPORT_YEAR_LABEL = "Year"
 EXPORT_MONTH_LABEL = "Month"
 """str: Export label for month."""
 
+EXPORT_DAY_LABEL: str = "Day"
+"""str: Label for day column."""
+
 EXPORT_TEMPERATURE_LABEL = "Temperature_(°C)"
 """str: Export label for temperature."""
 
@@ -357,6 +363,7 @@ DATA_LABEL_MAPPING: dict[str, str] = {
     TIMESTAMP_LABEL: EXPORT_TIMESTAMP_LABEL,
     YEAR_LABEL: EXPORT_YEAR_LABEL,
     MONTH_LABEL: EXPORT_MONTH_LABEL,
+    DAY_LABEL: EXPORT_DAY_LABEL,
     FILENAME_LABEL: EXPORT_FILENAME_LABEL,
     CHLOROPHYLL_LABEL: EXPORT_CHLOROPHYLL_LABEL,
     TEMPERATURE_LABEL: EXPORT_TEMPERATURE_LABEL,

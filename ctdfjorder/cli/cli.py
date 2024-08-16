@@ -125,8 +125,7 @@ def process_ctd_file(
         status.append("green")
         stage += 1
 
-        data.expand_date()
-
+        data.expand_date(day=False)
         # Filter
         data.filter_columns_by_range(filters=filters)
         status.append("green")
@@ -160,7 +159,9 @@ def process_ctd_file(
         stage += 1
 
         # Add Surface Measurements
-        data.add_surface_salinity_temp_meltwater()
+        data.add_surface_salinity()
+        data.add_surface_temperature()
+        data.add_meltwater_fraction()
         status.append("green")
         stage += 1
 

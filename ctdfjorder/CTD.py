@@ -117,10 +117,10 @@ class CTD:
                 pl.col(TIMESTAMP_LABEL).dt.year().alias(YEAR_LABEL))
         if month:
             self._data = self._data.with_columns(
-                pl.col(TIMESTAMP_LABEL).dt.month().alias(YEAR_LABEL))
+                pl.col(TIMESTAMP_LABEL).dt.month().alias(MONTH_LABEL))
         if day:
             self._data = self._data.with_columns(
-                pl.col(TIMESTAMP_LABEL).dt.day().alias(YEAR_LABEL))
+                pl.col(TIMESTAMP_LABEL).dt.ordinal_day().alias(DAY_LABEL))
 
     def add_metadata(self, master_sheet_path: str, master_sheet_polars: pl.DataFrame = None):
         """
@@ -823,18 +823,12 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
 
-    def add_surface_salinity_temp_meltwater(self, start=10.1325, end=12.1325):
-        r"""
-        Calculates the surface salinity, surface temperature, and meltwater fraction of a CTD profile.
-        Adds these values to the CTD data.
+    def add_surface_salinity(self, start=10.1325, end=12.1325):
+        """
+        Calculate and add surface salinity to the dataset.
 
-        Raises
-        ------
-        NoSamplesError
-            When the function is called on a CTD object with no data.
-
-        Warning
-            When there are no measurements within the specified pressure range for a profile.
+        This function calculates the surface salinity for each profile in the dataset. The surface salinity
+        is determined by selecting the salinity value at the lowest pressure within the specified range.
 
         Parameters
         ----------
@@ -843,50 +837,17 @@ class CTD:
         end : float, default 12.1325
             Lower bound of surface pressure.
 
-        Notes
-        -----
-        This method adds four new columns to the dataset: surface salinity, surface temperature, and
-        meltwater fraction using EQ. 10 and EQ. 11 The values are calculated as follows:
+        Raises
+        ------
+        NoSamplesError
+            If the dataset is empty when the function is called.
 
-        - Surface temperature is the mean temperature from pressure `start` to `end`.
-        - Surface salinity is the salinity value at the lowest pressure within the range from `start` to `end`.
-        - Meltwater fraction is calculated using the formula from `Pan et. al 2019 <https://doi.org/10.1371/journal.pone.0211107>`__:
-
-        .. math::
-
-            \text{Meltwater fraction EQ 11} = (-0.021406 \cdot S_0 + 0.740392) \cdot 100
-            \text{Meltwater fraction EQ 10} = (-0.016 \cdot S_0 + 0.544) \cdot 100
-
-        where :math:`( S_0 )` is the surface salinity.
-
-        The procedure is as follows:
-
-        1. Initialize new columns for surface salinity, surface temperature, and meltwater fraction in the dataset.
-        2. For each unique profile identified by `profile_id`, extract the profile's data.
-        3. Filter the data to include only the samples within the specified pressure range (`start` to `end`).
-        4. Calculate the mean surface temperature, surface salinity, and meltwater fraction based on the filtered data.
-        5. Update the profile with the computed values.
-        6. Reintegration of the updated profile into the main dataset.
-
-        Examples
-        --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_surface_salinity_temp_meltwater(start=10.1325, end=12.1325)
-        >>> # This will add new columns with surface salinity, surface temperature, and meltwater fraction
-        >>> # values to the dataset, calculated using the specified pressure range.
-
-        See Also
-        --------
-        add_density : method to calculate derived density.
-        add_potential_density : method to calculate derived potential density.
-
+        Warning
+            If no measurements are found within the specified pressure range for a profile.
         """
-        self.assert_data_not_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
+        self.assert_data_not_empty(self.add_surface_salinity.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(SURFACE_SALINITY_LABEL),
-            pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE_LABEL),
-            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_10_LABEL),
-            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_11_LABEL)
+            pl.lit(None, dtype=pl.Float64).alias(SURFACE_SALINITY_LABEL)
         )
         for profile_id in (
                 self._data.select(PROFILE_ID_LABEL)
@@ -903,22 +864,108 @@ class CTD:
                     filename=self._filename,
                     message=WARNING_CTD_SURFACE_MEASUREMENT,
                 )
-                self.assert_data_not_empty(CTD.add_surface_salinity_temp_meltwater.__name__)
                 continue
+
             surface_salinity = surface_data.select(pl.col(SALINITY_LABEL).first()).item()
+            profile = profile.with_columns(
+                pl.lit(surface_salinity).alias(SURFACE_SALINITY_LABEL)
+            )
+            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.vstack(profile)
+
+    def add_surface_temperature(self, start=10.1325, end=12.1325):
+        """
+        Calculate and add surface temperature to the dataset.
+
+        This function calculates the surface temperature for each profile in the dataset. The surface
+        temperature is determined by calculating the mean temperature within the specified pressure range.
+
+        Parameters
+        ----------
+        start : float, default 10.1325
+            Upper bound of surface pressure.
+        end : float, default 12.1325
+            Lower bound of surface pressure.
+
+        Raises
+        ------
+        NoSamplesError
+            If the dataset is empty when the function is called.
+
+        Warning
+            If no measurements are found within the specified pressure range for a profile.
+        """
+        self.assert_data_not_empty(self.add_surface_temperature.__name__)
+        self._data = self._data.with_columns(
+            pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE_LABEL)
+        )
+        for profile_id in (
+                self._data.select(PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
+        ):
+            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            surface_data = profile.filter(
+                pl.col(PRESSURE_LABEL) > start, pl.col(PRESSURE_LABEL) < end
+            )
+            if surface_data.is_empty():
+                raise_warning_calculatuion(
+                    filename=self._filename,
+                    message=WARNING_CTD_SURFACE_MEASUREMENT,
+                )
+                continue
+
             surface_temperature = np.array(
                 surface_data.select(pl.col(TEMPERATURE_LABEL).mean()).to_numpy()
             ).item(0)
-            mwf10 = (-0.021406 * surface_salinity + 0.740392) * 100
-            mwf11 = (-0.016 * surface_salinity + 0.544) * 100
             profile = profile.with_columns(
-                pl.lit(surface_salinity).alias(SURFACE_SALINITY_LABEL),
-                pl.lit(surface_temperature).alias(SURFACE_TEMPERATURE_LABEL),
+                pl.lit(surface_temperature).alias(SURFACE_TEMPERATURE_LABEL)
+            )
+            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.vstack(profile)
+
+    def add_meltwater_fraction(self):
+        """
+        Calculate and add meltwater fractions (EQ. 10 and EQ. 11) to the dataset.
+
+        This function calculates the meltwater fractions for each profile based on the surface salinity.
+        The calculations are performed using the formulas provided by Pan et al. 2019.
+
+        Raises
+        ------
+        NoSamplesError
+            If the dataset is empty when the function is called.
+
+        Notes
+        -----
+        - Meltwater fraction EQ 11 = (-0.021406 * S_0 + 0.740392) * 100
+        - Meltwater fraction EQ 10 = (-0.016 * S_0 + 0.544) * 100
+        """
+        self.assert_data_not_empty(self.add_meltwater_fraction.__name__)
+        self._data = self._data.with_columns(
+            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_10_LABEL),
+            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_11_LABEL)
+        )
+        for profile_id in (
+                self._data.select(PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
+        ):
+            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            surface_salinity = profile.select(pl.col(SURFACE_SALINITY_LABEL).first()).item()
+
+            mwf10 = (-0.016 * surface_salinity + 0.544) * 100
+            mwf11 = (-0.021406 * surface_salinity + 0.740392) * 100
+
+            profile = profile.with_columns(
                 pl.lit(mwf10).alias(MELTWATER_FRACTION_EQ_10_LABEL),
                 pl.lit(mwf11).alias(MELTWATER_FRACTION_EQ_11_LABEL)
             )
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
+
 
     def add_speed_of_sound(self) -> None:
         """
