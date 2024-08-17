@@ -318,11 +318,10 @@ class CTD:
 
         The procedure is as follows:
 
-        1. For each unique profile identified by `profile_id`, the method extracts the profile's data.
-        2. It then computes the difference in pressure between consecutive samples within the profile.
-        3. Rows where the pressure difference is not positive are removed, indicating a non-increasing
+        1. It then computes the difference in pressure between consecutive rows within the profile.
+        2. Rows where the pressure difference is not positive are removed, indicating a non-increasing
            pressure (i.e., an upcast or no movement).
-        4. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
+        3. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
 
         Let :math:`p_i` be the pressure at the :math:`i`-th sampling event. The condition for retaining a
         data point is given by:
@@ -359,7 +358,7 @@ class CTD:
                                      ~(pl.col(PRESSURE_LABEL).diff().is_null()),
                                      (pl.col(SEA_PRESSURE_LABEL).diff()) > 0.0,
                                      ~(pl.col(SEA_PRESSURE_LABEL).diff().is_nan()),
-                                     ~(pl.col(SEA_PRESSURE_LABEL).diff().is_null()),)
+                                     ~(pl.col(SEA_PRESSURE_LABEL).diff().is_null()), )
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
 
@@ -401,13 +400,11 @@ class CTD:
         -----
         The method performs the following steps for each unique profile identified by `profile_id`:
 
-        1. Extracts the data for the profile using the `profile_id`.
-        2. If `filters` is provided, it iterates over each filter tuple and applies the specified bounds
+        1. If `filters` is provided, it iterates over each filter tuple and applies the specified bounds
            to the relevant column, filtering out data that does not meet the criteria.
-        3. If `columns`, `upper_bounds`, and `lower_bounds` are provided, it iterates over each column
+        2. If `columns`, `upper_bounds`, and `lower_bounds` are provided, it iterates over each column
            and applies the corresponding upper and lower bounds to filter the data.
-        4. Updates the dataset by removing the original profile data and reintegrating the filtered profile data.
-        5. Checks if the dataset is empty after filtering using the `assert_data_not_empty` method.
+        3. Updates the dataset by removing the original profile data and reintegrating the filtered profile data.
 
         The method is designed to be flexible, allowing filtering through either a comprehensive set of filters
         or by specifying individual columns and their bounds directly. This makes it adaptable to various
@@ -431,7 +428,8 @@ class CTD:
         remove_non_positive_samples : Method to remove rows with non-positive values for specific parameters.
         """
 
-        def apply_bounds(profile: pl.DataFrame, column: str, upper_bound: int | float | None, lower_bound: int | float | None) -> pl.DataFrame:
+        def apply_bounds(profile: pl.DataFrame, column: str, upper_bound: int | float | None,
+                         lower_bound: int | float | None) -> pl.DataFrame:
             if upper_bound is not None:
                 profile = profile.filter(pl.col(column) <= upper_bound)
             if lower_bound is not None:
@@ -480,15 +478,6 @@ class CTD:
         This method cleans the CTD (Conductivity, Temperature, Depth) dataset by removing any samples
         that have non-positive values for key parameters. Non-positive values in these parameters
         are generally invalid and indicate erroneous measurements.
-
-        The procedure is as follows:
-
-        1. For each unique profile identified by `profile_id`, the method extracts the profile's data.
-        2. It then iterates over a predefined set of key parameters: depth, pressure, practical salinity,
-           absolute salinity, and density.
-        3. For each parameter present in the profile, it filters out rows where the parameter's value
-           is non-positive, null, or NaN.
-        4. The cleaned profile is then reintegrated into the main dataset, replacing the original data.
 
         Let :math:`( x_i )` represent the value of a parameter (depth, pressure, practical salinity, absolute salinity,
         or density) at the :math:`( i )`-th sampling event. The condition for retaining a data point is given by:
@@ -562,12 +551,11 @@ class CTD:
 
         The procedure for 'clean_salinity_ai' is as follows:
 
-        1. For each unique profile identified by `profile_id`, extract the profile's data.
-        2. Bin the data every 0.5 dbar of pressure.
-        3. Use a GRU model with a loss function that penalizes non-monotonic salinity increases with decreasing pressure.
-        4. Train the model on the binned data to predict clean salinity values.
-        5. Replace the original salinity values in the profile with the predicted clean values.
-        6. Reintegration of the cleaned profile into the main dataset.
+        1. Bin the data every 0.5 dbar of pressure.
+        2. Use a GRU model with a loss function that penalizes non-monotonic salinity increases with decreasing pressure.
+        3. Train the model on the binned data to predict clean salinity values.
+        4. Replace the original salinity values in the profile with the predicted clean values.
+        5. Reintegration of the cleaned profile into the main dataset.
 
         The loss function :math:`( L )` used in training is defined as:
 
@@ -623,14 +611,6 @@ class CTD:
         This method computes the absolute salinity from practical salinity for each profile in the dataset
         using the TEOS-10 standard. Absolute salinity provides a more accurate representation of salinity
         by accounting for the variations in seawater composition.
-
-        The procedure is as follows:
-
-        1. Initialize a new column for absolute salinity in the dataset.
-        2. For each unique profile identified by `profile_id`, extract the profile's data.
-        3. Use the `gsw.conversions.SA_from_SP` function to compute absolute salinity from practical salinity.
-        4. Update the profile with the computed absolute salinity values.
-        5. Reintegration of the updated profile into the main dataset.
 
         The TEOS-10 formula for converting practical salinity :math:`( S_P )` to absolute salinity :math:`( S_A )` is used:
 
@@ -694,15 +674,6 @@ class CTD:
         This method computes the density of seawater from absolute salinity, in-situ temperature,
         and sea pressure using the TEOS-10 standard. The density is a critical parameter for
         understanding the physical properties of seawater and its buoyancy characteristics.
-
-        The procedure is as follows:
-
-        1. Check if absolute salinity is already present in the dataset. If not, calculate it using `add_absolute_salinity()`.
-        2. Initialize a new column for density in the dataset.
-        3. For each unique profile identified by `profile_id`, extract the profile's data.
-        4. Use the `gsw.density.rho_t_exact` function to compute density from absolute salinity, temperature, and pressure.
-        5. Update the profile with the computed density values.
-        6. Reintegration of the updated profile into the main dataset.
 
         The TEOS-10 formula for calculating density :math:`( \rho )` is used:
 
@@ -770,15 +741,6 @@ class CTD:
         using the TEOS-10 standard. Potential density is the density a parcel of seawater would have if
         it were adiabatically brought to the sea surface, which helps in understanding the stability and
         stratification of the water column.
-
-        The procedure is as follows:
-
-        1. Check if absolute salinity is already present in the dataset. If not, calculate it using `add_absolute_salinity()`.
-        2. Initialize a new column for potential density in the dataset.
-        3. For each unique profile identified by `profile_id`, extract the profile's data.
-        4. Use the `gsw.sigma0` function to compute potential density from absolute salinity and temperature.
-        5. Update the profile with the computed potential density values.
-        6. Reintegration of the updated profile into the main dataset.
 
         The TEOS-10 formula for calculating potential density :math:`( \sigma_0 )` is used:
 
@@ -864,6 +826,8 @@ class CTD:
                     filename=self._filename,
                     message=WARNING_CTD_SURFACE_MEASUREMENT,
                 )
+                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+                self._data = self._data.vstack(profile)
                 continue
 
             surface_salinity = surface_data.select(pl.col(SALINITY_LABEL).first()).item()
@@ -897,7 +861,6 @@ class CTD:
         """
         self.assert_data_not_empty(self.add_surface_temperature.__name__)
         self._data = self._data.with_columns(
-
             pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE_LABEL)
         )
         for profile_id in (
@@ -915,6 +878,8 @@ class CTD:
                     filename=self._filename,
                     message=WARNING_CTD_SURFACE_MEASUREMENT,
                 )
+                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+                self._data = self._data.vstack(profile)
                 continue
 
             surface_temperature = np.array(
@@ -931,7 +896,7 @@ class CTD:
         Calculate and add meltwater fractions (EQ. 10 and EQ. 11) to the dataset.
 
         This function calculates the meltwater fractions for each profile based on the surface salinity.
-        The calculations are performed using the formulas provided by Pan et al. 2019.
+        The calculations are performed using the formulas provided by `Pan et al. 2019 <10.1371/journal.pone.0211107>`__.
 
         Raises
         ------
@@ -940,8 +905,18 @@ class CTD:
 
         Notes
         -----
-        - Meltwater fraction EQ 11 = (-0.021406 * S_0 + 0.740392) * 100
-        - Meltwater fraction EQ 10 = (-0.016 * S_0 + 0.544) * 100
+        - Meltwater fraction EQ 11, where :math:`S_0` is surface salinity
+
+        .. math::
+
+            \text{Meltwater Fraction} = (-0.021406 * S_0 + 0.740392) * 100
+
+        - Meltwater fraction EQ 10, where :math:`S_0` is surface salinity
+
+        .. math::
+
+            \text{Meltwater Fraction} = (-0.016 * S_0 + 0.544) * 100
+
         """
         self.assert_data_not_empty(self.add_meltwater_fraction.__name__)
         self._data = self._data.with_columns(
@@ -998,8 +973,7 @@ class CTD:
         - :math:`T` is the in-situ temperature,
         - :math:`p` is the sea pressure.
 
-        This method adds a new column for sound speed to the dataset, and it will overwrite any existing
-        column for speed of sound.
+        This method adds a new column for sound speed to the dataset.
 
         Examples
         --------
@@ -1096,17 +1070,7 @@ class CTD:
 
         Notes
         -----
-        This method adds a new column for the mean surface density to the dataset. The values are calculated as follows:
-
-        - Mean surface density is computed as the mean of density values within the specified pressure range (`start` to `end`).
-
-        The procedure is as follows:
-
-        1. For each unique profile identified by `profile_id`, extract the profile's data.
-        2. Filter the data to include only the samples within the specified pressure range (`start` to `end`).
-        3. Calculate the mean surface density based on the filtered data.
-        4. Update the profile with the computed mean surface density value.
-        5. Reintegration of the updated profile into the main dataset.
+        Mean surface density is computed as the mean of density values within the specified pressure range (`start` to `end`).
 
         Examples
         --------
@@ -1371,7 +1335,7 @@ class CTD:
         Parameters
         ----------
         method : str, default "potential_density_avg"
-            The MLD calculation method. Options are "abs_density_avg" or "potential_density_avg".
+            The MLD calculation method. Options are "abs_density_avg", "potential_density_avg", "salinity_olf", or "buoyancy_frequency".
         delta : float or None, default 0.05
             The change in density or potential density from the reference that would define the MLD in units of
             :math:`\frac{kg}{m^3}`.
@@ -1392,7 +1356,7 @@ class CTD:
         at which the density increases by a specified amount (delta) from the reference density. The reference
         density is calculated as the mean density up to the reference depth.
 
-        The procedure is as follows:
+        The procedure is as follows for the thresholding methods:
 
         1. Initialize a new column for MLD in the dataset.
         2. For each unique profile identified by `profile_id`, extract the profile's data.
@@ -1432,9 +1396,9 @@ class CTD:
         self.assert_data_not_empty(CTD.add_mld.__name__)
         mld_col_labels = []
         supported_methods = ["abs_density_avg", "potential_density_avg", "salinity_olf"]
-        if method != supported_methods[2]:
+        if method == supported_methods[0] or method == supported_methods[1]:
             mld_col_labels.append(f"MLD_Ref:{reference}_(m)_Thresh_{delta}_(kg/m^3)")
-        else:
+        elif method == supported_methods[2]:
             mld_col_labels.append(f"MLD_OLF_(m)")
         self._data = self._data.with_columns(
             pl.lit(None, dtype=pl.Float64).alias(mld_col_labels[-1])
@@ -1462,7 +1426,7 @@ class CTD:
                     pl.col(POTENTIAL_DENSITY_LABEL) >= reference_density + delta
                 )
             elif method == supported_methods[2]:
-                mld_from_olf = self.calculate_salinity_olf_mld(profile)
+                mld_from_olf = self.calculate_mld_salinity_olf(profile)
                 df_filtered = profile.filter(pl.col(DEPTH_LABEL) >= mld_from_olf)
             else:
                 raise ValueError(f'Invalid method "{method}" not in {supported_methods}')
@@ -1523,13 +1487,14 @@ class CTD:
             first_salinity = profile.select(pl.col(SALINITY_LABEL).first()).item()
             mld_salinity = profile.select(pl.col(mld_column).first()).item()
             if type(mld_salinity) is not type(None):
-                salinity_diff = float(mld_salinity)-float(first_salinity)
+                salinity_diff = float(mld_salinity) - float(first_salinity)
             else:
                 salinity_diff = None
             # Classify profile based on the criteria
             if type(salinity_diff) is not type(None) and salinity_diff > 0.5:
                 classification = 'A - Very shallow low salinity surface ML'
-            elif profile.select((pl.col(SALINITY_LABEL).max() - pl.col(SALINITY_LABEL).min()).abs() < stratification_threshold).item():
+            elif profile.select((pl.col(SALINITY_LABEL).max() - pl.col(
+                    SALINITY_LABEL).min()).abs() < stratification_threshold).item():
                 classification = 'C - Stratified MLD from surface to bottom of ML'
             else:
                 classification = 'B - Normal well mixed ML'
@@ -1540,7 +1505,7 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
 
-    def calculate_salinity_olf_mld(self, profile: pl.DataFrame,
+    def calculate_mld_salinity_olf(self, profile: pl.DataFrame,
                                    n: int = 4) -> float | None:
         r"""
         Calculates the mixed layer depth (MLD) using the Optimal Linear Fitting (OLF) method based on salinity profiles.
@@ -1595,7 +1560,7 @@ class CTD:
         --------
         >>> salinity_profile = [35.1, 35.2, 35.3, 35.5, 35.8, 36.0, 36.2]
         >>> depth_profile = [0, 10, 20, 30, 40, 50, 60]
-        >>> mld = CTD.calculate_salinity_olf_mld(salinity_profile, depth_profile)
+        >>> mld = CTD.calculate_mld_salinity_olf(salinity_profile, depth_profile)
         >>> print(f"Calculated MLD: {mld} meters")
 
         See Also
@@ -1609,7 +1574,8 @@ class CTD:
         min_depth_index = 2
 
         if max_depth_index < min_depth_index:
-            raise ValueError(f"{self._filename} - Profile must have at least {min_depth_index + n} samples, profile has {len(depth_profile)} samples.")
+            raise ValueError(
+                f"{self._filename} - Profile must have at least {min_depth_index + n} samples, profile has {len(depth_profile)} samples.")
         # Step 1: Perform linear fitting for each depth zk
         slopes = []
         intercepts = []
@@ -1617,8 +1583,7 @@ class CTD:
             linear = stats.linregress(x=salinity_profile[:k], y=depth_profile[:k])
             slopes.append(linear.slope)
             intercepts.append(linear.intercept)
-        # Step 2: Calculate E1(k) for each zk
-        # Step 3: Extrapolate and calculate E2(k) for each zk
+        # Step 2: Calculate E1(k) for each zk and extrapolate and calculate E2(k) for each zk
         E1_errors = []
         E2_errors = []
         for k in range(min_depth_index, max_depth_index):
@@ -1643,6 +1608,76 @@ class CTD:
         mld = depth_profile[optimal_k + min_depth_index]
         return mld
 
+    def add_mld_bf(self, min_qi=0.0) -> None:
+        r"""
+        Calculates the mixed layer depth (MLD) using the max buoyancy frequency (N^2) method based on salinity profiles.
+
+        Parameters
+        ----------
+        min_qi
+            Minimum quality index score to be considered a valid MLD.
+
+        Notes
+        -----
+        The mixed layer depth (MLD) is determined by identifying the depth where the
+        maximum buoyancy frequency occurs. After finding this depth, the Quality Index (QI)
+        is calculated to assess the reliability of the MLD. The Quality Index is given by:
+
+        .. math::
+            QI = 1 - \frac{\sigma_{A1}}{\sigma_{A2}}
+
+        where:
+
+        * :math:`\sigma_{A1}` is the standard deviation of the potential density within the mixed layer depth
+        * :math:`\sigma_{A2}` is the standard deviation of the potential density within 1.5 times the mixed layer depth.
+
+        The calculated QI must be greater than or equal to `min_qi` for the MLD to be considered valid. If invalid
+        or incalculable MLD is reported as None.
+
+        Raises
+        ------
+        NoSamplesError
+            When the function is called on a CTD object with no data.
+
+        See Also
+        --------
+        add_mld : Method to calculate and add MLD to a dataset using different methods, including density threshold.
+
+        """
+        # Check if required columns exist
+        self.assert_data_not_empty(CTD.add_mld_bf.__name__)
+        self._data = self._data.with_columns(
+            pl.lit(None, dtype=pl.Float64).alias("MLD_BF_(m)"),
+            pl.lit(None, dtype=pl.Float64).alias("Quality_Index")
+        )
+        for profile_id in (
+                self._data.select(PROFILE_ID_LABEL)
+                        .unique(keep="first")
+                        .to_series()
+                        .to_list()
+        ):
+            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            bf_max = profile.filter(pl.col(BV_LABEL) == (pl.col(BV_LABEL).max()))
+            mld = bf_max.select(pl.col(DEPTH_LABEL).first()).item()
+            profile_up_to_mld = profile.filter(pl.col(DEPTH_LABEL) <= mld)
+            if not profile.select(pl.col(DEPTH_LABEL).max() >= mld*1.5).item():
+                profile_up_to_mld_1dot5 = profile.filter(pl.col(DEPTH_LABEL) <= mld * 1.5)
+            else:
+                profile_up_to_mld_1dot5 = profile
+            std_A1 = profile_up_to_mld.select(pl.col(POTENTIAL_DENSITY_LABEL).std()).item()
+            if std_A1 is None:
+                # Reintegration of the updated profile into the main dataset
+                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+                self._data = self._data.vstack(profile)
+                continue
+            std_A2 = profile_up_to_mld_1dot5.select(pl.col(POTENTIAL_DENSITY_LABEL).std()).item()
+            qi = 1 - (std_A1/std_A2)
+            if qi >= min_qi:
+                profile = profile.with_columns(pl.lit(mld).alias("MLD_BF_(m)"),
+                                               pl.lit(qi).alias("Quality_Index"))
+            # Reintegration of the updated profile into the main dataset
+            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.vstack(profile)
     def add_brunt_vaisala_squared(self) -> None:
         r"""
         Calculates buoyancy frequency squared and adds it to the CTD data.
@@ -1718,7 +1753,7 @@ class CTD:
                 n_2, p_mid = gsw.Nsquared(SA=sa, CT=ct, p=p, lat=lat)
             except ValueError:
                 raise ValueError(f"Unable to calculate buoyancy frequency, likely due to lat = {lat}",
-                )
+                                 )
             buoyancy_frequency = (
                 pl.Series(np.array(n_2).flatten())
                 .extend_constant(None, n=1)

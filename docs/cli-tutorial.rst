@@ -57,7 +57,6 @@ For the purposes of this demo are assuming that you have the following:
    * location
    * loc id
    * date/time (ISO)
-
    * sechhi depth
 
 * Access to a public `MapBox <https://docs.mapbox.com/help/getting-started/access-tokens/>`_ token.
