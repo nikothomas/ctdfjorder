@@ -51,7 +51,10 @@ Constants
 .. autodata:: ctdfjorder.constants.constants.SURFACE_DENSITY_LABEL
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_LABEL
+.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_EQ_10_LABEL
+   :annotation:
+
+.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_EQ_11_LABEL
    :annotation:
 
 .. autodata:: ctdfjorder.constants.constants.DENSITY_LABEL
@@ -138,7 +141,10 @@ Constants
 .. autodata:: ctdfjorder.constants.constants.EXPORT_SURFACE_TEMPERATURE_LABEL
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.EXPORT_MELTWATER_FRACTION_LABEL
+.. autodata:: ctdfjorder.constants.constants.EXPORT_MELTWATER_FRACTION_EQ_10_LABEL
+   :annotation:
+
+.. autodata:: ctdfjorder.constants.constants.EXPORT_MELTWATER_FRACTION_EQ_11_LABEL
    :annotation:
 
 .. autodata:: ctdfjorder.constants.constants.EXPORT_LONGITUDE_LABEL

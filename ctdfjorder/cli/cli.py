@@ -180,23 +180,23 @@ def process_ctd_file(
         status.append("green")
         stage += 1
 
+        # Add BV Squared
+        data.add_brunt_vaisala_squared()
+        status.append("green")
+        stage += 1
+
         # Add MLD
         if mld_ref and mld_delta:
             for ref in mld_ref:
                 for delta in mld_delta:
-                    data.add_mld(reference=ref, delta=delta, method="salinity_olf")
+                    data.add_mld(reference=ref, delta=delta, method="potential_density_avg")
         else:
-            data.add_mld(reference=mld_ref, delta=mld_delta, method="salinity_olf")
+            data.add_mld_bf()
         status.append("green")
         stage += 1
 
         # Classify Profile
         data.add_profile_classification()
-        status.append("green")
-        stage += 1
-
-        # Add BV Squared
-        data.add_brunt_vaisala_squared()
         status.append("green")
         stage += 1
 

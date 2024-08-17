@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_speed_of_sound
+.. automethod:: ctdfjorder.CTD.CTD.add_profile_classification

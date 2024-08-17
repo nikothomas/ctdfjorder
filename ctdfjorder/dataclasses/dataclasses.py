@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
 from dataclasses import dataclass, field
+from collections import namedtuple
 import polars as pl
+
+from typing import NamedTuple
+
 
 @dataclass
 class Measurement:
@@ -47,7 +51,8 @@ class VarMetadata:
     depth: Measurement = Measurement(label="depth", unit="m", polars_type=pl.Float64)
     salinity: Measurement = Measurement(label="salinity", unit="PSU", polars_type=pl.Float64)
     speed_of_sound: Measurement = Measurement(label="speed_of_sound", unit="m/s", polars_type=pl.Float64)
-    specific_conductivity: Measurement = Measurement(label="specific_conductivity", unit="µS/cm", polars_type=pl.Float64)
+    specific_conductivity: Measurement = Measurement(label="specific_conductivity", unit="µS/cm",
+                                                     polars_type=pl.Float64)
     conductivity: Measurement = Measurement(label="conductivity", unit="mS/cm", polars_type=pl.Float64)
     pressure: Measurement = Measurement(label="pressure", unit="dbar", polars_type=pl.Float64)
     salinity_abs: Measurement = Measurement(label="salinity_abs", unit="g/kg", polars_type=pl.Float64)
@@ -57,7 +62,8 @@ class VarMetadata:
     meltwater_fraction: Measurement = Measurement(label="meltwater_fraction", unit="%", polars_type=pl.Float64)
     density: Measurement = Measurement(label="density", unit="kg/m^3", polars_type=pl.Float64)
     potential_density: Measurement = Measurement(label="potential_density", unit="kg/m^3", polars_type=pl.Float64)
-    brunt_vaisala_frequency_squared: Measurement = Measurement(label="brunt_vaisala_frequency_squared", unit=None, polars_type=pl.Float64)
+    brunt_vaisala_frequency_squared: Measurement = Measurement(label="brunt_vaisala_frequency_squared", unit=None,
+                                                               polars_type=pl.Float64)
     p_mid: Measurement = Measurement(label="p_mid", unit="dbar", polars_type=pl.Float64)
     secchi_depth: Measurement = Measurement(label="secchi_depth", unit="m", polars_type=pl.Float64)
     latitude: Measurement = Measurement(label="latitude", unit=None, polars_type=pl.Float64)
@@ -66,8 +72,10 @@ class VarMetadata:
     profile_id: Measurement = Measurement(label="profile_id", unit=None, polars_type=pl.Utf8)
     site_name: Measurement = Measurement(label="site_name", unit=None, polars_type=pl.Utf8)
     site_id: Measurement = Measurement(label="site_id", unit=None, polars_type=pl.Utf8)
-    conservative_temperature: Measurement = Measurement(label="conservative_temperature", unit="°C", polars_type=pl.Float64)
-    oxygen_concentration: Measurement = Measurement(label="oxygen_concentration", unit="µmol/kg", polars_type=pl.Float64)
+    conservative_temperature: Measurement = Measurement(label="conservative_temperature", unit="°C",
+                                                        polars_type=pl.Float64)
+    oxygen_concentration: Measurement = Measurement(label="oxygen_concentration", unit="µmol/kg",
+                                                    polars_type=pl.Float64)
     oxygen_saturation: Measurement = Measurement(label="oxygen_saturation", unit="%", polars_type=pl.Float64)
     nitrate: Measurement = Measurement(label="nitrate", unit="µmol/L", polars_type=pl.Float64)
     phosphate: Measurement = Measurement(label="phosphate", unit="µmol/L", polars_type=pl.Float64)
@@ -75,11 +83,15 @@ class VarMetadata:
     ph: Measurement = Measurement(label="ph", unit=None, polars_type=pl.Float64)
     alkalinity: Measurement = Measurement(label="alkalinity", unit="µmol/kg", polars_type=pl.Float64)
     turbidity: Measurement = Measurement(label="turbidity", unit="NTU", polars_type=pl.Float64)
-    particulate_organic_carbon: Measurement = Measurement(label="particulate_organic_carbon", unit="µmol/L", polars_type=pl.Float64)
+    particulate_organic_carbon: Measurement = Measurement(label="particulate_organic_carbon", unit="µmol/L",
+                                                          polars_type=pl.Float64)
     total_organic_carbon: Measurement = Measurement(label="total_organic_carbon", unit="µmol/L", polars_type=pl.Float64)
-    particulate_inorganic_carbon: Measurement = Measurement(label="particulate_inorganic_carbon", unit="µmol/L", polars_type=pl.Float64)
-    dissolved_inorganic_carbon: Measurement = Measurement(label="dissolved_inorganic_carbon", unit="µmol/kg", polars_type=pl.Float64)
-    chlorophyll_fluorescence: Measurement = Measurement(label="chlorophyll_fluorescence", unit="RFU", polars_type=pl.Float64)
+    particulate_inorganic_carbon: Measurement = Measurement(label="particulate_inorganic_carbon", unit="µmol/L",
+                                                            polars_type=pl.Float64)
+    dissolved_inorganic_carbon: Measurement = Measurement(label="dissolved_inorganic_carbon", unit="µmol/kg",
+                                                          polars_type=pl.Float64)
+    chlorophyll_fluorescence: Measurement = Measurement(label="chlorophyll_fluorescence", unit="RFU",
+                                                        polars_type=pl.Float64)
     par: Measurement = Measurement(label="par", unit="µmol/m²/s", polars_type=pl.Float64)
     ammonium: Measurement = Measurement(label="ammonium", unit="µmol/L", polars_type=pl.Float64)
     orp: Measurement = Measurement(label="orp", unit="mV", polars_type=pl.Float64)

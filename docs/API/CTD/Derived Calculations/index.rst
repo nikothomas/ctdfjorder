@@ -16,6 +16,9 @@ Derived Calculations
    add_potential_temperature
    add_profile_classification
    add_speed_of_sound
-   add_surface_salinity_temp_meltwater
+   add_surface_salinity
+   add_surface_temperature
+   add_meltwater_fraction
+   add_mld_bf
    add_thermal_expansion_coefficient
-   calculate_salinity_olf_mld
+   calculate_mld_salinity_olf
