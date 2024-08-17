@@ -897,6 +897,7 @@ class CTD:
         """
         self.assert_data_not_empty(self.add_surface_temperature.__name__)
         self._data = self._data.with_columns(
+
             pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE_LABEL)
         )
         for profile_id in (
