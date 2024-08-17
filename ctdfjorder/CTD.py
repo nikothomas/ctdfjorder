@@ -942,6 +942,7 @@ class CTD:
             self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
             self._data = self._data.vstack(profile)
 
+
     def add_speed_of_sound(self) -> None:
         """
         Calculates and adds sound speed to the CTD data using the TEOS-10 formula.
@@ -1601,6 +1602,8 @@ class CTD:
             optimal_k = np.argmax(
                 E2_E1_ratios)
         except ValueError:
+            return None
+        if slopes[optimal_k] < 200 and depth_profile[optimal_k+min_depth_index]:
             return None
         mld = depth_profile[optimal_k + min_depth_index]
         return mld
