@@ -119,20 +119,30 @@ def test_add_potential_density(ctd_instance):
     assert not ctd_instance._data.select(pl.col(POTENTIAL_DENSITY_LABEL).is_nan().any()).item()
 
 
-def test_add_surface_salinity_temp_meltwater(ctd_instance):
-    ctd_instance.add_surface_salinity_temp_meltwater()
-    assert SURFACE_SALINITY_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY_LABEL).is_nan().any()).item()
-    assert SURFACE_TEMPERATURE_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).is_nan().any()).item()
-    assert MELTWATER_FRACTION_EQ_10_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).is_nan().any()).item()
-    assert MELTWATER_FRACTION_EQ_11_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).is_nan().any()).item()
+def test_add_surface_salinity(ctd_instance):
+    ctd_instance.add_surface_salinity()
+    assert SURFACE_SALINITY_LABEL in ctd_instance._data.columns, "Surface salinity column should be added."
+    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY_LABEL).has_nulls()).item(), "Surface salinity column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY_LABEL).is_nan().any()).item(), "Surface salinity column should not have NaNs."
+
+
+def test_add_surface_temperature(ctd_instance):
+    ctd_instance.add_surface_temperature()
+    assert SURFACE_TEMPERATURE_LABEL in ctd_instance._data.columns, "Surface temperature column should be added."
+    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).has_nulls()).item(), "Surface temperature column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).is_nan().any()).item(), "Surface temperature column should not have NaNs."
+
+
+def test_add_meltwater_fraction(ctd_instance):
+    ctd_instance.add_surface_salinity()  # Ensure that surface salinity is calculated first
+    ctd_instance.add_meltwater_fraction()
+    assert MELTWATER_FRACTION_EQ_10_LABEL in ctd_instance._data.columns, "Meltwater fraction EQ 10 column should be added."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).has_nulls()).item(), "Meltwater fraction EQ 10 column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).is_nan().any()).item(), "Meltwater fraction EQ 10 column should not have NaNs."
+
+    assert MELTWATER_FRACTION_EQ_11_LABEL in ctd_instance._data.columns, "Meltwater fraction EQ 11 column should be added."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).has_nulls()).item(), "Meltwater fraction EQ 11 column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).is_nan().any()).item(), "Meltwater fraction EQ 11 column should not have NaNs."
 
 
 def test_add_mean_surface_density(ctd_instance):

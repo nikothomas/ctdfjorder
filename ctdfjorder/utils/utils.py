@@ -41,7 +41,7 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
     ]
     if missing_columns:
         missing_data = renamed_data.select(missing_columns)
-        reordered_data = pl.concat([reordered_data, missing_data], how="horizontal")
+        reordered_data = pl.concat([reordered_data, missing_data], how="diagonal_relaxed")
 
     # Create metadata
     if output_file == "ctdfjorder_data.csv":
