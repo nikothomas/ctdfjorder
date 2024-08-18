@@ -45,7 +45,7 @@ def test_ctd_initialization(ctd_instance):
 def test_ctd_initialization_multiprofile_rbr(mock_master_sheet):
     test_file_path = os.path.join(Path(__file__).parent, '208041_20230120_1643.rsk')
     ctd_instance_rbr = CTD(test_file_path)
-    max_profile_id = ctd_instance_rbr.get_df().select(PROFILE_ID_LABEL).max().item()
+    max_profile_id = ctd_instance_rbr.get_df().select(PROFILE_ID.label).max().item()
     assert isinstance(ctd_instance_rbr, CTD)
     assert(max_profile_id == 2)
     assert not ctd_instance_rbr.get_df().is_empty()
@@ -75,13 +75,13 @@ def test_remove_upcasts(ctd_instance):
     (0.0, -0.5)
 ])
 def test_filter_columns_by_range_not_empty(ctd_instance, upper_bound, lower_bound):
-    column = TEMPERATURE_LABEL
+    column = TEMPERATURE.label
     ctd_instance.filter_columns_by_range(column=column, upper_bound=upper_bound, lower_bound=lower_bound)
     assert not ctd_instance._data.is_empty()
 
 
 def test_filter_columns_by_range_empty(ctd_instance):
-    column = TEMPERATURE_LABEL
+    column = TEMPERATURE.label
     upper_bound = 10
     lower_bound = 9
     ctd_instance.filter_columns_by_range(column=column, upper_bound=upper_bound, lower_bound=lower_bound)
@@ -91,7 +91,7 @@ def test_filter_columns_by_range_empty(ctd_instance):
 def test_remove_non_positive_samples(ctd_instance):
     ctd_instance.remove_non_positive_samples()
     assert not ctd_instance._data.is_empty()
-    assert ctd_instance._data.filter(pl.col(DEPTH_LABEL) < 0).is_empty()
+    assert ctd_instance._data.filter(pl.col(DEPTH.label) < 0).is_empty()
 
 
 def test_clean_invalid_method(ctd_instance):
@@ -101,55 +101,55 @@ def test_clean_invalid_method(ctd_instance):
 
 def test_add_absolute_salinity(ctd_instance):
     ctd_instance.add_absolute_salinity()
-    assert SALINITY_ABS_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(SALINITY_ABS_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(SALINITY_ABS_LABEL).is_nan().any()).item()
+    assert ABSOLUTE_SALINITY.label in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(ABSOLUTE_SALINITY.label).has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col(ABSOLUTE_SALINITY.label).is_nan().any()).item()
 
 
 def test_add_density(ctd_instance):
     ctd_instance.add_density()
-    assert DENSITY_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(DENSITY_LABEL).has_nulls()).item()
+    assert DENSITY.label in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(DENSITY.label).has_nulls()).item()
 
 
 def test_add_potential_density(ctd_instance):
     ctd_instance.add_potential_density()
-    assert POTENTIAL_DENSITY_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(POTENTIAL_DENSITY_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(POTENTIAL_DENSITY_LABEL).is_nan().any()).item()
+    assert POTENTIAL_DENSITY.label in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(POTENTIAL_DENSITY.label).has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col(POTENTIAL_DENSITY.label).is_nan().any()).item()
 
 
 def test_add_surface_salinity(ctd_instance):
     ctd_instance.add_surface_salinity()
-    assert SURFACE_SALINITY_LABEL in ctd_instance._data.columns, "Surface salinity column should be added."
-    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY_LABEL).has_nulls()).item(), "Surface salinity column should not have nulls."
-    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY_LABEL).is_nan().any()).item(), "Surface salinity column should not have NaNs."
+    assert SURFACE_SALINITY.label in ctd_instance._data.columns, "Surface salinity column should be added."
+    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY.label).has_nulls()).item(), "Surface salinity column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(SURFACE_SALINITY.label).is_nan().any()).item(), "Surface salinity column should not have NaNs."
 
 
 def test_add_surface_temperature(ctd_instance):
     ctd_instance.add_surface_temperature()
-    assert SURFACE_TEMPERATURE_LABEL in ctd_instance._data.columns, "Surface temperature column should be added."
-    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).has_nulls()).item(), "Surface temperature column should not have nulls."
-    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE_LABEL).is_nan().any()).item(), "Surface temperature column should not have NaNs."
+    assert SURFACE_TEMPERATURE.label in ctd_instance._data.columns, "Surface temperature column should be added."
+    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE.label).has_nulls()).item(), "Surface temperature column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(SURFACE_TEMPERATURE.label).is_nan().any()).item(), "Surface temperature column should not have NaNs."
 
 
 def test_add_meltwater_fraction(ctd_instance):
     ctd_instance.add_surface_salinity()  # Ensure that surface salinity is calculated first
     ctd_instance.add_meltwater_fraction()
-    assert MELTWATER_FRACTION_EQ_10_LABEL in ctd_instance._data.columns, "Meltwater fraction EQ 10 column should be added."
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).has_nulls()).item(), "Meltwater fraction EQ 10 column should not have nulls."
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10_LABEL).is_nan().any()).item(), "Meltwater fraction EQ 10 column should not have NaNs."
+    assert MELTWATER_FRACTION_EQ_10.label in ctd_instance._data.columns, "Meltwater fraction EQ 10 column should be added."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10.label).has_nulls()).item(), "Meltwater fraction EQ 10 column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_10.label).is_nan().any()).item(), "Meltwater fraction EQ 10 column should not have NaNs."
 
-    assert MELTWATER_FRACTION_EQ_11_LABEL in ctd_instance._data.columns, "Meltwater fraction EQ 11 column should be added."
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).has_nulls()).item(), "Meltwater fraction EQ 11 column should not have nulls."
-    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11_LABEL).is_nan().any()).item(), "Meltwater fraction EQ 11 column should not have NaNs."
+    assert MELTWATER_FRACTION_EQ_11.label in ctd_instance._data.columns, "Meltwater fraction EQ 11 column should be added."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11.label).has_nulls()).item(), "Meltwater fraction EQ 11 column should not have nulls."
+    assert not ctd_instance._data.select(pl.col(MELTWATER_FRACTION_EQ_11.label).is_nan().any()).item(), "Meltwater fraction EQ 11 column should not have NaNs."
 
 
 def test_add_mean_surface_density(ctd_instance):
     ctd_instance.add_absolute_salinity()
     ctd_instance.add_density()
     ctd_instance.add_mean_surface_density()
-    assert SURFACE_DENSITY_LABEL in ctd_instance._data.columns
+    assert SURFACE_DENSITY.label in ctd_instance._data.columns
 
 
 def test_add_mld(ctd_instance):
@@ -159,12 +159,12 @@ def test_add_mld(ctd_instance):
     assert any(label.startswith("MLD") for label in ctd_instance._data.columns)
 
 
-def test_add_brunt_vaisala_squared(ctd_instance):
+def test_add_n_squared(ctd_instance):
     ctd_instance.add_absolute_salinity()
     ctd_instance.add_density()
-    ctd_instance.add_brunt_vaisala_squared()
-    assert BV_LABEL in ctd_instance._data.columns
-    assert P_MID_LABEL in ctd_instance._data.columns
+    ctd_instance.add_n_squared()
+    assert N2.label in ctd_instance._data.columns
+    assert P_MID.label in ctd_instance._data.columns
 
 
 def test_save_to_csv(ctd_instance, tmp_path):
@@ -176,9 +176,9 @@ def test_save_to_csv(ctd_instance, tmp_path):
 def test_add_speed_of_sound(ctd_instance):
     ctd_instance.add_absolute_salinity()
     ctd_instance.add_speed_of_sound()
-    assert SPEED_OF_SOUND_LABEL in ctd_instance._data.columns
-    assert not ctd_instance._data.select(pl.col(SPEED_OF_SOUND_LABEL).has_nulls()).item()
-    assert not ctd_instance._data.select(pl.col(SPEED_OF_SOUND_LABEL).is_nan().any()).item()
+    assert SPEED_OF_SOUND.label in ctd_instance._data.columns
+    assert not ctd_instance._data.select(pl.col(SPEED_OF_SOUND.label).has_nulls()).item()
+    assert not ctd_instance._data.select(pl.col(SPEED_OF_SOUND.label).is_nan().any()).item()
 
 
 def test_add_potential_temperature(ctd_instance):
@@ -230,6 +230,6 @@ def test_add_profile_classification(ctd_instance):
     ctd_instance.add_density()
     ctd_instance.add_mld(reference=10, method="abs_density_avg", delta=0.05)
     ctd_instance.add_profile_classification()
-    assert CLASSIFICATION_LABEL in ctd_instance._data.columns
+    assert CLASSIFICATION.label in ctd_instance._data.columns
 
 

@@ -181,7 +181,7 @@ def process_ctd_file(
         stage += 1
 
         # Add BV Squared
-        data.add_brunt_vaisala_squared()
+        data.add_n_squared()
         status.append("green")
         stage += 1
 
@@ -209,11 +209,11 @@ def process_ctd_file(
         return data.get_df(), status
 
     except CTDError as error:
-        logger.error(error)
+        logger.exception(error)
         status.extend(["red"] * (15 - stage))
         return None, status
     except ValueError as error:
-        logger.error(CTDError(str(error)))
+        logger.exception(CTDError(str(error)))
         status.extend(["red"] * (15 - stage))
         return None, status
     except KeyboardInterrupt:
@@ -242,8 +242,8 @@ def plot_data(my_data, plots_folder):
     This function generates two types of plots: depth vs potential density and depth vs salinity.
     The plots are saved in the specified folder.
     """
-    ctd_plot.plot_depth_vs(my_data, POTENTIAL_DENSITY_LABEL, plot_folder=plots_folder)
-    ctd_plot.plot_depth_vs(my_data, SALINITY_LABEL, plot_folder=plots_folder)
+    ctd_plot.plot_depth_vs(my_data, POTENTIAL_DENSITY.label, plot_folder=plots_folder)
+    ctd_plot.plot_depth_vs(my_data, SALINITY.label, plot_folder=plots_folder)
 
 
 def generate_status_table(status_table):
@@ -482,12 +482,12 @@ def process_results(
             )
             pl.Config.set_tbl_rows(-1)
             df_test = df.unique(
-                subset=["filename", PROFILE_ID_LABEL], keep="first"
+                subset=["filename", PROFILE_ID.label], keep="first"
             ).select(
                 pl.col("filename"),
                 pl.col("unique_id"),
-                pl.col(TIMESTAMP_LABEL),
-                pl.col(PROFILE_ID_LABEL),
+                pl.col(TIMESTAMP.label),
+                pl.col(PROFILE_ID.label),
             )
             df_test.write_csv(path.join(get_cwd(), "UniqueIDs"))
             richprint(panel)
@@ -831,7 +831,7 @@ def add_arguments_default(parser):
         required=False,
         default=None,
         help="List of columns to filter",
-        choices=LIST_LABELS,
+        choices=[feature.label for feature in ALL_SAMPLE_FEATURES],
     )
     parser.add_argument(
         "--filter-upper",
@@ -921,7 +921,7 @@ def add_arguments_fjord(parser):
         required=False,
         default=None,
         help="List of columns to filter",
-        choices=LIST_LABELS,
+        choices=[feature.label for feature in ALL_SAMPLE_FEATURES],
     )
     parser.add_argument(
         "--filter-upper",

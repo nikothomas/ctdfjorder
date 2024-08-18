@@ -20,6 +20,7 @@ class AI:
 
     """
 
+    @staticmethod
     def clean_salinity_ai(profile: pl.DataFrame, profile_id: int) -> pl.DataFrame:
         r"""
         Cleans salinity using a GRU (Gated Recurrent Unit) machine learning model.
@@ -147,35 +148,35 @@ class AI:
                 When there are not enough values to train on.
 
             """
-            filename = data.select(pl.col(FILENAME_LABEL).first()).item()
-            filtered_data = data.filter(pl.col(DEPTH_LABEL) > 1)
+            filename = data.select(pl.col(FILENAME.label).first()).item()
+            filtered_data = data.filter(pl.col(DEPTH.label) > 1)
             filtered_data = filtered_data.with_columns(
-                (pl.col(PRESSURE_LABEL) // 0.5 * 0.5).alias("pressure_bin")
+                (pl.col(PRESSURE.label) // 0.5 * 0.5).alias("pressure_bin")
             )
             # Define the desired columns and their aggregation functions
             column_agg_dict = {
-                TEMPERATURE_LABEL: pl.mean(TEMPERATURE_LABEL),
-                YEAR_LABEL: pl.first(YEAR_LABEL),
-                MONTH_LABEL: pl.first(MONTH_LABEL),
-                CHLOROPHYLL_LABEL: pl.mean(CHLOROPHYLL_LABEL),
-                SEA_PRESSURE_LABEL: pl.mean(SEA_PRESSURE_LABEL),
-                DEPTH_LABEL: pl.mean(DEPTH_LABEL),
-                SALINITY_LABEL: pl.median(SALINITY_LABEL),
-                SPEED_OF_SOUND_LABEL: pl.mean(SPEED_OF_SOUND_LABEL),
-                SPECIFIC_CONDUCTIVITY_LABEL: pl.mean(SPECIFIC_CONDUCTIVITY_LABEL),
-                CONDUCTIVITY_LABEL: pl.mean(CONDUCTIVITY_LABEL),
-                DENSITY_LABEL: pl.mean(DENSITY_LABEL),
-                POTENTIAL_DENSITY_LABEL: pl.mean(POTENTIAL_DENSITY_LABEL),
-                SALINITY_ABS_LABEL: pl.mean(SALINITY_ABS_LABEL),
-                TIMESTAMP_LABEL: pl.first(TIMESTAMP_LABEL),
-                LONGITUDE_LABEL: pl.first(LONGITUDE_LABEL),
-                LATITUDE_LABEL: pl.first(LATITUDE_LABEL),
-                UNIQUE_ID_LABEL: pl.first(UNIQUE_ID_LABEL),
-                FILENAME_LABEL: pl.first(FILENAME_LABEL),
-                PROFILE_ID_LABEL: pl.first(PROFILE_ID_LABEL),
-                SECCHI_DEPTH_LABEL: pl.first(SECCHI_DEPTH_LABEL),
-                SITE_NAME_LABEL: pl.first(SITE_NAME_LABEL),
-                SITE_ID_LABEL: pl.first(SITE_ID_LABEL),
+                TEMPERATURE.label: pl.mean(TEMPERATURE.label),
+                YEAR.label: pl.first(YEAR.label),
+                MONTH.label: pl.first(MONTH.label),
+                CHLOROPHYLL.label: pl.mean(CHLOROPHYLL.label),
+                SEA_PRESSURE.label: pl.mean(SEA_PRESSURE.label),
+                DEPTH.label: pl.mean(DEPTH.label),
+                SALINITY.label: pl.median(SALINITY.label),
+                SPEED_OF_SOUND.label: pl.mean(SPEED_OF_SOUND.label),
+                SPECIFIC_CONDUCTIVITY.label: pl.mean(SPECIFIC_CONDUCTIVITY.label),
+                CONDUCTIVITY.label: pl.mean(CONDUCTIVITY.label),
+                DENSITY.label: pl.mean(DENSITY.label),
+                POTENTIAL_DENSITY.label: pl.mean(POTENTIAL_DENSITY.label),
+                ABSOLUTE_SALINITY.label: pl.mean(ABSOLUTE_SALINITY.label),
+                TIMESTAMP.label: pl.first(TIMESTAMP.label),
+                LONGITUDE.label: pl.first(LONGITUDE.label),
+                LATITUDE.label: pl.first(LATITUDE.label),
+                UNIQUE_ID.label: pl.first(UNIQUE_ID.label),
+                FILENAME.label: pl.first(FILENAME.label),
+                PROFILE_ID.label: pl.first(PROFILE_ID.label),
+                SECCHI_DEPTH.label: pl.first(SECCHI_DEPTH.label),
+                SITE_NAME.label: pl.first(SITE_NAME.label),
+                SITE_ID.label: pl.first(SITE_ID.label),
             }
             available_columns = {
                 col: agg_func
@@ -185,16 +186,16 @@ class AI:
             data_binned = filtered_data.group_by(
                 "pressure_bin", maintain_order=True
             ).agg(list(available_columns.values()))
-            data_binned = data_binned.rename({"pressure_bin": PRESSURE_LABEL})
+            data_binned = data_binned.rename({"pressure_bin": PRESSURE.label})
             if data_binned.limit(4).height < 2:
                 raise ValueError(f"{filename} - Insufficient data for the GRU, profile must contain at least 5m of samples.")
-            salinity = np.array(data_binned.select(pl.col(SALINITY_LABEL)).to_numpy())
+            salinity = np.array(data_binned.select(pl.col(SALINITY.label)).to_numpy())
             scaler = MinMaxScaler(feature_range=(-1, 1))
             scaler.fit(salinity)
             scaled_sequence = scaler.transform(salinity)
             scaled_seq = np.expand_dims(scaled_sequence, axis=0)
-            min_pres = data_binned.select(pl.min(DEPTH_LABEL)).item()
-            max_pres = data_binned.select(pl.max(DEPTH_LABEL)).item()
+            min_pres = data_binned.select(pl.min(DEPTH.label)).item()
+            max_pres = data_binned.select(pl.max(DEPTH.label)).item()
             pres_range = max_pres - min_pres
             epochs = int(pres_range * 12)
             input_shape = scaled_seq.shape[1:]
@@ -217,25 +218,25 @@ class AI:
             predicted_seq = np.array(scaler.inverse_transform(X_pred[0])).flatten()
             if show_plots:
                 xlim, ylim = plot_original_data(
-                    data.select(SALINITY_LABEL).to_numpy(),
-                    data.select(DEPTH_LABEL).to_numpy(),
+                    data.select(SALINITY.label).to_numpy(),
+                    data.select(DEPTH.label).to_numpy(),
                     filename + str(profile_id),
                     plot_path=path.join(
-                        getcwd(), "ctdplots", f"{filename}_original.png"
+                        getcwd(), DEFAULT_PLOTS_FOLDER, f"{filename}_original.png"
                     ),
                 )
                 plot_predicted_data(
                     salinity=predicted_seq,
-                    depths=data_binned.select(DEPTH_LABEL).to_numpy(),
+                    depths=data_binned.select(DEPTH.label).to_numpy(),
                     filename=filename + str(profile_id),
                     xlim=xlim,
                     ylim=ylim,
                     plot_path=path.join(
-                        getcwd(), "ctdplots", f"{filename}_predicted.png"
+                        getcwd(), DEFAULT_PLOTS_FOLDER, f"{filename}_predicted.png"
                     ),
                 )
             data_binned = data_binned.with_columns(
-                pl.Series(predicted_seq, dtype=pl.Float64).alias(SALINITY_LABEL)
+                pl.Series(predicted_seq, dtype=pl.Float64).alias(SALINITY.label)
             )
             return data_binned
 

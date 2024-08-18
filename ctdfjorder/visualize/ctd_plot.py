@@ -31,8 +31,8 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     """
     px.set_mapbox_access_token(mapbox_access_token)
 
-    lat_median = df.select(pl.col(EXPORT_LATITUDE_LABEL).median().first()).item()
-    long_median = df.select(pl.col(EXPORT_LONGITUDE_LABEL).median().first()).item()
+    lat_median = df.select(pl.col(LATITUDE.export_label).median().first()).item()
+    long_median = df.select(pl.col(LONGITUDE.export_label).median().first()).item()
     pd_df = df.to_pandas()
 
     server = Flask(__name__)
@@ -48,7 +48,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                         id="year-dropdown",
                         options=[
                             {"label": str(year), "value": year}
-                            for year in pd_df[EXPORT_YEAR_LABEL].unique()
+                            for year in pd_df[YEAR.export_label].unique()
                         ],
                         placeholder="Select a year",
                         multi=True,
@@ -151,10 +151,10 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         filtered_df = pd_df.copy()
         if selected_years:
             filtered_df = filtered_df[
-                filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)
+                filtered_df[YEAR.export_label].isin(selected_years)
             ]
         if selected_months:
-            filtered_df = filtered_df[filtered_df[EXPORT_MONTH_LABEL].isin(selected_months)]
+            filtered_df = filtered_df[filtered_df[MONTH.export_label].isin(selected_months)]
         if unique_id_filter:
             unique_id_list = unique_id_filter.split()
             try:
@@ -191,8 +191,8 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
 
         total_profiles = len(filtered_df)
         try:
-            lat_median = filtered_df[EXPORT_LATITUDE_LABEL].median()
-            long_median = filtered_df[EXPORT_LONGITUDE_LABEL].median()
+            lat_median = filtered_df[LATITUDE.export_label].median()
+            long_median = filtered_df[LONGITUDE.export_label].median()
         except Exception as e:
             pass
         fig = px.scatter_mapbox(
@@ -245,10 +245,10 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         filtered_df = pd_df.copy()
         if selected_years:
             filtered_df = filtered_df[
-                filtered_df[EXPORT_YEAR_LABEL].isin(selected_years)
+                filtered_df[YEAR.export_label].isin(selected_years)
             ]
         if selected_months:
-            filtered_df = filtered_df[filtered_df[EXPORT_MONTH_LABEL].isin(selected_months)]
+            filtered_df = filtered_df[filtered_df[MONTH.export_label].isin(selected_months)]
         if unique_id_filter:
             unique_id_list = unique_id_filter.split()
             try:
@@ -321,48 +321,48 @@ def plot_depth_vs(
     plt.rcParams.update({"font.size": 16})
     os.makedirs(plot_folder, exist_ok=True)
     for profile_id in (
-        df.select(PROFILE_ID_LABEL).unique(keep="first").to_series().to_list()
+        df.select(PROFILE_ID.label).unique(keep="first").to_series().to_list()
     ):
-        profile = df.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+        profile = df.filter(pl.col(PROFILE_ID.label) == profile_id)
         # Calculate the standard deviation of the brunt_vaisala column if it exists
-        if BV_LABEL in profile.columns:
-            brunt_vaisala_std = profile.select(pl.col(BV_LABEL)).std().item()
+        if N2.label in profile.columns:
+            brunt_vaisala_std = profile.select(pl.col(N2.label)).std().item()
         else:
             brunt_vaisala_std = None
-        if CLASSIFICATION_LABEL in profile.columns:
-            profile_type = profile.select(pl.col(CLASSIFICATION_LABEL).first()).item()
+        if CLASSIFICATION.label in profile.columns:
+            profile_type = profile.select(pl.col(CLASSIFICATION.label).first()).item()
         else:
             profile_type = None
 
-        filename = profile.select(pl.first(FILENAME_LABEL)).item()
+        filename = profile.select(pl.first(FILENAME.label)).item()
         fig, ax1 = plt.subplots(figsize=(18, 18))
         ax1.invert_yaxis()
-        ax1.set_ylim([profile.select(pl.col(DEPTH_LABEL)).max().item(), 0])
+        ax1.set_ylim([profile.select(pl.col(DEPTH.label)).max().item(), 0])
         color_map = {
-            SALINITY_LABEL: "tab:blue",
-            DENSITY_LABEL: "tab:red",
-            POTENTIAL_DENSITY_LABEL: "tab:red",
-            TEMPERATURE_LABEL: "tab:blue",
+            SALINITY.label: "tab:blue",
+            DENSITY.label: "tab:red",
+            POTENTIAL_DENSITY.label: "tab:red",
+            TEMPERATURE.label: "tab:blue",
         }
         label_map = {
-            SALINITY_LABEL: "Practical Salinity (PSU)",
-            DENSITY_LABEL: "Density (kg/m^3)",
-            POTENTIAL_DENSITY_LABEL: "Potential Density (kg/m^3)",
-            TEMPERATURE_LABEL: "Temperature (°C)",
+            SALINITY.label: "Practical Salinity (PSU)",
+            DENSITY.label: "Density (kg/m^3)",
+            POTENTIAL_DENSITY.label: "Potential Density (kg/m^3)",
+            TEMPERATURE.label: "Temperature (°C)",
         }
         if plot_type == "line":
             lowess = nonparametric.lowess
             y, x = zip(
                 *lowess(
                     profile.select(pl.col(f"{measurement}")).to_numpy(),
-                    profile.select(pl.col(DEPTH_LABEL)).to_numpy(),
+                    profile.select(pl.col(DEPTH.label)).to_numpy(),
                     frac=0.1,
                 )
             )
         else:
             x, y = (
                 profile.select(pl.col(f"{measurement}")).to_numpy(),
-                profile.select(pl.col(DEPTH_LABEL)).to_numpy(),
+                profile.select(pl.col(DEPTH.label)).to_numpy(),
             )
         (
             ax1.plot(x, y, color=color_map[measurement], label=label_map[measurement])

@@ -8,14 +8,14 @@ from os import path
 
 # Column label mapping from castaway to internal
 csvLabels_to_labelInternal: dict[str, str] = {
-    "Pressure (Decibar)": SEA_PRESSURE_LABEL,
-    "Depth (Meter)": DEPTH_LABEL,
-    "Temperature (Celsius)": TEMPERATURE_LABEL,
-    "Conductivity (MicroSiemens per Centimeter)": CONDUCTIVITY_LABEL,
-    "Specific conductance (MicroSiemens per Centimeter)": SPECIFIC_CONDUCTIVITY_LABEL,
-    "Salinity (Practical Salinity Scale)": SALINITY_LABEL,
-    "Sound velocity (Meters per Second)": SPEED_OF_SOUND_LABEL,
-    "Density (Kilograms per Cubic Meter)": DENSITY_LABEL,
+    "Pressure (Decibar)": SEA_PRESSURE.label,
+    "Depth (Meter)": DEPTH.label,
+    "Temperature (Celsius)": TEMPERATURE.label,
+    "Conductivity (MicroSiemens per Centimeter)": CONDUCTIVITY.label,
+    "Specific conductance (MicroSiemens per Centimeter)": SPECIFIC_CONDUCTIVITY.label,
+    "Salinity (Practical Salinity Scale)": SALINITY.label,
+    "Sound velocity (Meters per Second)": SPEED_OF_SOUND.label,
+    "Density (Kilograms per Cubic Meter)": DENSITY.label,
 }
 
 
@@ -65,7 +65,7 @@ def load_file_castaway(castaway_file_path):
             pl.Series(timestamps)
             .dt.convert_time_zone(TIME_ZONE)
             .dt.cast_time_unit(TIME_UNIT)
-            .alias(TIMESTAMP_LABEL)
+            .alias(TIMESTAMP.label)
         )
     except pl.exceptions.ComputeError:
         raise
@@ -73,15 +73,15 @@ def load_file_castaway(castaway_file_path):
         if header in profile.columns:
             profile = profile.rename({header: maps_to})
     profile = profile.drop(CASTAWAY_FILE_ID_LABEL, strict=False).with_columns(
-        (pl.col(SEA_PRESSURE_LABEL) + 10.1325).alias(PRESSURE_LABEL),
-        pl.lit(0).alias(PROFILE_ID_LABEL),
-        pl.lit(filename).alias(FILENAME_LABEL),
+        (pl.col(SEA_PRESSURE.label) + 10.1325).alias(PRESSURE.label),
+        pl.lit(0).alias(PROFILE_ID.label),
+        pl.lit(filename).alias(FILENAME.label),
     )
-    if LATITUDE_LABEL not in profile.collect_schema().names():
+    if LATITUDE.label not in profile.collect_schema().names():
         lat, long = extract_lat_long_castaway(castaway_file_path)
         profile = profile.with_columns(
-            pl.lit(lat).cast(pl.Float64).alias(LATITUDE_LABEL),
-            pl.lit(long).cast(pl.Float64).alias(LONGITUDE_LABEL),
+            pl.lit(lat).cast(pl.Float64).alias(LATITUDE.label),
+            pl.lit(long).cast(pl.Float64).alias(LONGITUDE.label),
         )
     data = profile
     return data
