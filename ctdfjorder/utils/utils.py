@@ -24,14 +24,18 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
     """
 
     def relabel_ctd_data(label: str) -> str:
-        return DATA_LABEL_MAPPING.get(label, label)
+        for feature in ALL_SAMPLE_FEATURES:
+            if feature.label == label:
+                return feature.export_label
+            else:
+                return label
 
     # Rename columns
     renamed_data = data.rename(relabel_ctd_data)
 
     # Reorder columns if they are present in the DataFrame
     present_columns = [
-        col for col in EXPORT_COLUMN_ORDER if col in renamed_data.columns
+        col.export_label for col in ALL_SAMPLE_FEATURES if col.export_label in renamed_data.columns
     ]
     reordered_data = renamed_data.select(present_columns)
 

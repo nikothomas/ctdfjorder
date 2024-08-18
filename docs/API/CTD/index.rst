@@ -36,7 +36,7 @@ Methods to calculate additional parameters and metrics from the raw CTD data.
 * :doc:`add_surface_temperature <./Derived Calculations/add_surface_temperature>`
 * :doc:`add_meltwater_fraction <./Derived Calculations/add_meltwater_fraction>`
 * :doc:`add_mld <./Derived Calculations/add_mld>`
-* :doc:`add_brunt_vaisala_squared <./Derived Calculations/add_brunt_vaisala_squared>`
+* :doc:`add_n_squared <./Derived Calculations/add_n_squared>`
 * :doc:`add_potential_temperature <./Derived Calculations/add_potential_temperature>`
 * :doc:`add_conservative_temperature <./Derived Calculations/add_conservative_temperature>`
 * :doc:`add_dynamic_height <./Derived Calculations/add_dynamic_height>`
@@ -44,7 +44,6 @@ Methods to calculate additional parameters and metrics from the raw CTD data.
 * :doc:`add_haline_contraction_coefficient <./Derived Calculations/add_haline_contraction_coefficient>`
 * :doc:`add_speed_of_sound <./Derived Calculations/add_speed_of_sound>`
 * :doc:`add_profile_classification <./Derived Calculations/add_profile_classification>`
-* :doc:`calculate_mld_salinity_olf <./Derived Calculations/calculate_mld_salinity_olf>`
 
 Exporting Data
 --------------

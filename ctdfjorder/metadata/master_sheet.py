@@ -183,7 +183,7 @@ class MasterSheet:
         CTDError
             When there is no timestamp data in the master sheet and/or CTD file.
         """
-        filename = profile.select(pl.first(FILENAME_LABEL)).item()
+        filename = profile.select(pl.first(FILENAME.label)).item()
         closest_row_overall = self.data.filter(
             pl.col(self.filename_label).str.contains(filename)
         )

@@ -1,174 +1,90 @@
 Constants
 ==========
-.. autodata:: ctdfjorder.constants.constants.TIMESTAMP_LABEL
+.. autodata:: ctdfjorder.constants.constants.TIMESTAMP
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.YEAR_LABEL
+.. autodata:: ctdfjorder.constants.constants.YEAR
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.MONTH_LABEL
+.. autodata:: ctdfjorder.constants.constants.MONTH
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.FILENAME_LABEL
+.. autodata:: ctdfjorder.constants.constants.FILENAME
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.CHLOROPHYLL_LABEL
+.. autodata:: ctdfjorder.constants.constants.CHLOROPHYLL
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.TEMPERATURE_LABEL
+.. autodata:: ctdfjorder.constants.constants.TEMPERATURE
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SEA_PRESSURE_LABEL
+.. autodata:: ctdfjorder.constants.constants.SEA_PRESSURE
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.DEPTH_LABEL
+.. autodata:: ctdfjorder.constants.constants.DEPTH
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SALINITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.SALINITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SPEED_OF_SOUND_LABEL
+.. autodata:: ctdfjorder.constants.constants.SPEED_OF_SOUND
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SPECIFIC_CONDUCTIVITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.SPECIFIC_CONDUCTIVITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.CONDUCTIVITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.CONDUCTIVITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.PRESSURE_LABEL
+.. autodata:: ctdfjorder.constants.constants.PRESSURE
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SALINITY_ABS_LABEL
+.. autodata:: ctdfjorder.constants.constants.ABSOLUTE_SALINITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SURFACE_SALINITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.SURFACE_SALINITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SURFACE_TEMPERATURE_LABEL
+.. autodata:: ctdfjorder.constants.constants.SURFACE_TEMPERATURE
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SURFACE_DENSITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.SURFACE_DENSITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_EQ_10_LABEL
+.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_EQ_10
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_EQ_11_LABEL
+.. autodata:: ctdfjorder.constants.constants.MELTWATER_FRACTION_EQ_11
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.DENSITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.DENSITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.POTENTIAL_DENSITY_LABEL
+.. autodata:: ctdfjorder.constants.constants.POTENTIAL_DENSITY
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.BV_LABEL
+.. autodata:: ctdfjorder.constants.constants.N2
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.P_MID_LABEL
+.. autodata:: ctdfjorder.constants.constants.P_MID
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.SECCHI_DEPTH_LABEL
+.. autodata:: ctdfjorder.constants.constants.SECCHI_DEPTH
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.LATITUDE_LABEL
+.. autodata:: ctdfjorder.constants.constants.LATITUDE
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.LONGITUDE_LABEL
+.. autodata:: ctdfjorder.constants.constants.LONGITUDE
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.UNIQUE_ID_LABEL
+.. autodata:: ctdfjorder.constants.constants.UNIQUE_ID
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.PROFILE_ID_LABEL
+.. autodata:: ctdfjorder.constants.constants.PROFILE_ID
    :annotation:
 
-.. autodata:: ctdfjorder.constants.constants.LIST_LABELS
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_TIMESTAMP_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_YEAR_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_MONTH_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_TEMPERATURE_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_PRESSURE_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_DEPTH_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SEA_PRESSURE_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_CHLOROPHYLL_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SALINITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SPECIFIC_CONDUCTIVITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_CONDUCTIVITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_DENSITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_POTENTIAL_DENSITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SALINITY_ABS_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SURFACE_DENSITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SPEED_OF_SOUND_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SURFACE_SALINITY_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SURFACE_TEMPERATURE_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_MELTWATER_FRACTION_EQ_10_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_MELTWATER_FRACTION_EQ_11_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_LONGITUDE_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_LATITUDE_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_FILENAME_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_PROFILE_ID_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_UNIQUE_ID_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_BV_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_P_MID_LABEL
-   :annotation:
-
-.. autodata:: ctdfjorder.constants.constants.EXPORT_SECCHI_DEPTH_LABEL
+.. autodata:: ctdfjorder.constants.constants.ALL_SAMPLE_FEATURES
    :annotation:
 
 .. autodata:: ctdfjorder.constants.constants.TIME_ZONE

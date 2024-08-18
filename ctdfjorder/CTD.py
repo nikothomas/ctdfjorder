@@ -1,6 +1,8 @@
 from scipy.stats import stats
-from ctdfjorder.exceptions.exceptions import *
-from ctdfjorder.exceptions.exceptions import raise_warning_calculatuion
+from ctdfjorder.exceptions.exceptions import (raise_warning_calculatuion,
+                                              CTDCorruptError,
+                                              InvalidCTDFilenameError,
+                                              NoSamplesError)
 from ctdfjorder.metadata.master_sheet import MasterSheet
 from ctdfjorder.constants.constants import *
 from ctdfjorder.loadctd.rsk import load_file_rsk
@@ -43,10 +45,11 @@ class CTD:
     Examples
     --------
     Castaway CTD profile with valid data
+    .. code-block:: python
 
-    >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
-    >>> output = ctd_data.get_df()
-    >>> print(output.head(3))
+        ctd_data = CTD('CC1531002_20181225_114931.csv')
+        output = ctd_data.get_df()
+        print(output.head(3))
 
     """
 
@@ -102,25 +105,28 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.expand_date(year=True, month=True, day=False)
-        >>> # This will add year and month columns to the dataset, but not a day column.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.expand_date(year=True, month=True, day=False)
+            # This will add year and month columns to the dataset, but not a day column.
+
         """
         self.assert_data_not_empty(CTD.expand_date.__name__)
         self._data = self._data.with_columns(
-            pl.col(TIMESTAMP_LABEL)
+            pl.col(TIMESTAMP.label)
             .dt.convert_time_zone(TIME_ZONE)
             .cast(pl.Datetime(time_unit=TIME_UNIT, time_zone=TIME_ZONE))
         )
         if year:
             self._data = self._data.with_columns(
-                pl.col(TIMESTAMP_LABEL).dt.year().alias(YEAR_LABEL))
+                pl.col(TIMESTAMP.label).dt.year().alias(YEAR.label))
         if month:
             self._data = self._data.with_columns(
-                pl.col(TIMESTAMP_LABEL).dt.month().alias(MONTH_LABEL))
+                pl.col(TIMESTAMP.label).dt.month().alias(MONTH.label))
         if day:
             self._data = self._data.with_columns(
-                pl.col(TIMESTAMP_LABEL).dt.ordinal_day().alias(DAY_LABEL))
+                pl.col(TIMESTAMP.label).dt.ordinal_day().alias(DAY.label))
 
     def add_metadata(self, master_sheet_path: str, master_sheet_polars: pl.DataFrame = None):
         """
@@ -148,9 +154,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_metadata('path/to/master_sheet.csv')
-        >>> # This will add metadata from the master sheet to the CTD dataset.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_metadata('path/to/master_sheet.csv')
+            # This will add metadata from the master sheet to the CTD dataset.
+
         """
         self.assert_data_not_empty(CTD.add_metadata.__name__)
         # If master sheet or cached master sheet is present, find the matching information and correct missing location
@@ -158,48 +167,48 @@ class CTD:
             master_sheet_polars = MasterSheet(master_sheet_path=master_sheet_path)
 
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.String).alias(UNIQUE_ID_LABEL),
-            pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH_LABEL),
-            pl.lit(None, dtype=pl.String).alias(SITE_NAME_LABEL),
-            pl.lit(None, dtype=pl.String).alias(SITE_ID_LABEL),
+            pl.lit(None, dtype=pl.String).alias(UNIQUE_ID.label),
+            pl.lit(None, dtype=pl.Float32).alias(SECCHI_DEPTH.label),
+            pl.lit(None, dtype=pl.String).alias(SITE_NAME.label),
+            pl.lit(None, dtype=pl.String).alias(SITE_ID.label),
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             # Find master sheet match
             master_sheet_match = master_sheet_polars.find_match(profile)
             # Add secchi depth and Unique ID
             profile = profile.with_columns(
                 pl.lit(master_sheet_match.unique_id, dtype=pl.String).alias(
-                    UNIQUE_ID_LABEL
+                    UNIQUE_ID.label
                 ),
                 pl.lit(master_sheet_match.secchi_depth)
                 .cast(pl.Float32)
-                .alias(SECCHI_DEPTH_LABEL),
+                .alias(SECCHI_DEPTH.label),
                 pl.lit(master_sheet_match.site_name)
                 .cast(pl.String)
-                .alias(SITE_NAME_LABEL),
+                .alias(SITE_NAME.label),
                 pl.lit(master_sheet_match.site_id)
                 .cast(pl.String)
-                .alias(SITE_ID_LABEL),
+                .alias(SITE_ID.label),
             )
             # Add location data if not present
             if (
-                    LATITUDE_LABEL not in profile.columns
+                    LATITUDE.label not in profile.columns
                     or (
-                    profile.select(pl.col(LATITUDE_LABEL).has_nulls()).item()
-                    or profile.select(pl.col(LATITUDE_LABEL).is_nan().any()).item()
+                    profile.select(pl.col(LATITUDE.label).has_nulls()).item()
+                    or profile.select(pl.col(LATITUDE.label).is_nan().any()).item()
             )
-                    or profile.select(pl.col(LATITUDE_LABEL)).is_empty()
-                    or profile.select(pl.col(LATITUDE_LABEL)).limit(1).item() is None
+                    or profile.select(pl.col(LATITUDE.label)).is_empty()
+                    or profile.select(pl.col(LATITUDE.label)).limit(1).item() is None
             ):
                 self._data = self._data.with_columns(
-                    pl.lit(None, dtype=pl.Float64).alias(LATITUDE_LABEL),
-                    pl.lit(None, dtype=pl.Float64).alias(LONGITUDE_LABEL),
+                    pl.lit(None, dtype=pl.Float64).alias(LATITUDE.label),
+                    pl.lit(None, dtype=pl.Float64).alias(LONGITUDE.label),
                 )
                 latitude = master_sheet_match.latitude
                 longitude = master_sheet_match.longitude
@@ -213,11 +222,11 @@ class CTD:
                     longitude = None
                 new_fname = self._filename + "cm"
                 profile = profile.with_columns(
-                    pl.lit(latitude).cast(pl.Float64).alias(LATITUDE_LABEL),
-                    pl.lit(longitude).cast(pl.Float64).alias(LONGITUDE_LABEL),
+                    pl.lit(latitude).cast(pl.Float64).alias(LATITUDE.label),
+                    pl.lit(longitude).cast(pl.Float64).alias(LONGITUDE.label),
                     pl.lit(new_fname, pl.String).alias("filename"),
                 )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def get_df(self, pandas=False) -> pl.DataFrame | Any:
@@ -232,20 +241,22 @@ class CTD:
         Examples
         --------
         Accessing CTD data as a polars dataframe
+        .. code-block:: python
 
-        >>> from ctdfjorder import CTD
-        >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
-        >>> ctd_data.remove_non_positive_samples()
-        >>> output = ctd_data.get_df()
-        >>> print(output.head(3))
+            from ctdfjorder import CTD
+            ctd_data = CTD('CC1531002_20181225_114931.csv')
+            ctd_data.remove_non_positive_samples()
+            output = ctd_data.get_df()
+            print(output.head(3))
 
         Accessing CTD data as a pandas dataframe
+        .. code-block:: python
 
-        >>> from ctdfjorder import CTD
-        >>> ctd_data = CTD('CC1531002_20181225_114931.csv')
-        >>> ctd_data.remove_non_positive_samples()
-        >>> output = ctd_data.get_df(pandas=True)
-        >>> print(output.head(3))
+             from ctdfjorder import CTD
+             ctd_data = CTD('CC1531002_20181225_114931.csv')
+             ctd_data.remove_non_positive_samples()
+             output = ctd_data.get_df(pandas=True)
+             print(output.head(3))
 
         Returns
         -------
@@ -290,9 +301,11 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.assert_data_not_empty('example_function')
-        True
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.assert_data_not_empty('example_function')
+
         """
         if self._data.is_empty():
             raise NoSamplesError(
@@ -335,10 +348,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.remove_upcasts()
-        >>> # This will clean the dataset by removing upcasts, ensuring all profiles have monotonically
-        >>> # increasing pressure readings.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.remove_upcasts()
+            # This will clean the dataset by removing upcasts, ensuring all profiles have monotonically
+            # increasing pressure readings.
 
         See Also
         --------
@@ -347,19 +362,19 @@ class CTD:
         """
         self.assert_data_not_empty(CTD.add_metadata.__name__)
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            profile = profile.filter((pl.col(PRESSURE_LABEL).diff()) > 0.0,
-                                     ~(pl.col(PRESSURE_LABEL).diff().is_nan()),
-                                     ~(pl.col(PRESSURE_LABEL).diff().is_null()),
-                                     (pl.col(SEA_PRESSURE_LABEL).diff()) > 0.0,
-                                     ~(pl.col(SEA_PRESSURE_LABEL).diff().is_nan()),
-                                     ~(pl.col(SEA_PRESSURE_LABEL).diff().is_null()), )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            profile = profile.filter((pl.col(PRESSURE.label).diff()) > 0.0,
+                                     ~(pl.col(PRESSURE.label).diff().is_nan()),
+                                     ~(pl.col(PRESSURE.label).diff().is_null()),
+                                     (pl.col(SEA_PRESSURE.label).diff()) > 0.0,
+                                     ~(pl.col(SEA_PRESSURE.label).diff().is_nan()),
+                                     ~(pl.col(SEA_PRESSURE.label).diff().is_null()), )
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def filter_columns_by_range(
@@ -412,16 +427,20 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> filters = zip(['temperature', 'salinity'], [20.0, 35.0], [10.0, 30.0])
-        >>> ctd_data.filter_columns_by_range(filters=filters)
-        >>> # This will filter the `temperature` column to be between 10.0 and 20.0, and `salinity` to be between 30.0 and 35.0.
+        .. code-block:: python
 
-        >>> columns = ['temperature', 'salinity']
-        >>> upper_bounds = [20.0, 35.0]
-        >>> lower_bounds = [10.0, 30.0]
-        >>> ctd_data.filter_columns_by_range(columns=columns, upper_bounds=upper_bounds, lower_bounds=lower_bounds)
-        >>> # This will filter the `temperature` column to be between 10.0 and 20.0, and `salinity` to be between 30.0 and 35.0.
+            ctd_data = CTD('example.csv')
+            filters = zip(['temperature', 'salinity'], [20.0, 35.0], [10.0, 30.0])
+            ctd_data.filter_columns_by_range(filters=filters)
+            # This will filter the `temperature` column to be between 10.0 and 20.0, and `salinity` to be between 30.0 and 35.0.
+
+        .. code-block:: python
+
+            column = 'temperature'
+            upper_bound = 30.0
+            lower_bound = 10.0
+            ctd_data.filter_columns_by_range(column=column, upper_bound=upper_bound, lower_bound=lower_bound)
+            # This will filter the `temperature` column to be between 10.0 and 30.0
 
         See Also
         --------
@@ -438,12 +457,12 @@ class CTD:
 
         self.assert_data_not_empty(CTD.filter_columns_by_range.__name__)
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
 
             if filters:
                 for column, upper_bound, lower_bound in filters:
@@ -461,7 +480,7 @@ class CTD:
                     if strict:
                         raise e
             self._data = self._data.filter(
-                pl.col(PROFILE_ID_LABEL) != profile_id
+                pl.col(PROFILE_ID.label) != profile_id
             ).vstack(profile)
 
     def remove_non_positive_samples(self) -> None:
@@ -490,10 +509,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.remove_non_positive_samples()
-        >>> # This will clean the dataset by removing samples with non-positive, null, or NaN values
-        >>> # for the specified key parameters.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.remove_non_positive_samples()
+            # This will clean the dataset by removing samples with non-positive, null, or NaN values
+            # for the specified key parameters.
 
         See Also
         --------
@@ -502,26 +523,26 @@ class CTD:
         """
         self.assert_data_not_empty(CTD.remove_non_positive_samples.__name__)
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             cols = list(
                 {
-                    DEPTH_LABEL,
-                    PRESSURE_LABEL,
-                    SALINITY_LABEL,
-                    SALINITY_ABS_LABEL,
-                    DENSITY_LABEL,
+                    DEPTH.label,
+                    PRESSURE.label,
+                    SALINITY.label,
+                    ABSOLUTE_SALINITY.label,
+                    DENSITY.label,
                 }.intersection(profile.collect_schema().names())
             )
             for col in cols:
                 profile = profile.filter(
                     pl.col(col) > 0.0, ~pl.col(col).is_null(), pl.col(col).is_not_nan()
                 )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def clean(self, method) -> None:
@@ -568,10 +589,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.clean('clean_salinity_ai')
-        >>> # This will clean the salinity data using the AI-based method, correcting any unrealistic
-        >>> # values and ensuring smoother transitions with respect to pressure.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.clean('clean_salinity_ai')
+            # This will clean the salinity data using the AI-based method, correcting any unrealistic
+            # values and ensuring smoother transitions with respect to pressure.
 
         See Also
         --------
@@ -580,17 +603,17 @@ class CTD:
         """
         self.assert_data_not_empty(CTD.clean.__name__)
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             if method == "clean_salinity_ai":
                 profile = ai.AI.clean_salinity_ai(profile, profile_id)
             else:
                 raise ValueError(f"Invalid method {method}.")
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = pl.concat([self._data, profile], how=CONCAT_HOW, rechunk=True)
 
     def add_absolute_salinity(self) -> None:
@@ -622,10 +645,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_absolute_salinity()
-        >>> # This will add a new column with absolute salinity values to the dataset, calculated using the
-        >>> # TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_absolute_salinity()
+            # This will add a new column with absolute salinity values to the dataset, calculated using the
+            # TEOS-10 formula.
 
         See Also
         --------
@@ -634,25 +659,25 @@ class CTD:
         """
         self.assert_data_not_empty(CTD.add_absolute_salinity.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(SALINITY_ABS_LABEL)
+            pl.lit(None, dtype=pl.Float64).alias(ABSOLUTE_SALINITY.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            s = profile.select(pl.col(SALINITY_LABEL)).to_numpy()
-            p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy()
-            lat = profile.select(pl.col(LATITUDE_LABEL)).to_numpy()
-            long = profile.select(pl.col(LONGITUDE_LABEL)).to_numpy()
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            s = profile.select(pl.col(SALINITY.label)).to_numpy()
+            p = profile.select(pl.col(SEA_PRESSURE.label)).to_numpy()
+            lat = profile.select(pl.col(LATITUDE.label)).to_numpy()
+            long = profile.select(pl.col(LONGITUDE.label)).to_numpy()
             salinity_abs_list = gsw.conversions.SA_from_SP(s, p, lat, long)
             salinity_abs = pl.Series(
                 np.array(salinity_abs_list).flatten(), dtype=pl.Float64, strict=False
-            ).to_frame(SALINITY_ABS_LABEL)
+            ).to_frame(ABSOLUTE_SALINITY.label)
             profile = profile.with_columns(salinity_abs)
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_density(self):
@@ -685,10 +710,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_density()
-        >>> # This will add a new column with density values to the dataset, calculated using the
-        >>> # TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_density()
+            # This will add a new column with density values to the dataset, calculated using the
+            # TEOS-10 formula.
 
         See Also
         --------
@@ -697,28 +724,28 @@ class CTD:
 
         """
         self.assert_data_not_empty(CTD.add_density.__name__)
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
         self._data = self._data.with_columns(
-            pl.lit(None).cast(pl.Float64).alias(DENSITY_LABEL)
+            pl.lit(None).cast(pl.Float64).alias(DENSITY.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
-            t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy()
-            p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy()
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            sa = profile.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy()
+            t = profile.select(pl.col(TEMPERATURE.label)).to_numpy()
+            p = profile.select(pl.col(SEA_PRESSURE.label)).to_numpy()
             density = pl.Series(
                 np.array(gsw.density.rho_t_exact(sa, t, p)).flatten(),
                 dtype=pl.Float64,
                 strict=True,
-            ).to_frame(DENSITY_LABEL)
+            ).to_frame(DENSITY.label)
             profile = profile.with_columns(density)
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_potential_density(self):
@@ -752,10 +779,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_potential_density()
-        >>> # This will add a new column with potential density values to the dataset, calculated using the
-        >>> # TEOS-10 formula.
+        .. code-block::
+        
+            ctd_data = CTD('example.csv')
+            ctd_data.add_potential_density()
+            # This will add a new column with potential density values to the dataset, calculated using the
+            # TEOS-10 formula.
 
         See Also
         --------
@@ -765,24 +794,24 @@ class CTD:
         """
         self.assert_data_not_empty(CTD.add_potential_density.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(POTENTIAL_DENSITY_LABEL)
+            pl.lit(None, dtype=pl.Float64).alias(POTENTIAL_DENSITY.label)
         )
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
-            t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy()
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            sa = profile.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy()
+            t = profile.select(pl.col(TEMPERATURE.label)).to_numpy()
             potential_density = pl.Series(
                 np.array(gsw.sigma0(sa, t)).flatten()
-            ).to_frame(POTENTIAL_DENSITY_LABEL)
+            ).to_frame(POTENTIAL_DENSITY.label)
             profile = profile.with_columns(pl.Series(potential_density))
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_surface_salinity(self, start=10.1325, end=12.1325):
@@ -809,32 +838,32 @@ class CTD:
         """
         self.assert_data_not_empty(self.add_surface_salinity.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(SURFACE_SALINITY_LABEL)
+            pl.lit(None, dtype=pl.Float64).alias(SURFACE_SALINITY.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             surface_data = profile.filter(
-                pl.col(PRESSURE_LABEL) > start, pl.col(PRESSURE_LABEL) < end
+                pl.col(PRESSURE.label) > start, pl.col(PRESSURE.label) < end
             )
             if surface_data.is_empty():
                 raise_warning_calculatuion(
                     filename=self._filename,
                     message=WARNING_CTD_SURFACE_MEASUREMENT,
                 )
-                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+                self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
                 self._data = self._data.vstack(profile)
                 continue
 
-            surface_salinity = surface_data.select(pl.col(SALINITY_LABEL).first()).item()
+            surface_salinity = surface_data.select(pl.col(SALINITY.label).first()).item()
             profile = profile.with_columns(
-                pl.lit(surface_salinity).alias(SURFACE_SALINITY_LABEL)
+                pl.lit(surface_salinity).alias(SURFACE_SALINITY.label)
             )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_surface_temperature(self, start=10.1325, end=12.1325):
@@ -861,34 +890,34 @@ class CTD:
         """
         self.assert_data_not_empty(self.add_surface_temperature.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE_LABEL)
+            pl.lit(None, dtype=pl.Float64).alias(SURFACE_TEMPERATURE.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             surface_data = profile.filter(
-                pl.col(PRESSURE_LABEL) > start, pl.col(PRESSURE_LABEL) < end
+                pl.col(PRESSURE.label) > start, pl.col(PRESSURE.label) < end
             )
             if surface_data.is_empty():
                 raise_warning_calculatuion(
                     filename=self._filename,
                     message=WARNING_CTD_SURFACE_MEASUREMENT,
                 )
-                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+                self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
                 self._data = self._data.vstack(profile)
                 continue
 
             surface_temperature = np.array(
-                surface_data.select(pl.col(TEMPERATURE_LABEL).mean()).to_numpy()
+                surface_data.select(pl.col(TEMPERATURE.label).mean()).to_numpy()
             ).item(0)
             profile = profile.with_columns(
-                pl.lit(surface_temperature).alias(SURFACE_TEMPERATURE_LABEL)
+                pl.lit(surface_temperature).alias(SURFACE_TEMPERATURE.label)
             )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_meltwater_fraction(self):
@@ -920,26 +949,26 @@ class CTD:
         """
         self.assert_data_not_empty(self.add_meltwater_fraction.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_10_LABEL),
-            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_11_LABEL)
+            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_10.label),
+            pl.lit(None, dtype=pl.Float64).alias(MELTWATER_FRACTION_EQ_11.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            surface_salinity = profile.select(pl.col(SURFACE_SALINITY_LABEL).first()).item()
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            surface_salinity = profile.select(pl.col(SURFACE_SALINITY.label).first()).item()
 
             mwf10 = (-0.016 * surface_salinity + 0.544) * 100
             mwf11 = (-0.021406 * surface_salinity + 0.740392) * 100
 
             profile = profile.with_columns(
-                pl.lit(mwf10).alias(MELTWATER_FRACTION_EQ_10_LABEL),
-                pl.lit(mwf11).alias(MELTWATER_FRACTION_EQ_11_LABEL)
+                pl.lit(mwf10).alias(MELTWATER_FRACTION_EQ_10.label),
+                pl.lit(mwf11).alias(MELTWATER_FRACTION_EQ_11.label)
             )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
 
@@ -977,33 +1006,36 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_speed_of_sound()
-        >>> # This will add a new column with sound speed values to the dataset, calculated using the TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_speed_of_sound()
+            # This will add a new column with sound speed values to the dataset, calculated using the TEOS-10 formula.
+            
         """
         self.assert_data_not_empty(CTD.add_speed_of_sound.__name__)
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
         self._data = self._data.with_columns(
-            pl.lit(None).cast(pl.Float64).alias(SPEED_OF_SOUND_LABEL)
+            pl.lit(None).cast(pl.Float64).alias(SPEED_OF_SOUND.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy()
-            t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy()
-            p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy()
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            sa = profile.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy()
+            t = profile.select(pl.col(TEMPERATURE.label)).to_numpy()
+            p = profile.select(pl.col(SEA_PRESSURE.label)).to_numpy()
             sound_speed = pl.Series(
                 np.array(gsw.sound_speed(sa, t, p)).flatten(),
                 dtype=pl.Float64,
                 strict=True,
-            ).to_frame(SPEED_OF_SOUND_LABEL)
+            ).to_frame(SPEED_OF_SOUND.label)
             profile = profile.with_columns(sound_speed)
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_potential_temperature(self, p_ref: Union[float, np.ndarray] = 0) -> None:
@@ -1028,18 +1060,21 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_potential_temperature()
-        >>> # This will add a new column with potential temperature values to the dataset, calculated using the TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_potential_temperature()
+            # This will add a new column with potential temperature values to the dataset, calculated using the TEOS-10 formula.
+            
         """
         self.assert_data_not_empty(CTD.add_potential_temperature.__name__)
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
 
         # Compute potential temperature across all profiles in one go
-        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
-        t = self._data.select(pl.col(TEMPERATURE_LABEL)).to_numpy().flatten()
-        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+        sa = self._data.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
+        t = self._data.select(pl.col(TEMPERATURE.label)).to_numpy().flatten()
+        p = self._data.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()
 
         # Calculate potential temperature for all data points
         potential_temperature_values = gsw.pt_from_t(sa, t, p, p_ref)
@@ -1074,10 +1109,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_mean_surface_density(start=10.1325, end=12.1325)
-        >>> # This will add a new column with mean surface density values to the dataset, calculated using the
-        >>> # specified pressure range.
+        .. code-block::
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_mean_surface_density(start=10.1325, end=12.1325)
+            # This will add a new column with mean surface density values to the dataset, calculated using the
+            # specified pressure range.
 
         See Also
         --------
@@ -1088,23 +1125,23 @@ class CTD:
         self.assert_data_not_empty(CTD.add_mean_surface_density.__name__)
         # Filtering data within the specified pressure range
         self._data = self._data.with_columns(
-            pl.lit(None).cast(pl.Float64).alias(SURFACE_DENSITY_LABEL)
+            pl.lit(None).cast(pl.Float64).alias(SURFACE_DENSITY.label)
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             surface_data = profile.filter(
-                pl.col(PRESSURE_LABEL) > start, pl.col(PRESSURE_LABEL) < end
+                pl.col(PRESSURE.label) > start, pl.col(PRESSURE.label) < end
             )
-            surface_density = surface_data.select(pl.col(DENSITY_LABEL).mean()).item()
+            surface_density = surface_data.select(pl.col(DENSITY.label).mean()).item()
             profile = profile.with_columns(
-                pl.lit(surface_density).alias(SURFACE_DENSITY_LABEL)
+                pl.lit(surface_density).alias(SURFACE_DENSITY.label)
             )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_conservative_temperature(self) -> None:
@@ -1129,17 +1166,19 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_conservative_temperature()
-        >>> # This will add a new column with conservative temperature values to the dataset, calculated using the TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_conservative_temperature()
+            # This will add a new column with conservative temperature values to the dataset, calculated using the TEOS-10 formula.
 
         """
         self.assert_data_not_empty(CTD.add_conservative_temperature.__name__)
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
 
-        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
-        t = self._data.select(pl.col(TEMPERATURE_LABEL)).to_numpy().flatten()
+        sa = self._data.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
+        t = self._data.select(pl.col(TEMPERATURE.label)).to_numpy().flatten()
 
         conservative_temperature_values = gsw.CT_from_t(sa, t, 0)
 
@@ -1175,20 +1214,23 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_dynamic_height()
-        >>> # This will add a new column with dynamic height values to the dataset, calculated using the TEOS-10 formula.
+        .. code-block:: python
+        
+            ctd_data = CTD('example.csv')
+            ctd_data.add_dynamic_height()
+            # This will add a new column with dynamic height values to the dataset, calculated using the TEOS-10 formula.
+            
         """
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
 
-        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        sa = self._data.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
         ct = (
-            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE_LABEL))
+            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE.label))
             .to_numpy()
             .flatten()
         )
-        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+        p = self._data.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()
 
         dynamic_height = gsw.geo_strf_dyn_height(sa, ct, p, p_ref)
 
@@ -1234,23 +1276,25 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_thermal_expansion_coefficient()
-        >>> # This will add a new column with thermal expansion coefficient values to the dataset, calculated using the TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_thermal_expansion_coefficient()
+            # This will add a new column with thermal expansion coefficient values to the dataset, calculated using the TEOS-10 formula.
 
         """
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
-        if CONSERVATIVE_TEMPERATURE_LABEL not in self._data.columns:
+        if CONSERVATIVE_TEMPERATURE.label not in self._data.columns:
             self.add_conservative_temperature()
 
-        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        sa = self._data.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
         ct = (
-            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE_LABEL))
+            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE.label))
             .to_numpy()
             .flatten()
         )
-        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+        p = self._data.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()
 
         thermal_expansion_coefficient_values = gsw.alpha(sa, ct, p)
 
@@ -1298,23 +1342,25 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_haline_contraction_coefficient()
-        >>> # This will add a new column with haline contraction coefficient values to the dataset, calculated using the TEOS-10 formula.
+        .. code-block:: python
+        
+            ctd_data = CTD('example.csv')
+            ctd_data.add_haline_contraction_coefficient()
+            # This will add a new column with haline contraction coefficient values to the dataset, calculated using the TEOS-10 formula.
 
         """
-        if SALINITY_ABS_LABEL not in self._data.columns:
+        if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
-        if CONSERVATIVE_TEMPERATURE_LABEL not in self._data.columns:
+        if CONSERVATIVE_TEMPERATURE.label not in self._data.columns:
             self.add_conservative_temperature()
 
-        sa = self._data.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
+        sa = self._data.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
         ct = (
-            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE_LABEL))
+            self._data.select(pl.col(CONSERVATIVE_TEMPERATURE.label))
             .to_numpy()
             .flatten()
         )
-        p = self._data.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
+        p = self._data.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()
 
         haline_contraction_coefficient_values = gsw.beta(sa, ct, p)
 
@@ -1335,7 +1381,7 @@ class CTD:
         Parameters
         ----------
         method : str, default "potential_density_avg"
-            The MLD calculation method. Options are "abs_density_avg", "potential_density_avg", "salinity_olf", or "buoyancy_frequency".
+            The MLD calculation method. Options are "abs_density_avg" or "potential_density_avg".
         delta : float or None, default 0.05
             The change in density or potential density from the reference that would define the MLD in units of
             :math:`\frac{kg}{m^3}`.
@@ -1382,10 +1428,13 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_mld(reference=10, method="potential_density_avg", delta=0.05)
-        >>> # This will add a new column with MLD values to the dataset, calculated using the specified method
-        >>> # and parameters.
+        
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_mld(reference=10, method="potential_density_avg", delta=0.05)
+            # This will add a new column with MLD values to the dataset, calculated using the specified method
+            # and parameters.
 
         See Also
         --------
@@ -1395,44 +1444,39 @@ class CTD:
         """
         self.assert_data_not_empty(CTD.add_mld.__name__)
         mld_col_labels = []
-        supported_methods = ["abs_density_avg", "potential_density_avg", "salinity_olf"]
+        supported_methods = ["abs_density_avg", "potential_density_avg"]
         if method == supported_methods[0] or method == supported_methods[1]:
             mld_col_labels.append(f"MLD_Ref:{reference}_(m)_Thresh_{delta}_(kg/m^3)")
-        elif method == supported_methods[2]:
-            mld_col_labels.append(f"MLD_OLF_(m)")
         self._data = self._data.with_columns(
             pl.lit(None, dtype=pl.Float64).alias(mld_col_labels[-1])
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            df_filtered = profile.filter(pl.col(DEPTH_LABEL) <= reference)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            df_filtered = profile.filter(pl.col(DEPTH.label) <= reference)
             if method == supported_methods[0]:
                 reference_density = df_filtered.select(
-                    pl.col(DENSITY_LABEL).mean()
+                    pl.col(DENSITY.label).mean()
                 ).item()
                 df_filtered = profile.filter(
-                    pl.col(DENSITY_LABEL) >= reference_density + delta
+                    pl.col(DENSITY.label) >= reference_density + delta
                 )
             elif method == supported_methods[1]:
                 reference_density = df_filtered.select(
-                    pl.col(POTENTIAL_DENSITY_LABEL).mean()
+                    pl.col(POTENTIAL_DENSITY.label).mean()
                 ).item()
                 df_filtered = profile.filter(
-                    pl.col(POTENTIAL_DENSITY_LABEL) >= reference_density + delta
+                    pl.col(POTENTIAL_DENSITY.label) >= reference_density + delta
                 )
-            elif method == supported_methods[2]:
-                mld_from_olf = self.calculate_mld_salinity_olf(profile)
-                df_filtered = profile.filter(pl.col(DEPTH_LABEL) >= mld_from_olf)
             else:
                 raise ValueError(f'Invalid method "{method}" not in {supported_methods}')
-            mld = df_filtered.select(pl.col(DEPTH_LABEL).first()).item()
+            mld = df_filtered.select(pl.col(DEPTH.label).first()).item()
             profile = profile.with_columns(pl.lit(mld, dtype=pl.Float64).alias(mld_col_labels[-1]))
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
 
     def add_profile_classification(self, stratification_threshold=0.5):
@@ -1463,28 +1507,31 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_profile_classification()
-        >>> # This will add a new column with profile classifications to the dataset.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_profile_classification()
+            # This will add a new column with profile classifications to the dataset.
+
         """
 
         # Check if required columns exist
         self.assert_data_not_empty(CTD.add_profile_classification.__name__)
 
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Utf8).alias(CLASSIFICATION_LABEL)
+            pl.lit(None, dtype=pl.Utf8).alias(CLASSIFICATION.label)
         )
 
         # Iterate through each profile
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
             mld_column = profile.select(pl.col(r"^.*MLD.*$")).columns[0]
-            first_salinity = profile.select(pl.col(SALINITY_LABEL).first()).item()
+            first_salinity = profile.select(pl.col(SALINITY.label).first()).item()
             mld_salinity = profile.select(pl.col(mld_column).first()).item()
             if type(mld_salinity) is not type(None):
                 salinity_diff = float(mld_salinity) - float(first_salinity)
@@ -1493,120 +1540,17 @@ class CTD:
             # Classify profile based on the criteria
             if type(salinity_diff) is not type(None) and salinity_diff > 0.5:
                 classification = 'A - Very shallow low salinity surface ML'
-            elif profile.select((pl.col(SALINITY_LABEL).max() - pl.col(
-                    SALINITY_LABEL).min()).abs() < stratification_threshold).item():
+            elif profile.select((pl.col(SALINITY.label).max() - pl.col(
+                    SALINITY.label).min()).abs() < stratification_threshold).item():
                 classification = 'C - Stratified MLD from surface to bottom of ML'
             else:
                 classification = 'B - Normal well mixed ML'
             # Update the profile with the classification result
-            profile = profile.with_columns(pl.lit(classification).alias(CLASSIFICATION_LABEL))
+            profile = profile.with_columns(pl.lit(classification).alias(CLASSIFICATION.label))
 
             # Reintegration of the updated profile into the main dataset
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
-
-    def calculate_mld_salinity_olf(self, profile: pl.DataFrame,
-                                   n: int = 4) -> float | None:
-        r"""
-        Calculates the mixed layer depth (MLD) using the Optimal Linear Fitting (OLF) method based on salinity profiles.
-
-        Parameters
-        ----------
-        profile : pl.Dataframe
-            Profile to calculate MLD on.
-        n : int, default 4
-            The number of data points below the current depth `zk` to use for calculating the extrapolation bias.
-            A smaller `n` is used because below the mixed layer, salinity often has a large vertical gradient.
-
-        Raises
-        ------
-        NoSamplesError
-            When the function is called on a CTD object with no data.
-        ValueError
-            If the input profiles are not of the same length.
-
-        Returns
-        -------
-        float or None
-            The mixed layer depth (MLD) calculated using the salinity-based OLF method. None is no MLD found.
-
-        Notes
-        -----
-        The OLF method determines the mixed layer depth by performing the following steps:
-
-        1. A linear polynomial is fitted to the salinity data from the surface to a specified depth `zk`.
-        2. The root-mean-square error (RMSE) `E1` between the observed salinity values and the fitted values
-           is calculated for each depth.
-        3. For the next `n` points below `zk`, the linear fit is extrapolated, and the bias `E2` is calculated
-           as the average difference between the observed and extrapolated values.
-        4. The ratio `E2(k)/E1(k)` is computed for each depth `zk`.
-        5. The depth corresponding to the maximum value of `E2(k)/E1(k)` is identified as the mixed layer depth (MLD).
-
-        The MLD is typically found at the point where the linear fit ceases to represent the data well, indicating
-        the transition from the mixed layer to the underlying water column.
-
-        The equation for the MLD is given by:
-
-        .. math::
-
-            \text{MLD} = \max\left(\frac{E2(k)}{E1(k)}\right)
-
-        where:
-
-        * :math:`E1(k)` is the root-mean-square error between the observed and fitted salinity from the surface to depth `zk`.
-        * :math:`E2(k)` is the bias between the observed and extrapolated salinity for the next `n` points below `zk`.
-
-        Examples
-        --------
-        >>> salinity_profile = [35.1, 35.2, 35.3, 35.5, 35.8, 36.0, 36.2]
-        >>> depth_profile = [0, 10, 20, 30, 40, 50, 60]
-        >>> mld = CTD.calculate_mld_salinity_olf(salinity_profile, depth_profile)
-        >>> print(f"Calculated MLD: {mld} meters")
-
-        See Also
-        --------
-        add_mld : Method to calculate and add MLD to a dataset using different methods, including density threshold.
-
-        """
-        salinity_profile = profile.select(pl.col(SALINITY_LABEL)).to_numpy().flatten()
-        depth_profile = profile.select(pl.col(DEPTH_LABEL)).to_numpy().flatten()
-        max_depth_index = len(depth_profile) - n  # Ensure there are enough points for extrapolation
-        min_depth_index = 2
-
-        if max_depth_index < min_depth_index:
-            raise ValueError(
-                f"{self._filename} - Profile must have at least {min_depth_index + n} samples, profile has {len(depth_profile)} samples.")
-        # Step 1: Perform linear fitting for each depth zk
-        slopes = []
-        intercepts = []
-        for k in range(min_depth_index, max_depth_index):
-            linear = stats.linregress(x=salinity_profile[:k], y=depth_profile[:k])
-            slopes.append(linear.slope)
-            intercepts.append(linear.intercept)
-        # Step 2: Calculate E1(k) for each zk and extrapolate and calculate E2(k) for each zk
-        E1_errors = []
-        E2_errors = []
-        for k in range(min_depth_index, max_depth_index):
-            S_hat = intercepts[k - min_depth_index] + slopes[k - min_depth_index] * np.array(salinity_profile[:k])
-            E1 = np.sqrt(np.mean((np.array(depth_profile[:k]) - S_hat) ** 2))
-            E1_errors.append(E1)
-            S_hat_extrapolated = intercepts[k - min_depth_index] + slopes[k - min_depth_index] * np.array(
-                salinity_profile[k:k + n])
-            bias = np.mean(S_hat_extrapolated - np.array(depth_profile[k:k + n]))
-            E2 = np.abs(bias)
-            E2_errors.append(E2)
-
-        # Step 4: Calculate E2(k)/E1(k) and determine the depth with maximum ratio
-        E2_E1_ratios = np.array(E2_errors) / np.array(E1_errors)
-        try:
-            optimal_k = np.argmax(
-                E2_E1_ratios)
-        except ValueError:
-            return None
-        if slopes[optimal_k] < 200 and depth_profile[optimal_k+min_depth_index]:
-            return None
-        mld = depth_profile[optimal_k + min_depth_index]
-        return mld
 
     def add_mld_bf(self, min_qi=0.0) -> None:
         r"""
@@ -1651,34 +1595,34 @@ class CTD:
             pl.lit(None, dtype=pl.Float64).alias("Quality_Index")
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            bf_max = profile.filter(pl.col(BV_LABEL) == (pl.col(BV_LABEL).max()))
-            mld = bf_max.select(pl.col(DEPTH_LABEL).first()).item()
-            profile_up_to_mld = profile.filter(pl.col(DEPTH_LABEL) <= mld)
-            if not profile.select(pl.col(DEPTH_LABEL).max() >= mld*1.5).item():
-                profile_up_to_mld_1dot5 = profile.filter(pl.col(DEPTH_LABEL) <= mld * 1.5)
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            bf_max = profile.filter(pl.col(N2.label) == (pl.col(N2.label).max()))
+            mld = bf_max.select(pl.col(DEPTH.label).first()).item()
+            profile_up_to_mld = profile.filter(pl.col(DEPTH.label) <= mld)
+            if not profile.select(pl.col(DEPTH.label).max() >= mld*1.5).item():
+                profile_up_to_mld_1dot5 = profile.filter(pl.col(DEPTH.label) <= mld * 1.5)
             else:
                 profile_up_to_mld_1dot5 = profile
-            std_A1 = profile_up_to_mld.select(pl.col(POTENTIAL_DENSITY_LABEL).std()).item()
+            std_A1 = profile_up_to_mld.select(pl.col(POTENTIAL_DENSITY.label).std()).item()
             if std_A1 is None:
                 # Reintegration of the updated profile into the main dataset
-                self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+                self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
                 self._data = self._data.vstack(profile)
                 continue
-            std_A2 = profile_up_to_mld_1dot5.select(pl.col(POTENTIAL_DENSITY_LABEL).std()).item()
+            std_A2 = profile_up_to_mld_1dot5.select(pl.col(POTENTIAL_DENSITY.label).std()).item()
             qi = 1 - (std_A1/std_A2)
             if qi >= min_qi:
                 profile = profile.with_columns(pl.lit(mld).alias("MLD_BF_(m)"),
                                                pl.lit(qi).alias("Quality_Index"))
             # Reintegration of the updated profile into the main dataset
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
-    def add_brunt_vaisala_squared(self) -> None:
+    def add_n_squared(self) -> None:
         r"""
         Calculates buoyancy frequency squared and adds it to the CTD data.
         Requires potential density to be calculated first.
@@ -1715,18 +1659,21 @@ class CTD:
 
             N_2 = g_2 \cdot \frac{\beta \cdot d(SA) - \alpha \cdot d(CT)}{\text{specvol_local} \cdot dP}
 
-        Note. This routine uses rho from "gsw_specvol", which is the
-          computationally efficient 75-term expression for specific volume in
-          terms of SA, CT and p (Roquet et al., 2015).
+        This routine uses rho from "gsw_specvol", which is the
+        computationally efficient 75-term expression for specific volume in
+        terms of SA, CT and p (Roquet et al., 2015).
+
         Note also that the pressure increment, dP, in the above formula is in
-          Pa, so that it is 104 times the pressure increment dp in dbar.
+        Pa, so that it is 104 times the pressure increment dp in dbar.
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.add_brunt_vaisala_squared()
-        >>> # This will add new columns with buoyancy frequency squared values and mid-pressure values to the dataset,
-        >>> # calculated using the TEOS-10 formula.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.add_brunt_vaisala_squared()
+            # This will add new columns with buoyancy frequency squared values and mid-pressure values to the dataset,
+            # calculated using the TEOS-10 formula.
 
         See Also
         --------
@@ -1734,20 +1681,20 @@ class CTD:
 
         """
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias(BV_LABEL),
-            pl.lit(None, dtype=pl.Float64).alias(P_MID_LABEL),
+            pl.lit(None, dtype=pl.Float64).alias(N2.label),
+            pl.lit(None, dtype=pl.Float64).alias(P_MID.label),
         )
         for profile_id in (
-                self._data.select(PROFILE_ID_LABEL)
+                self._data.select(PROFILE_ID.label)
                         .unique(keep="first")
                         .to_series()
                         .to_list()
         ):
-            profile = self._data.filter(pl.col(PROFILE_ID_LABEL) == profile_id)
-            sa = profile.select(pl.col(SALINITY_ABS_LABEL)).to_numpy().flatten()
-            t = profile.select(pl.col(TEMPERATURE_LABEL)).to_numpy().flatten()
-            p = profile.select(pl.col(SEA_PRESSURE_LABEL)).to_numpy().flatten()
-            lat = profile.select(pl.col(LATITUDE_LABEL)).to_numpy().flatten()
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+            sa = profile.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
+            t = profile.select(pl.col(TEMPERATURE.label)).to_numpy().flatten()
+            p = profile.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()
+            lat = profile.select(pl.col(LATITUDE.label)).to_numpy().flatten()
             ct = gsw.CT_from_t(sa, t, p).flatten()
             try:
                 n_2, p_mid = gsw.Nsquared(SA=sa, CT=ct, p=p, lat=lat)
@@ -1757,15 +1704,15 @@ class CTD:
             buoyancy_frequency = (
                 pl.Series(np.array(n_2).flatten())
                 .extend_constant(None, n=1)
-                .to_frame(BV_LABEL)
+                .to_frame(N2.label)
             )
-            p_mid = pl.Series(p_mid).extend_constant(None, n=1).to_frame(P_MID_LABEL)
+            p_mid = pl.Series(p_mid).extend_constant(None, n=1).to_frame(P_MID.label)
             profile = profile.with_columns(
                 pl.Series(buoyancy_frequency), pl.Series(p_mid)
             )
-            self._data = self._data.filter(pl.col(PROFILE_ID_LABEL) != profile_id)
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
-        self.assert_data_not_empty(CTD.add_brunt_vaisala_squared.__name__)
+        self.assert_data_not_empty(CTD.add_n_squared.__name__)
 
     def save_to_csv(self, output_file: str, null_value: str | None) -> None:
         """
@@ -1800,10 +1747,12 @@ class CTD:
 
         Examples
         --------
-        >>> ctd_data = CTD('example.csv')
-        >>> ctd_data.save_to_csv(output_file='path/to/output.csv')
-        >>> # This will rename the columns of the CTD dataset and save it to 'path/to/output.csv'.
-        >>> # Any existing file with the same name at that location will be overwritten.
+        .. code-block:: python
+
+            ctd_data = CTD('example.csv')
+            ctd_data.save_to_csv(output_file='path/to/output.csv')
+            # This will rename the columns of the CTD dataset and save it to 'path/to/output.csv'.
+            # Any existing file with the same name at that location will be overwritten.
 
         See Also
         --------

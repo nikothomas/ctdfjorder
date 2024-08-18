@@ -8,15 +8,15 @@ from typing import Any
 
 # Column label mapping from rsk to internal
 rskLabels_to_labelInternal: dict[str, str] = {
-    "temperature_00": TEMPERATURE_LABEL,
-    "chlorophyll_00": CHLOROPHYLL_LABEL,
-    "seapressure_00": SEA_PRESSURE_LABEL,
-    "depth_00": DEPTH_LABEL,
-    "salinity_00": SALINITY_LABEL,
-    "speedofsound_00": SPEED_OF_SOUND_LABEL,
-    "specificconductivity_00": SPECIFIC_CONDUCTIVITY_LABEL,
-    "conductivity_00": CONDUCTIVITY_LABEL,
-    "pressure_00": PRESSURE_LABEL,
+    "temperature_00": TEMPERATURE.label,
+    "chlorophyll_00": CHLOROPHYLL.label,
+    "seapressure_00": SEA_PRESSURE.label,
+    "depth_00": DEPTH.label,
+    "salinity_00": SALINITY.label,
+    "speedofsound_00": SPEED_OF_SOUND.label,
+    "specificconductivity_00": SPECIFIC_CONDUCTIVITY.label,
+    "conductivity_00": CONDUCTIVITY.label,
+    "pressure_00": PRESSURE.label,
 }
 
 
@@ -68,7 +68,7 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
             If the RSK profile is empty.
         """
         rsk_profile = rsk_profile.with_columns(
-            pl.col(TIMESTAMP_LABEL)
+            pl.col(TIMESTAMP.label)
             .cast(pl.String)
             .str.to_datetime(
                 format="%Y-%m-%d %H:%M:%S%.f",
@@ -82,14 +82,14 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
         try:
             profile_geodata = next(geo)
             return data.with_columns(
-                pl.lit(profile_geodata.latitude).alias(LATITUDE_LABEL),
-                pl.lit(profile_geodata.longitude).alias(LONGITUDE_LABEL),
+                pl.lit(profile_geodata.latitude).alias(LATITUDE.label),
+                pl.lit(profile_geodata.longitude).alias(LONGITUDE.label),
             )
 
         # No geodata found in rsk file
         except StopIteration:
             return data.with_columns(
-                pl.lit(None).alias(LATITUDE_LABEL), pl.lit(None).alias(LONGITUDE_LABEL)
+                pl.lit(None).alias(LATITUDE.label), pl.lit(None).alias(LONGITUDE.label)
             )
 
     data = None
@@ -102,15 +102,15 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
         rsk_numpy_array = np.array(
             rsk.npsamples(endpoints.start_time, endpoints.end_time)
         )
-        for x, timestamp in enumerate(rsk_numpy_array[TIMESTAMP_LABEL]):
-            rsk_numpy_array[TIMESTAMP_LABEL][x] = timestamp.strftime(TIME_FORMAT)
+        for x, timestamp in enumerate(rsk_numpy_array[TIMESTAMP.label]):
+            rsk_numpy_array[TIMESTAMP.label][x] = timestamp.strftime(TIME_FORMAT)
         profile_to_process = (
             pl.DataFrame(rsk_numpy_array)
             .rename(rskLabels_to_labelInternal)
             .drop_nulls()
             .with_columns(
-                pl.lit(filename).alias(FILENAME_LABEL),
-                pl.lit(num_profiles).alias(PROFILE_ID_LABEL),
+                pl.lit(filename).alias(FILENAME.label),
+                pl.lit(num_profiles).alias(PROFILE_ID.label),
             )
         )
         geodata = rsk.geodata(endpoints.start_time, endpoints.end_time)
@@ -128,14 +128,14 @@ def load_file_rsk(rbr_file_path: str = None) -> pl.DataFrame:
     if type(data) is type(None) or data.is_empty():
         num_profiles = 0
         rsk_numpy_array = np.array(rsk.npsamples())
-        for x, timestamp in enumerate(rsk_numpy_array[TIMESTAMP_LABEL]):
-            rsk_numpy_array[TIMESTAMP_LABEL][x] = timestamp.strftime(TIME_FORMAT)
+        for x, timestamp in enumerate(rsk_numpy_array[TIMESTAMP.label]):
+            rsk_numpy_array[TIMESTAMP.label][x] = timestamp.strftime(TIME_FORMAT)
         profile = (
             pl.DataFrame(rsk_numpy_array)
             .rename(rskLabels_to_labelInternal)
             .with_columns(
-                pl.lit(filename).alias(FILENAME_LABEL),
-                pl.lit(num_profiles).alias(PROFILE_ID_LABEL),
+                pl.lit(filename).alias(FILENAME.label),
+                pl.lit(num_profiles).alias(PROFILE_ID.label),
             )
         )
         geodata = rsk.geodata()

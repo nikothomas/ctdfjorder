@@ -5,465 +5,131 @@ This module contains various constant values used for labeling columns,
 time formatting, error messages, warning messages, and other configuration
 settings within the CTDFjorder package.
 """
-
 from typing import Literal
+from ctdfjorder.dataclasses.dataclasses import SampleFeature
 
-# ------------------------------------
-# Column labels for internal use
-# ------------------------------------
-TIMESTAMP_LABEL: str = "timestamp"
-"""str: Label for timestamp column."""
+# --------------
+# Column labels
+# --------------
 
-YEAR_LABEL: str = "year"
-"""str: Label for year column."""
+from typing import NamedTuple
+import polars as pl
 
-MONTH_LABEL: str = "month"
-"""str: Label for month column."""
+# Create SampleFeature instances for all labeled features
+TIMESTAMP = SampleFeature(label="timestamp", export_label="timestamp", unit="ISO8601", pl_unit=pl.Datetime)
+YEAR = SampleFeature(label="year", export_label="Year", unit="", pl_unit=pl.Int16)
+MONTH = SampleFeature(label="month", export_label="Month", unit="", pl_unit=pl.Int8)
+DAY = SampleFeature(label="day", export_label="Day", unit="", pl_unit=pl.Int8)
+FILENAME = SampleFeature(label="filename", export_label="filename", unit="", pl_unit=pl.Utf8)
+CHLOROPHYLL = SampleFeature(label="chlorophyll", export_label="Chlorophyll_a_(µg/l)", unit="µg/l", pl_unit=pl.Float32)
+TEMPERATURE = SampleFeature(label="temperature", export_label="Temperature_(°C)", unit="°C", pl_unit=pl.Float32)
+SEA_PRESSURE = SampleFeature(label="sea_pressure", export_label="Sea_Pressure_(dbar)", unit="dbar", pl_unit=pl.Float32)
+DEPTH = SampleFeature(label="depth", export_label="Depth_(m)", unit="m", pl_unit=pl.Float32)
+SALINITY = SampleFeature(label="salinity", export_label="Salinity_(PSU)", unit="PSU", pl_unit=pl.Float32)
+SPEED_OF_SOUND = SampleFeature(label="speed_of_sound", export_label="Speed_of_Sound_(m/s)", unit="m/s",
+                               pl_unit=pl.Float32)
+SPECIFIC_CONDUCTIVITY = SampleFeature(label="specific_conductivity", export_label="Specific_Conductivity_(µS/cm)",
+                                      unit="µS/cm", pl_unit=pl.Float32)
+CONDUCTIVITY = SampleFeature(label="conductivity", export_label="Conductivity_(mS/cm)", unit="mS/cm",
+                             pl_unit=pl.Float32)
+PRESSURE = SampleFeature(label="pressure", export_label="Pressure_(dbar)", unit="dbar", pl_unit=pl.Float32)
+ABSOLUTE_SALINITY = SampleFeature(label="salinity_abs", export_label="Absolute_Salinity_(g/kg)", unit="g/kg",
+                                  pl_unit=pl.Float32)
+SURFACE_SALINITY = SampleFeature(label="surface_salinity", export_label="Surface_Salinity_(PSU)", unit="PSU",
+                                 pl_unit=pl.Float32)
+SURFACE_TEMPERATURE = SampleFeature(label="surface_temperature", export_label="Surface_Temperature_(°C)", unit="°C",
+                                    pl_unit=pl.Float32)
+SURFACE_DENSITY = SampleFeature(label="surface_density", export_label="Mean_Surface_Density_(kg/m^3)", unit="kg/m^3",
+                                pl_unit=pl.Float32)
+MELTWATER_FRACTION_EQ_10 = SampleFeature(label="meltwater_fraction_eq_10", export_label="Meltwater_Fraction_EQ_10_(%)",
+                                         unit="%", pl_unit=pl.Float32)
+MELTWATER_FRACTION_EQ_11 = SampleFeature(label="meltwater_fraction_eq_11", export_label="Meltwater_Fraction_EQ_11_(%)",
+                                         unit="%", pl_unit=pl.Float32)
+DENSITY = SampleFeature(label="density", export_label="Density_(kg/m^3)", unit="kg/m^3", pl_unit=pl.Float32)
+POTENTIAL_DENSITY = SampleFeature(label="potential_density", export_label="Potential_Density_(kg/m^3)", unit="kg/m^3",
+                                  pl_unit=pl.Float32)
+N2 = SampleFeature(label="brunt_vaisala_frequency_squared", export_label="N^2", unit="s^-2", pl_unit=pl.Float32)
+P_MID = SampleFeature(label="p_mid", export_label="Mid_Pressure_Used_For_BV_Calc", unit="dbar", pl_unit=pl.Float32)
+SECCHI_DEPTH = SampleFeature(label="secchi_depth", export_label="Secchi_Depth_(m)", unit="m", pl_unit=pl.Float32)
+LATITUDE = SampleFeature(label="latitude", export_label="latitude", unit="decimal_degrees", pl_unit=pl.Float64)
+LONGITUDE = SampleFeature(label="longitude", export_label="longitude", unit="decimal_degrees", pl_unit=pl.Float64)
+UNIQUE_ID = SampleFeature(label="unique_id", export_label="Unique_ID", unit="", pl_unit=pl.Utf8)
+PROFILE_ID = SampleFeature(label="profile_id", export_label="Profile_ID", unit="", pl_unit=pl.Utf8)
+SITE_NAME = SampleFeature(label="site_name", export_label="Site_Name", unit="", pl_unit=pl.Utf8)
+SITE_ID = SampleFeature(label="site_id", export_label="Site_ID", unit="", pl_unit=pl.Utf8)
+CONSERVATIVE_TEMPERATURE = SampleFeature(label="conservative_temperature", export_label="Conservative_Temperature_(°C)",
+                                         unit="°C", pl_unit=pl.Float32)
+OXYGEN_CONCENTRATION = SampleFeature(label="oxygen_concentration", export_label="Oxygen_Concentration_(µmol/kg)",
+                                     unit="µmol/kg", pl_unit=pl.Float32)
+OXYGEN_SATURATION = SampleFeature(label="oxygen_saturation", export_label="Oxygen_Saturation_(%)", unit="%",
+                                  pl_unit=pl.Float32)
+NITRATE = SampleFeature(label="nitrate", export_label="Nitrate_(µmol/L)", unit="µmol/L", pl_unit=pl.Float32)
+PHOSPHATE = SampleFeature(label="phosphate", export_label="Phosphate_(µmol/L)", unit="µmol/L", pl_unit=pl.Float32)
+SILICATE = SampleFeature(label="silicate", export_label="Silicate_(µmol/L)", unit="µmol/L", pl_unit=pl.Float32)
+PH = SampleFeature(label="ph", export_label="pH", unit="", pl_unit=pl.Float32)
+ALKALINITY = SampleFeature(label="alkalinity", export_label="Alkalinity_(µmol/kg)", unit="µmol/kg", pl_unit=pl.Float32)
+TURBIDITY = SampleFeature(label="turbidity", export_label="Turbidity_(NTU)", unit="NTU", pl_unit=pl.Float32)
+PARTICULATE_ORGANIC_CARBON = SampleFeature(label="particulate_organic_carbon",
+                                           export_label="Particulate_Organic_Carbon_(µmol/L)", unit="µmol/L",
+                                           pl_unit=pl.Float32)
+TOTAL_ORGANIC_CARBON = SampleFeature(label="total_organic_carbon", export_label="Total_Organic_Carbon_(µmol/L)",
+                                     unit="µmol/L", pl_unit=pl.Float32)
+PARTICULATE_INORGANIC_CARBON = SampleFeature(label="particulate_inorganic_carbon",
+                                             export_label="Particulate_Inorganic_Carbon_(µmol/L)", unit="µmol/L",
+                                             pl_unit=pl.Float32)
+DISSOLVED_INORGANIC_CARBON = SampleFeature(label="dissolved_inorganic_carbon",
+                                           export_label="Dissolved_Inorganic_Carbon_(µmol/kg)", unit="µmol/kg",
+                                           pl_unit=pl.Float32)
+CHLOROPHYLL_FLUORESCENCE = SampleFeature(label="chlorophyll_fluorescence",
+                                         export_label="Chlorophyll_Fluorescence_(RFU)", unit="RFU", pl_unit=pl.Float32)
+PAR = SampleFeature(label="par", export_label="PAR_(µmol/m²/s)", unit="µmol/m²/s", pl_unit=pl.Float32)
+AMMONIUM = SampleFeature(label="ammonium", export_label="Ammonium_(µmol/L)", unit="µmol/L", pl_unit=pl.Float32)
+ORP = SampleFeature(label="orp", export_label="ORP_(mV)", unit="mV", pl_unit=pl.Float32)
+CLASSIFICATION = SampleFeature(label="profile_type", export_label="Profile_Type", unit="", pl_unit=pl.Categorical)
 
-DAY_LABEL: str = "day"
-"""str: Label for day column."""
+# List of all Sample_Feature instances
+ALL_SAMPLE_FEATURES = [
+    # Identification and metadata
+    FILENAME, UNIQUE_ID, PROFILE_ID, SITE_ID, SITE_NAME,
 
-FILENAME_LABEL: str = "filename"
-"""str: Label for filename column."""
+    # Temporal data
+    TIMESTAMP, YEAR, MONTH, DAY,
 
-CHLOROPHYLL_LABEL: str = "chlorophyll"
-"""str: Label for chlorophyll column."""
+    # Spatial data
+    LATITUDE, LONGITUDE,
 
-TEMPERATURE_LABEL: str = "temperature"
-"""str: Label for temperature column."""
+    # Primary measurements
+    DEPTH, PRESSURE, SEA_PRESSURE, P_MID,
+    TEMPERATURE, CONSERVATIVE_TEMPERATURE,
+    SALINITY, ABSOLUTE_SALINITY,
+    DENSITY, POTENTIAL_DENSITY,
 
-SEA_PRESSURE_LABEL: str = "sea_pressure"
-"""str: Label for sea pressure column."""
+    # Derived or calculated values
+    SURFACE_TEMPERATURE, SURFACE_SALINITY, SURFACE_DENSITY,
+    MELTWATER_FRACTION_EQ_10, MELTWATER_FRACTION_EQ_11,
+    N2, CLASSIFICATION,
 
-DEPTH_LABEL: str = "depth"
-"""str: Label for depth column."""
+    # Additional physical properties
+    CONDUCTIVITY, SPECIFIC_CONDUCTIVITY,
+    SPEED_OF_SOUND,
 
-SALINITY_LABEL: str = "salinity"
-"""str: Label for salinity column."""
+    # Chemical properties
+    OXYGEN_CONCENTRATION, OXYGEN_SATURATION,
+    PH, ALKALINITY,
+    NITRATE, PHOSPHATE, SILICATE, AMMONIUM,
 
-SPEED_OF_SOUND_LABEL: str = "speed_of_sound"
-"""str: Label for speed of sound column."""
+    # Organic content
+    PARTICULATE_ORGANIC_CARBON, TOTAL_ORGANIC_CARBON,
+    PARTICULATE_INORGANIC_CARBON, DISSOLVED_INORGANIC_CARBON,
 
-SPECIFIC_CONDUCTIVITY_LABEL: str = "specific_conductivity"
-"""str: Label for specific conductivity column."""
+    # Optical properties
+    SECCHI_DEPTH, TURBIDITY,
+    CHLOROPHYLL, CHLOROPHYLL_FLUORESCENCE,
+    PAR,  # Photosynthetically Active Radiation
 
-CONDUCTIVITY_LABEL: str = "conductivity"
-"""str: Label for conductivity column."""
-
-PRESSURE_LABEL: str = "pressure"
-"""str: Label for pressure column."""
-
-SALINITY_ABS_LABEL: str = "salinity_abs"
-"""str: Label for absolute salinity column."""
-
-SURFACE_SALINITY_LABEL: str = "surface_salinity"
-"""str: Label for surface salinity column."""
-
-SURFACE_TEMPERATURE_LABEL: str = "surface_temperature"
-"""str: Label for surface temperature column."""
-
-SURFACE_DENSITY_LABEL: str = "surface_density"
-"""str: Label for surface density column."""
-
-MELTWATER_FRACTION_EQ_10_LABEL: str = "meltwater_fraction_eq_10"
-"""str: Label for meltwater fraction equation 10 column."""
-
-MELTWATER_FRACTION_EQ_11_LABEL: str = "meltwater_fraction_eq_11"
-"""str: Label for meltwater fraction equation 11 column."""
-
-DENSITY_LABEL: str = "density"
-"""str: Label for density column."""
-
-POTENTIAL_DENSITY_LABEL: str = "potential_density"
-"""str: Label for potential density column."""
-
-BV_LABEL: str = "brunt_vaisala_frequency_squared"
-"""str: Label for Brunt-Väisälä frequency squared column."""
-
-P_MID_LABEL: str = "p_mid"
-"""str: Label for mid pressure used for Brunt-Väisälä calculation column."""
-
-SECCHI_DEPTH_LABEL: str = "secchi_depth"
-"""str: Label for Secchi depth column."""
-
-LATITUDE_LABEL: str = "latitude"
-"""str: Label for latitude column."""
-
-LONGITUDE_LABEL: str = "longitude"
-"""str: Label for longitude column."""
-
-UNIQUE_ID_LABEL: str = "unique_id"
-"""str: Label for unique ID column."""
-
-PROFILE_ID_LABEL: str = "profile_id"
-"""str: Label for profile ID column."""
-
-SITE_NAME_LABEL: str = "site_name"
-"""str: Label for site name column."""
-
-SITE_ID_LABEL: str = "site_id"
-"""str: Label for the site id column."""
-
-CONSERVATIVE_TEMPERATURE_LABEL: str = "conservative_temperature"
-"""str: Label for the conservative temperature column."""
-
-OXYGEN_CONCENTRATION_LABEL: str = "oxygen_concentration"
-"""str: Label for dissolved oxygen concentration column."""
-
-OXYGEN_SATURATION_LABEL: str = "oxygen_saturation"
-"""str: Label for oxygen saturation column."""
-
-NITRATE_LABEL: str = "nitrate"
-"""str: Label for nitrate concentration column."""
-
-PHOSPHATE_LABEL: str = "phosphate"
-"""str: Label for phosphate concentration column."""
-
-SILICATE_LABEL: str = "silicate"
-"""str: Label for silicate concentration column."""
-
-PH_LABEL: str = "ph"
-"""str: Label for pH value column."""
-
-ALKALINITY_LABEL: str = "alkalinity"
-"""str: Label for alkalinity column."""
-
-TURBIDITY_LABEL: str = "turbidity"
-"""str: Label for turbidity column."""
-
-PARTICULATE_ORGANIC_CARBON_LABEL: str = "particulate_organic_carbon"
-"""str: Label for particulate organic carbon column."""
-
-TOTAL_ORGANIC_CARBON_LABEL: str = "total_organic_carbon"
-"""str: Label for total organic carbon column."""
-
-PARTICULATE_INORGANIC_CARBON_LABEL: str = "particulate_inorganic_carbon"
-"""str: Label for particulate inorganic carbon column."""
-
-DISSOLVED_INORGANIC_CARBON_LABEL: str = "dissolved_inorganic_carbon"
-"""str: Label for dissolved inorganic carbon column."""
-
-CHLOROPHYLL_FLUORESCENCE_LABEL: str = "chlorophyll_fluorescence"
-"""str: Label for chlorophyll fluorescence column."""
-
-PAR_LABEL: str = "par"
-"""str: Label for photosynthetically active radiation (PAR) column."""
-
-AMMONIUM_LABEL: str = "ammonium"
-"""str: Label for ammonium concentration column."""
-
-ORP_LABEL: str = "orp"
-"""str: Label for oxidation-reduction potential (ORP) column."""
-
-CLASSIFICATION_LABEL: str = "profile_type"
-"""str: Label for profile type (A, B, C) column."""
-
-LIST_LABELS: list[str] = [
-    TIMESTAMP_LABEL,
-    YEAR_LABEL,
-    MONTH_LABEL,
-    FILENAME_LABEL,
-    CHLOROPHYLL_LABEL,
-    TEMPERATURE_LABEL,
-    SEA_PRESSURE_LABEL,
-    DEPTH_LABEL,
-    SALINITY_LABEL,
-    SPEED_OF_SOUND_LABEL,
-    SPECIFIC_CONDUCTIVITY_LABEL,
-    CONDUCTIVITY_LABEL,
-    PRESSURE_LABEL,
-    SALINITY_ABS_LABEL,
-    SURFACE_SALINITY_LABEL,
-    SURFACE_TEMPERATURE_LABEL,
-    SURFACE_DENSITY_LABEL,
-    MELTWATER_FRACTION_EQ_10_LABEL,
-    MELTWATER_FRACTION_EQ_11_LABEL,
-    DENSITY_LABEL,
-    POTENTIAL_DENSITY_LABEL,
-    BV_LABEL,
-    P_MID_LABEL,
-    SECCHI_DEPTH_LABEL,
-    LATITUDE_LABEL,
-    LONGITUDE_LABEL,
-    UNIQUE_ID_LABEL,
-    PROFILE_ID_LABEL,
-    SITE_ID_LABEL,
-    SITE_NAME_LABEL,
-    OXYGEN_CONCENTRATION_LABEL,
-    OXYGEN_SATURATION_LABEL,
-    NITRATE_LABEL,
-    PHOSPHATE_LABEL,
-    SILICATE_LABEL,
-    PH_LABEL,
-    ALKALINITY_LABEL,
-    TURBIDITY_LABEL,
-    PARTICULATE_ORGANIC_CARBON_LABEL,
-    TOTAL_ORGANIC_CARBON_LABEL,
-    PARTICULATE_INORGANIC_CARBON_LABEL,
-    DISSOLVED_INORGANIC_CARBON_LABEL,
-    CHLOROPHYLL_FLUORESCENCE_LABEL,
-    PAR_LABEL,
-    AMMONIUM_LABEL,
-    ORP_LABEL,
-    CLASSIFICATION_LABEL
+    # Other
+    ORP  # Oxidation-Reduction Potential
 ]
-"""list[str]: List of all internal column labels."""
-
-# ------------------------------------
-# Export labels
-# ------------------------------------
-EXPORT_TIMESTAMP_LABEL = "timestamp"
-"""str: Export label for timestamp."""
-
-EXPORT_YEAR_LABEL = "Year"
-"""str: Export label for year."""
-
-EXPORT_MONTH_LABEL = "Month"
-"""str: Export label for month."""
-
-EXPORT_DAY_LABEL: str = "Day"
-"""str: Label for day column."""
-
-EXPORT_TEMPERATURE_LABEL = "Temperature_(°C)"
-"""str: Export label for temperature."""
-
-EXPORT_PRESSURE_LABEL = "Pressure_(dbar)"
-"""str: Export label for pressure."""
-
-EXPORT_DEPTH_LABEL = "Depth_(m)"
-"""str: Export label for depth."""
-
-EXPORT_SEA_PRESSURE_LABEL = "Sea_Pressure_(dbar)"
-"""str: Export label for sea pressure."""
-
-EXPORT_CHLOROPHYLL_LABEL = "Chlorophyll_a_(µg/l)"
-"""str: Export label for chlorophyll-a."""
-
-EXPORT_SALINITY_LABEL = "Salinity_(PSU)"
-"""str: Export label for salinity."""
-
-EXPORT_SPECIFIC_CONDUCTIVITY_LABEL = "Specific_Conductivity_(µS/cm)"
-"""str: Export label for specific conductivity."""
-
-EXPORT_CONDUCTIVITY_LABEL = "Conductivity_(mS/cm)"
-"""str: Export label for conductivity."""
-
-EXPORT_DENSITY_LABEL = "Density_(kg/m^3)"
-"""str: Export label for density."""
-
-EXPORT_POTENTIAL_DENSITY_LABEL = "Potential_Density_(kg/m^3)"
-"""str: Export label for potential density."""
-
-EXPORT_SALINITY_ABS_LABEL = "Absolute_Salinity_(g/kg)"
-"""str: Export label for absolute salinity."""
-
-EXPORT_SURFACE_DENSITY_LABEL = "Mean_Surface_Density_(kg/m^3)"
-"""str: Export label for mean surface density."""
-
-EXPORT_SPEED_OF_SOUND_LABEL = "Speed_of_Sound_(m/s)"
-"""str: Export label for speed of sound."""
-
-EXPORT_SURFACE_SALINITY_LABEL = "Surface_Salinity_(PSU)"
-"""str: Export label for surface salinity."""
-
-EXPORT_SURFACE_TEMPERATURE_LABEL = "Surface_Temperature_(°C)"
-"""str: Export label for surface temperature."""
-
-EXPORT_MELTWATER_FRACTION_EQ_10_LABEL = "Meltwater_Fraction_EQ_10_(%)"
-"""str: Export label for meltwater fraction equation 10."""
-
-EXPORT_MELTWATER_FRACTION_EQ_11_LABEL = "Meltwater_Fraction_EQ_11_(%)"
-"""str: Export label for meltwater fraction equation 11."""
-
-EXPORT_LONGITUDE_LABEL = "longitude"
-"""str: Export label for longitude."""
-
-EXPORT_LATITUDE_LABEL = "latitude"
-"""str: Export label for latitude."""
-
-EXPORT_FILENAME_LABEL = "filename"
-"""str: Export label for filename."""
-
-EXPORT_PROFILE_ID_LABEL = "Profile_ID"
-"""str: Export label for profile ID."""
-
-EXPORT_UNIQUE_ID_LABEL = "Unique_ID"
-"""str: Export label for unique ID."""
-
-EXPORT_BV_LABEL = "Brunt_Vaisala_Frequency_Squared"
-"""str: Export label for Brunt-Väisälä frequency squared."""
-
-EXPORT_P_MID_LABEL = "Mid_Pressure_Used_For_BV_Calc"
-"""str: Export label for mid pressure used for Brunt-Väisälä calculation."""
-
-EXPORT_SECCHI_DEPTH_LABEL = "Secchi_Depth_(m)"
-"""str: Export label for Secchi depth."""
-
-EXPORT_SITE_NAME_LABEL = "Site_Name"
-"""str: Export label for site name."""
-
-EXPORT_SITE_ID_LABEL = "Site_ID"
-"""str: Export label for site id."""
-
-EXPORT_OXYGEN_CONCENTRATION_LABEL = "Oxygen_Concentration_(µmol/kg)"
-"""str: Export label for dissolved oxygen concentration."""
-
-EXPORT_OXYGEN_SATURATION_LABEL = "Oxygen_Saturation_(%)"
-"""str: Export label for oxygen saturation."""
-
-EXPORT_NITRATE_LABEL = "Nitrate_(µmol/L)"
-"""str: Export label for nitrate concentration."""
-
-EXPORT_PHOSPHATE_LABEL = "Phosphate_(µmol/L)"
-"""str: Export label for phosphate concentration."""
-
-EXPORT_SILICATE_LABEL = "Silicate_(µmol/L)"
-"""str: Export label for silicate concentration."""
-
-EXPORT_PH_LABEL = "pH"
-"""str: Export label for pH value."""
-
-EXPORT_ALKALINITY_LABEL = "Alkalinity_(µmol/kg)"
-"""str: Export label for alkalinity."""
-
-EXPORT_TURBIDITY_LABEL = "Turbidity_(NTU)"
-"""str: Export label for turbidity."""
-
-EXPORT_PARTICULATE_ORGANIC_CARBON_LABEL = "Particulate_Organic_Carbon_(µmol/L)"
-"""str: Export label for particulate organic carbon."""
-
-EXPORT_TOTAL_ORGANIC_CARBON_LABEL = "Total_Organic_Carbon_(µmol/L)"
-"""str: Export label for total organic carbon."""
-
-EXPORT_PARTICULATE_INORGANIC_CARBON_LABEL = "Particulate_Inorganic_Carbon_(µmol/L)"
-"""str: Export label for particulate inorganic carbon."""
-
-EXPORT_DISSOLVED_INORGANIC_CARBON_LABEL = "Dissolved_Inorganic_Carbon_(µmol/kg)"
-"""str: Export label for dissolved inorganic carbon."""
-
-EXPORT_CHLOROPHYLL_FLUORESCENCE_LABEL = "Chlorophyll_Fluorescence_(RFU)"
-"""str: Export label for chlorophyll fluorescence."""
-
-EXPORT_PAR_LABEL = "PAR_(µmol/m²/s)"
-"""str: Export label for photosynthetically active radiation (PAR)."""
-
-EXPORT_AMMONIUM_LABEL = "Ammonium_(µmol/L)"
-"""str: Export label for ammonium concentration."""
-
-EXPORT_ORP_LABEL = "ORP_(mV)"
-"""str: Export label for oxidation-reduction potential (ORP)."""
-
-EXPORT_CLASSIFICATION_LABEL: str = "Profile_Type"
-"""str: Export label for profile type (A, B, C) column."""
-
-# ------------------------------------
-# Mapping of internal labels to export labels
-# ------------------------------------
-DATA_LABEL_MAPPING: dict[str, str] = {
-    TIMESTAMP_LABEL: EXPORT_TIMESTAMP_LABEL,
-    YEAR_LABEL: EXPORT_YEAR_LABEL,
-    MONTH_LABEL: EXPORT_MONTH_LABEL,
-    DAY_LABEL: EXPORT_DAY_LABEL,
-    FILENAME_LABEL: EXPORT_FILENAME_LABEL,
-    CHLOROPHYLL_LABEL: EXPORT_CHLOROPHYLL_LABEL,
-    TEMPERATURE_LABEL: EXPORT_TEMPERATURE_LABEL,
-    PRESSURE_LABEL: EXPORT_PRESSURE_LABEL,
-    SEA_PRESSURE_LABEL: EXPORT_SEA_PRESSURE_LABEL,
-    DEPTH_LABEL: EXPORT_DEPTH_LABEL,
-    SALINITY_LABEL: EXPORT_SALINITY_LABEL,
-    SPEED_OF_SOUND_LABEL: EXPORT_SPEED_OF_SOUND_LABEL,
-    SPECIFIC_CONDUCTIVITY_LABEL: EXPORT_SPECIFIC_CONDUCTIVITY_LABEL,
-    CONDUCTIVITY_LABEL: EXPORT_CONDUCTIVITY_LABEL,
-    DENSITY_LABEL: EXPORT_DENSITY_LABEL,
-    POTENTIAL_DENSITY_LABEL: EXPORT_POTENTIAL_DENSITY_LABEL,
-    SALINITY_ABS_LABEL: EXPORT_SALINITY_ABS_LABEL,
-    SURFACE_SALINITY_LABEL: EXPORT_SURFACE_SALINITY_LABEL,
-    SURFACE_TEMPERATURE_LABEL: EXPORT_SURFACE_TEMPERATURE_LABEL,
-    SURFACE_DENSITY_LABEL: EXPORT_SURFACE_DENSITY_LABEL,
-    MELTWATER_FRACTION_EQ_10_LABEL: EXPORT_MELTWATER_FRACTION_EQ_10_LABEL,
-    MELTWATER_FRACTION_EQ_11_LABEL: EXPORT_MELTWATER_FRACTION_EQ_11_LABEL,
-    LONGITUDE_LABEL: EXPORT_LONGITUDE_LABEL,
-    LATITUDE_LABEL: EXPORT_LATITUDE_LABEL,
-    UNIQUE_ID_LABEL: EXPORT_UNIQUE_ID_LABEL,
-    PROFILE_ID_LABEL: EXPORT_PROFILE_ID_LABEL,
-    SITE_NAME_LABEL: EXPORT_SITE_NAME_LABEL,
-    SITE_ID_LABEL: EXPORT_SITE_ID_LABEL,
-    BV_LABEL: EXPORT_BV_LABEL,
-    P_MID_LABEL: EXPORT_P_MID_LABEL,
-    SECCHI_DEPTH_LABEL: EXPORT_SECCHI_DEPTH_LABEL,
-    OXYGEN_CONCENTRATION_LABEL: EXPORT_OXYGEN_CONCENTRATION_LABEL,
-    OXYGEN_SATURATION_LABEL: EXPORT_OXYGEN_SATURATION_LABEL,
-    NITRATE_LABEL: EXPORT_NITRATE_LABEL,
-    PHOSPHATE_LABEL: EXPORT_PHOSPHATE_LABEL,
-    SILICATE_LABEL: EXPORT_SILICATE_LABEL,
-    PH_LABEL: EXPORT_PH_LABEL,
-    ALKALINITY_LABEL: EXPORT_ALKALINITY_LABEL,
-    TURBIDITY_LABEL: EXPORT_TURBIDITY_LABEL,
-    PARTICULATE_ORGANIC_CARBON_LABEL: EXPORT_PARTICULATE_ORGANIC_CARBON_LABEL,
-    TOTAL_ORGANIC_CARBON_LABEL: EXPORT_TOTAL_ORGANIC_CARBON_LABEL,
-    PARTICULATE_INORGANIC_CARBON_LABEL: EXPORT_PARTICULATE_INORGANIC_CARBON_LABEL,
-    DISSOLVED_INORGANIC_CARBON_LABEL: EXPORT_DISSOLVED_INORGANIC_CARBON_LABEL,
-    CHLOROPHYLL_FLUORESCENCE_LABEL: EXPORT_CHLOROPHYLL_FLUORESCENCE_LABEL,
-    PAR_LABEL: EXPORT_PAR_LABEL,
-    AMMONIUM_LABEL: EXPORT_AMMONIUM_LABEL,
-    ORP_LABEL: EXPORT_ORP_LABEL,
-    CLASSIFICATION_LABEL: EXPORT_CLASSIFICATION_LABEL
-}
-"""dict[str, str]: Mapping of internal column labels to export column labels."""
-
-# ------------------------------------
-# Desired column order for CSV export
-# ------------------------------------
-EXPORT_COLUMN_ORDER: list[str] = [
-    EXPORT_FILENAME_LABEL,
-    EXPORT_PROFILE_ID_LABEL,
-    EXPORT_UNIQUE_ID_LABEL,
-    EXPORT_SITE_NAME_LABEL,
-    EXPORT_SITE_ID_LABEL,
-    EXPORT_LONGITUDE_LABEL,
-    EXPORT_LATITUDE_LABEL,
-    EXPORT_TIMESTAMP_LABEL,
-    EXPORT_YEAR_LABEL,
-    EXPORT_MONTH_LABEL,
-    EXPORT_TEMPERATURE_LABEL,
-    EXPORT_PRESSURE_LABEL,
-    EXPORT_DEPTH_LABEL,
-    EXPORT_SEA_PRESSURE_LABEL,
-    EXPORT_CHLOROPHYLL_LABEL,
-    EXPORT_SALINITY_LABEL,
-    EXPORT_SPECIFIC_CONDUCTIVITY_LABEL,
-    EXPORT_CONDUCTIVITY_LABEL,
-    EXPORT_DENSITY_LABEL,
-    EXPORT_POTENTIAL_DENSITY_LABEL,
-    EXPORT_SALINITY_ABS_LABEL,
-    EXPORT_SURFACE_DENSITY_LABEL,
-    EXPORT_SPEED_OF_SOUND_LABEL,
-    EXPORT_SURFACE_SALINITY_LABEL,
-    EXPORT_SURFACE_TEMPERATURE_LABEL,
-    EXPORT_MELTWATER_FRACTION_EQ_10_LABEL,
-    EXPORT_MELTWATER_FRACTION_EQ_11_LABEL,
-    EXPORT_BV_LABEL,
-    EXPORT_P_MID_LABEL,
-    EXPORT_SECCHI_DEPTH_LABEL,
-    EXPORT_OXYGEN_CONCENTRATION_LABEL,
-    EXPORT_OXYGEN_SATURATION_LABEL,
-    EXPORT_NITRATE_LABEL,
-    EXPORT_PHOSPHATE_LABEL,
-    EXPORT_SILICATE_LABEL,
-    EXPORT_PH_LABEL,
-    EXPORT_ALKALINITY_LABEL,
-    EXPORT_TURBIDITY_LABEL,
-    EXPORT_PARTICULATE_ORGANIC_CARBON_LABEL,
-    EXPORT_TOTAL_ORGANIC_CARBON_LABEL,
-    EXPORT_PARTICULATE_INORGANIC_CARBON_LABEL,
-    EXPORT_DISSOLVED_INORGANIC_CARBON_LABEL,
-    EXPORT_CHLOROPHYLL_FLUORESCENCE_LABEL,
-    EXPORT_PAR_LABEL,
-    EXPORT_AMMONIUM_LABEL,
-    EXPORT_ORP_LABEL,
-    EXPORT_CLASSIFICATION_LABEL
-]
-"""list[str]: Desired column order for CSV export."""
 
 # ------------------------------------
 # Time string constants
@@ -537,7 +203,10 @@ LIB_LOGGER_NAME = "ctdfjorder"
 """str: Logger name for the CTDFjorder library."""
 
 # ------------------------------------
-# Default output file
+# Default output files/directories
 # ------------------------------------
 DEFAULT_OUTPUT_FILE = "ctdfjorder_data.csv"
 """str: Name of the default output file."""
+
+DEFAULT_PLOTS_FOLDER = "ctdplots"
+"""str: Name of the default plots output folder."""
