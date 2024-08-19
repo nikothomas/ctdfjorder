@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.remove_non_positive_samples
+.. autofunction:: ctdfjorder.CTD.CTD.remove_non_positive_samples

@@ -1,2 +1,2 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_speed_of_sound
+.. autofunction:: ctdfjorder.CTD.CTD.add_speed_of_sound
 

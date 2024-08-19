@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.remove_upcasts
+.. autofunction:: ctdfjorder.CTD.CTD.remove_upcasts

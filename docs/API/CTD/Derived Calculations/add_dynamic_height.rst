@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_dynamic_height
+.. autofunction:: ctdfjorder.CTD.CTD.add_dynamic_height

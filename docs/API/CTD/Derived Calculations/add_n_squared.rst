@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_n_squared
+.. autofunction:: ctdfjorder.CTD.CTD.add_n_squared

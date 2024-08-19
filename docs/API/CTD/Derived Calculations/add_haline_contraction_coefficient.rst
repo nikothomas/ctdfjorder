@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_haline_contraction_coefficient
+.. autofunction:: ctdfjorder.CTD.CTD.add_haline_contraction_coefficient

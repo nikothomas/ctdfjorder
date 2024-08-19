@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_absolute_salinity
+.. autofunction:: ctdfjorder.CTD.CTD.add_absolute_salinity

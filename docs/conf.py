@@ -50,6 +50,7 @@ html_theme_options = {
     "navbar_align": "left",
     "footer_start": ["copyright"],
     "footer_end": [],
+    "show_prev_next": False,
     "icon_links": [
         {
             # Label for this link

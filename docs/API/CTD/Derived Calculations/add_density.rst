@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_density
+.. autofunction:: ctdfjorder.CTD.CTD.add_density

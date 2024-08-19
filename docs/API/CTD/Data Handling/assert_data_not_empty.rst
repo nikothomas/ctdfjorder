@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.assert_data_not_empty
+.. autofunction:: ctdfjorder.CTD.CTD.assert_data_not_empty

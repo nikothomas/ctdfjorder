@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.filter_columns_by_range
+.. autofunction:: ctdfjorder.CTD.CTD.filter_columns_by_range
