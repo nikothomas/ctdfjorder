@@ -1221,6 +1221,7 @@ class CTD:
             # This will add a new column with dynamic height values to the dataset, calculated using the TEOS-10 formula.
             
         """
+        self.assert_data_not_empty(CTD.add_dynamic_height.__name__)
         if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
 
@@ -1238,7 +1239,6 @@ class CTD:
             pl.Series(dynamic_height, dtype=pl.Float64).alias("dynamic_height")
         )
 
-        self.assert_data_not_empty(CTD.add_dynamic_height.__name__)
 
     def add_thermal_expansion_coefficient(self) -> None:
         r"""
@@ -1283,6 +1283,7 @@ class CTD:
             # This will add a new column with thermal expansion coefficient values to the dataset, calculated using the TEOS-10 formula.
 
         """
+        self.assert_data_not_empty(CTD.add_thermal_expansion_coefficient.__name__)
         if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
         if CONSERVATIVE_TEMPERATURE.label not in self._data.columns:
@@ -1303,8 +1304,6 @@ class CTD:
                 "thermal_expansion_coefficient"
             )
         )
-
-        self.assert_data_not_empty(CTD.add_thermal_expansion_coefficient.__name__)
 
     def add_haline_contraction_coefficient(self) -> None:
         r"""
@@ -1349,11 +1348,11 @@ class CTD:
             # This will add a new column with haline contraction coefficient values to the dataset, calculated using the TEOS-10 formula.
 
         """
+        self.assert_data_not_empty(CTD.add_haline_contraction_coefficient.__name__)
         if ABSOLUTE_SALINITY.label not in self._data.columns:
             self.add_absolute_salinity()
         if CONSERVATIVE_TEMPERATURE.label not in self._data.columns:
             self.add_conservative_temperature()
-
         sa = self._data.select(pl.col(ABSOLUTE_SALINITY.label)).to_numpy().flatten()
         ct = (
             self._data.select(pl.col(CONSERVATIVE_TEMPERATURE.label))
@@ -1369,8 +1368,6 @@ class CTD:
                 "haline_contraction_coefficient"
             )
         )
-
-        self.assert_data_not_empty(CTD.add_haline_contraction_coefficient.__name__)
 
     def add_mld(
             self, method: str = "potential_density_avg", delta: float | None = 0.05, reference: int | None = 10

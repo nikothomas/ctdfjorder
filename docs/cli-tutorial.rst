@@ -2,6 +2,8 @@ CLI Tutorial
 =============
 .. role:: console(code)
    :language: console
+.. role:: python(code)
+   :language: python
 
 The following tutorial is for CLI users, if you are using the library to write your own Python or R scripts then you'll want to read
 :doc:`developers`.
@@ -18,11 +20,11 @@ To do this, open your terminal (MacOS/Linux) or command prompt (Windows) and run
    $ conda create --name ctdfjorder python=3.12
    $ conda activate ctdfjorder
 
-To use CTDFjorder, first install it using pip:
+Then install CTDFjorder using pip:
 
 .. code-block:: console
 
-   (ctdfjorder) $ pip install ctdfjorder
+   (ctdfjorder)$ pip install ctdfjorder
 
 Navigate to your files
 ----------------------
@@ -63,14 +65,14 @@ For the purposes of this demo are assuming that you have the following:
 
 If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
-
+Members of FjordPhyto can use this token :code:`pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiOiJjbHl2Z2JzbDQxZjEwMmpwd2c1cnJpYmRyIn0.j9l0EXWa2ik51AbAcIe5HQ`
 .. tip::
 
-    Are you a member of Fjord Phyto? If so run command this instead :console:`ctdcli fjord --token pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiOiJjbHl2Z2JzbDQxZjEwMmpwd2c1cnJpYmRyIn0.j9l0EXWa2ik51AbAcIe5HQ`
+    Add plotting by including :code:`-p` in the command.
 
 .. code-block:: console
 
-   (ctdfjorder) $ ctdcli default -r -p -m "mastersheet.csv" -w 4 --show-status --token MY_TOKEN
+   (ctdfjorder) $ ctdcli default -r --token MY_TOKEN
 
 Interpret output
 ----------------
@@ -82,6 +84,29 @@ Once all files are completed, a map will open as well. The points are individual
   module.
 * There you will also find a **ctdfjorder_data.csv** with our processed data.
 * To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
+
+Steps
+-----
+These are the functions we ran through the CLI on each file in this tutorial:
+
+.. code-block:: python
+
+    data = CTD(file)
+    data.expand_date(day=False)
+    data.remove_upcasts()
+    data.remove_non_positive_samples()
+    data.filter_columns_by_range(column='salinity', upper_bound=None, lower_bound=10)
+    data.add_metadata(master_sheet_path='mastersheet.csv')
+    data.clean(method='clean_salinity_ai')
+    data.add_surface_salinity()
+    data.add_surface_temperature()
+    data.add_meltwater_fraction()
+    data.add_absolute_salinity()
+    data.add_density()
+    data.add_potential_density()
+    data.add_n_squared()
+    data.add_mld_bf()
+    data.add_profile_classification()
 
 Congrats! You can now use CTDFjorder to investigate your ctd data. For more in depth information on the processes
 executed here, read the :doc:`./API/index`.

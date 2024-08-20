@@ -3,15 +3,10 @@ import shutil
 import sys
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from contextlib import ExitStack
 from os import path, listdir, remove, mkdir, getcwd
-from warnings import catch_warnings
-from typing import List
 import signal
-
 import polars as pl
 import psutil
-from polars.exceptions import ChronoFormatWarning
 from rich.console import Console
 from rich.panel import Panel
 from rich.pretty import Pretty
@@ -22,7 +17,7 @@ from rich import print as richprint
 from rich_argparse import RichHelpFormatter
 
 from ctdfjorder.visualize import ctd_plot
-from ctdfjorder.exceptions.exceptions import CTDError, MissingMasterSheetError, CTDCorruptError
+from ctdfjorder.exceptions.exceptions import CTDError, MissingMasterSheetError
 from ctdfjorder.CTD import CTD
 from ctdfjorder.utils.utils import save_to_csv
 from ctdfjorder.constants.constants import *
@@ -64,6 +59,7 @@ null_values = [
     " ",
 ]
 
+
 def process_ctd_file(
     file: str,
     plot: bool,
@@ -72,8 +68,6 @@ def process_ctd_file(
     verbosity: int,
     plots_folder: str,
     filters: zip | None,
-    mld_ref: list[int] | None,
-    mld_delta: list[float] | None,
 ):
     """
     Processes a CTD file through a series of data cleaning and analysis steps.
@@ -93,11 +87,7 @@ def process_ctd_file(
     plots_folder : str
         The folder to save plots in.
     filters : list
-        List of filters to apply to the data.
-    mld_ref : list[int]
-        List of reference densities for calculating MLD.
-    mld_delta : list[float]
-        List of delta values for calculating MLD.
+        Filters to apply to the data.
 
     Returns
     -------
@@ -126,8 +116,13 @@ def process_ctd_file(
         stage += 1
 
         data.expand_date(day=False)
-        # Filter
+        # Filter and Remove Invalid Salinity Values
         data.filter_columns_by_range(filters=filters)
+        data.filter_columns_by_range(
+            column="salinity", upper_bound=None, lower_bound=10
+        )
+        status.append("green")
+        stage += 1
         status.append("green")
         stage += 1
 
@@ -141,20 +136,13 @@ def process_ctd_file(
         status.append("green")
         stage += 1
 
-        # Remove Invalid Salinity Values
-        data.filter_columns_by_range(
-            column="salinity", upper_bound=None, lower_bound=10
-        )
-        status.append("green")
-        stage += 1
-
         # Add Metadata
-        data.add_metadata(master_sheet_path="mastersheet.csv", master_sheet_polars=cached_master_sheet)
+        data.add_metadata(master_sheet_path=master_sheet_path, master_sheet_polars=cached_master_sheet)
         status.append("green")
         stage += 1
 
         # Clean Salinity AI
-        data.clean("clean_salinity_ai")
+        data.clean(method="clean_salinity_ai")
         status.append("green")
         stage += 1
 
@@ -180,18 +168,13 @@ def process_ctd_file(
         status.append("green")
         stage += 1
 
-        # Add BV Squared
+        # Add N Squared
         data.add_n_squared()
         status.append("green")
         stage += 1
 
         # Add MLD
-        if mld_ref and mld_delta:
-            for ref in mld_ref:
-                for delta in mld_delta:
-                    data.add_mld(reference=ref, delta=delta, method="potential_density_avg")
-        else:
-            data.add_mld_bf()
+        data.add_mld_bf()
         status.append("green")
         stage += 1
 
@@ -199,9 +182,9 @@ def process_ctd_file(
         data.add_profile_classification()
         status.append("green")
         stage += 1
-
-        # Plot
-        plot_data(data.get_df(), plots_folder)
+        if plot:
+            # Plot
+            plot_data(data.get_df(), plots_folder)
         status.append("green")
         stage += 1
 
@@ -209,11 +192,11 @@ def process_ctd_file(
         return data.get_df(), status
 
     except CTDError as error:
-        logger.exception(error)
+        logger.error(error)
         status.extend(["red"] * (15 - stage))
         return None, status
     except ValueError as error:
-        logger.exception(CTDError(str(error)))
+        logger.error(error)
         status.extend(["red"] * (15 - stage))
         return None, status
     except KeyboardInterrupt:
@@ -279,7 +262,7 @@ def generate_status_table(status_table):
         "Add Potential Density",
         "Add MLD",
         "Classify Profile",
-        "Add BV Squared",
+        "Add N Squared",
         "Plot",
     ]
     table = Table(box=box.SQUARE)
@@ -301,8 +284,6 @@ def run_default(
     status_show: bool,
     mapbox_access_token: str | None,
     filters: zip | None,
-    mld_ref: list[int] | None = None,
-    mld_delta: list[float] | None = None,
 ):
     """
     Runs the default processing pipeline for CTD files.
@@ -327,10 +308,6 @@ def run_default(
         The Mapbox access token for generating interactive maps.
     filters : zip or None
         Filters to apply to the data.
-    mld_ref : list[int]
-        Reference densities for calculating MLD.
-    mld_delta : list[float]
-        Delta values for calculating MLD.
 
     Notes
     -----
@@ -393,8 +370,6 @@ def run_default(
                         verbosity=verbosity,
                         plots_folder=plots_folder,
                         filters=filters,
-                        mld_ref=mld_ref,
-                        mld_delta=mld_delta,
                     ): file
                     for file in files
                 }
@@ -425,8 +400,6 @@ def run_default(
                     results,
                     total_files,
                     output_file,
-                    plot,
-                    plots_folder,
                     mapbox_access_token,
                 )
 
@@ -444,7 +417,7 @@ def run_default(
 
 
 def process_results(
-    results, total_files, output_file, plot, plots_folder, mapbox_access_token
+    results, total_files, output_file, mapbox_access_token
 ):
     """
     Processes the results of the CTD file processing pipeline.
@@ -457,10 +430,6 @@ def process_results(
         The total number of files processed.
     output_file : str
         The path to the output CSV file.
-    plot : bool
-        Flag indicating whether to generate plots.
-    plots_folder : str
-        The folder to save plots in.
     mapbox_access_token : str
         The Mapbox access token for generating interactive maps.
 
@@ -681,12 +650,7 @@ def build_parser():
         help="Run the default processing pipeline",
         formatter_class=RichHelpFormatter,
     )
-    parser_fjord = subparsers.add_parser(
-        "fjord",
-        help="Run the Fjord Phyto processing pipeline",
-    )
     add_arguments_default(parser_default)
-    add_arguments_fjord(parser_fjord)
     return parser
 
 
@@ -710,150 +674,13 @@ def build_parser_docs():
         "default",
         help="Run the default processing pipeline",
     )
-    parser_fjord = subparsers.add_parser(
-        "fjord",
-        help="Run the Fjord Phyto processing pipeline",
-    )
     add_arguments_default(parser_default)
-    add_arguments_fjord(parser_fjord)
     return parser
 
 
 def add_arguments_default(parser):
     """
     Adds arguments to the default argument parser.
-
-    Parameters
-    ----------
-    parser : argparse.ArgumentParser
-        The argument parser to add arguments to.
-
-    Notes
-    -----
-    This function adds various command-line arguments to the parser, including options for plotting,
-    verbosity, resetting the file environment, showing processing status, running in debug mode,
-    specifying the master sheet path, setting the number of worker processes, providing a Mapbox token,
-    and defining filters for data columns.
-    """
-    parser.add_argument("-p", "--plot", action="store_true", help="Generate plots")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        dest="verbosity",
-        default=0,
-        help="Verbose logger output to ctdfjorder.log (repeat for increased verbosity)",
-    )
-    parser.add_argument(
-        "--mld-ref",
-        type=int,
-        nargs="+",
-        default=20,
-        help="Reference value(s) for mld calculation.",
-        choices=[
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-        ],
-    )
-    parser.add_argument(
-        "--mld-delta",
-        type=float,
-        nargs="+",
-        default=0.05,
-        help="Delta value(s) for mld calculation.",
-        choices=[0.01, 0.02, 0.03, 0.04, 0.05],
-    )
-    parser.add_argument(
-        "-q",
-        "--quiet",
-        action="store_const",
-        const=-1,
-        default=0,
-        dest="verbosity",
-        help="Quiet output (show errors only)",
-    )
-    parser.add_argument(
-        "-r", "--reset", action="store_true", help="Reset file environment"
-    )
-    parser.add_argument(
-        "-s",
-        "--show-status",
-        action="store_true",
-        help="Show processing status and pipeline status",
-    )
-    parser.add_argument(
-        "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
-    )
-    parser.add_argument("-m", "--mastersheet", type=str, help="Path to mastersheet")
-    parser.add_argument(
-        "-w", "--workers", type=int, nargs="?", const=1, help="Max workers"
-    )
-    parser.add_argument(
-        "--token",
-        type=str,
-        default=None,
-        help="MapBox token to enable interactive map plot",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        default=str(DEFAULT_OUTPUT_FILE),
-        help="Output file path",
-    )
-    parser.add_argument(
-        "--filter-columns",
-        nargs="*",
-        type=str,
-        required=False,
-        default=None,
-        help="List of columns to filter",
-        choices=[feature.label for feature in ALL_SAMPLE_FEATURES],
-    )
-    parser.add_argument(
-        "--filter-upper",
-        nargs="*",
-        type=float,
-        required=False,
-        default=None,
-        help="Upper bounds for the filtered columns",
-    )
-    parser.add_argument(
-        "--filter-lower",
-        nargs="*",
-        type=float,
-        required=False,
-        default=None,
-        help="Lower bounds for the filtered columns",
-    )
-
-
-def add_arguments_fjord(parser):
-    """
-    Adds arguments to the fjord argument parser.
 
     Parameters
     ----------
@@ -954,40 +781,20 @@ def main():
         signal.signal(sig, signal_handler)
     parser = build_parser()
     args = parser.parse_args()
-    if args.command == "default":
-        filters = create_filters(args)
-        if args.reset:
-            reset_file_environment()
-        display_config(args)
-        run_default(
-            plot=args.plot,
-            master_sheet_path=args.mastersheet,
-            max_workers=args.workers,
-            verbosity=args.verbosity,
-            output_file=args.output,
-            debug_run=args.debug_run,
-            status_show=args.show_status,
-            mapbox_access_token=args.token,
-            filters=filters,
-        )
-        sys.exit()
-    if args.command == "fjord":
-        reset_file_environment()
-        filters = create_filters(args)
-        display_config(args)
-        run_default(
-            plot=args.plot,
-            master_sheet_path=args.mastersheet,
-            max_workers=args.workers,
-            verbosity=args.verbosity,
-            output_file=args.output,
-            debug_run=args.debug_run,
-            status_show=True,
-            mapbox_access_token=args.token,
-            filters=filters,
-            mld_ref=None,
-            mld_delta=None,
-        )
+    reset_file_environment()
+    filters = create_filters(args)
+    display_config(args, filters)
+    run_default(
+        plot=args.plot,
+        master_sheet_path=args.mastersheet,
+        max_workers=args.workers,
+        verbosity=args.verbosity,
+        output_file=args.output,
+        debug_run=args.debug_run,
+        status_show=True,
+        mapbox_access_token=args.token,
+        filters=filters,
+    )
 
 
 def create_filters(args):
@@ -998,7 +805,6 @@ def create_filters(args):
     ----------
     args : argparse.Namespace
         The parsed command-line arguments.
-
     Returns
     -------
     list[tuple] | None
@@ -1017,7 +823,7 @@ def create_filters(args):
     return None
 
 
-def display_config(args):
+def display_config(args, filters):
     """
     Displays the configuration of the processing pipeline.
 
@@ -1025,6 +831,8 @@ def display_config(args):
     ----------
     args : argparse.Namespace
         The parsed command-line arguments.
+    filters : zip or None
+        Filters to apply to the data.
 
     Notes
     -----
