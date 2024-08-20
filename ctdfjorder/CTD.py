@@ -1588,8 +1588,8 @@ class CTD:
         # Check if required columns exist
         self.assert_data_not_empty(CTD.add_mld_bf.__name__)
         self._data = self._data.with_columns(
-            pl.lit(None, dtype=pl.Float64).alias("MLD_BF_(m)"),
-            pl.lit(None, dtype=pl.Float64).alias("Quality_Index")
+            pl.lit(None, dtype=pl.Float64).alias(MLD_N2.label),
+            pl.lit(None, dtype=pl.Float64).alias(QUALITY_INDEX.label)
         )
         for profile_id in (
                 self._data.select(PROFILE_ID.label)
@@ -1607,6 +1607,8 @@ class CTD:
                 profile_up_to_mld_1dot5 = profile
             std_A1 = profile_up_to_mld.select(pl.col(POTENTIAL_DENSITY.label).std()).item()
             if std_A1 is None:
+                print(mld)
+                print(profile_up_to_mld)
                 # Reintegration of the updated profile into the main dataset
                 self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
                 self._data = self._data.vstack(profile)
@@ -1614,11 +1616,12 @@ class CTD:
             std_A2 = profile_up_to_mld_1dot5.select(pl.col(POTENTIAL_DENSITY.label).std()).item()
             qi = 1 - (std_A1/std_A2)
             if qi >= min_qi:
-                profile = profile.with_columns(pl.lit(mld).alias("MLD_BF_(m)"),
-                                               pl.lit(qi).alias("Quality_Index"))
+                profile = profile.with_columns(pl.lit(mld).alias(MLD_N2.label),
+                                               pl.lit(qi).alias(QUALITY_INDEX.label))
             # Reintegration of the updated profile into the main dataset
             self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = self._data.vstack(profile)
+
     def add_n_squared(self) -> None:
         r"""
         Calculates buoyancy frequency squared and adds it to the CTD data.
@@ -1692,7 +1695,7 @@ class CTD:
             t = profile.select(pl.col(TEMPERATURE.label)).to_numpy().flatten()
             p = profile.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()
             lat = profile.select(pl.col(LATITUDE.label)).to_numpy().flatten()
-            ct = gsw.CT_from_t(sa, t, p).flatten()
+            ct = gsw.CT_from_t(SA=sa, t=t, p=p).flatten()
             try:
                 n_2, p_mid = gsw.Nsquared(SA=sa, CT=ct, p=p, lat=lat)
             except ValueError:

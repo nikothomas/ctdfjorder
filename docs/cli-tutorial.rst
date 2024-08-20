@@ -66,9 +66,10 @@ For the purposes of this demo are assuming that you have the following:
 If you meet those conditions make your terminal window fullscreen.
 Then copy and paste the following into your terminal, and replace :code:`MY_TOKEN` with your public MapBox token.
 Members of FjordPhyto can use this token :code:`pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiOiJjbHl2Z2JzbDQxZjEwMmpwd2c1cnJpYmRyIn0.j9l0EXWa2ik51AbAcIe5HQ`
+
 .. tip::
 
-    Add plotting by including :code:`-p` in the command.
+    Add plotting by including :code:`-p` in the command, like so :code:`ctdcli default -r -p --token MY_TOKEN`
 
 .. code-block:: console
 
