@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.save_to_csv
+.. autofunction:: ctdfjorder.CTD.CTD.save_to_csv

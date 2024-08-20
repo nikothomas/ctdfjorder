@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.get_df
+.. autofunction:: ctdfjorder.CTD.CTD.get_df

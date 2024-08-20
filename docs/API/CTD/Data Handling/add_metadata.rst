@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_metadata
+.. autofunction:: ctdfjorder.CTD.CTD.add_metadata

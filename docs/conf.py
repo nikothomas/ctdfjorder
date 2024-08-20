@@ -23,7 +23,7 @@ print(font_manager.findSystemFonts(fontpaths=font_dirs))
 project = 'CTDFjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.8.3'
+release = '0.8.4'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -50,6 +50,7 @@ html_theme_options = {
     "navbar_align": "left",
     "footer_start": ["copyright"],
     "footer_end": [],
+    "show_prev_next": False,
     "icon_links": [
         {
             # Label for this link

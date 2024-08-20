@@ -86,7 +86,8 @@ PAR = SampleFeature(label="par", export_label="PAR_(µmol/m²/s)", unit="µmol/m
 AMMONIUM = SampleFeature(label="ammonium", export_label="Ammonium_(µmol/L)", unit="µmol/L", pl_unit=pl.Float32)
 ORP = SampleFeature(label="orp", export_label="ORP_(mV)", unit="mV", pl_unit=pl.Float32)
 CLASSIFICATION = SampleFeature(label="profile_type", export_label="Profile_Type", unit="", pl_unit=pl.Categorical)
-
+QUALITY_INDEX = SampleFeature(label="mld_quality_index", export_label="MLD_Quality_Index", unit="", pl_unit=pl.Float32)
+MLD_N2 = SampleFeature(label="MLD_BF", export_label="MLD_BF_(m)", unit="(m)", pl_unit=pl.Float32)
 # List of all Sample_Feature instances
 ALL_SAMPLE_FEATURES = [
     # Identification and metadata
@@ -130,6 +131,78 @@ ALL_SAMPLE_FEATURES = [
     # Other
     ORP  # Oxidation-Reduction Potential
 ]
+
+RELABEL_DICT = {
+    # Identification and metadata
+    FILENAME.label: FILENAME.export_label,
+    UNIQUE_ID.label: UNIQUE_ID.export_label,
+    PROFILE_ID.label: PROFILE_ID.export_label,
+    SITE_ID.label: SITE_ID.export_label,
+    SITE_NAME.label: SITE_NAME.export_label,
+
+    # Temporal data
+    TIMESTAMP.label: TIMESTAMP.export_label,
+    YEAR.label: YEAR.export_label,
+    MONTH.label: MONTH.export_label,
+    DAY.label: DAY.export_label,
+
+    # Spatial data
+    LATITUDE.label: LATITUDE.export_label,
+    LONGITUDE.label: LONGITUDE.export_label,
+
+    # Primary measurements
+    DEPTH.label: DEPTH.export_label,
+    PRESSURE.label: PRESSURE.export_label,
+    SEA_PRESSURE.label: SEA_PRESSURE.export_label,
+    P_MID.label: P_MID.export_label,
+    TEMPERATURE.label: TEMPERATURE.export_label,
+    CONSERVATIVE_TEMPERATURE.label: CONSERVATIVE_TEMPERATURE.export_label,
+    SALINITY.label: SALINITY.export_label,
+    ABSOLUTE_SALINITY.label: ABSOLUTE_SALINITY.export_label,
+    DENSITY.label: DENSITY.export_label,
+    POTENTIAL_DENSITY.label: POTENTIAL_DENSITY.export_label,
+
+    # Derived or calculated values
+    SURFACE_TEMPERATURE.label: SURFACE_TEMPERATURE.export_label,
+    SURFACE_SALINITY.label: SURFACE_SALINITY.export_label,
+    SURFACE_DENSITY.label: SURFACE_DENSITY.export_label,
+    MELTWATER_FRACTION_EQ_10.label: MELTWATER_FRACTION_EQ_10.export_label,
+    MELTWATER_FRACTION_EQ_11.label: MELTWATER_FRACTION_EQ_11.export_label,
+    N2.label: N2.export_label,
+    CLASSIFICATION.label: CLASSIFICATION.export_label,
+
+    # Additional physical properties
+    CONDUCTIVITY.label: CONDUCTIVITY.export_label,
+    SPECIFIC_CONDUCTIVITY.label: SPECIFIC_CONDUCTIVITY.export_label,
+    SPEED_OF_SOUND.label: SPEED_OF_SOUND.export_label,
+
+    # Chemical properties
+    OXYGEN_CONCENTRATION.label: OXYGEN_CONCENTRATION.export_label,
+    OXYGEN_SATURATION.label: OXYGEN_SATURATION.export_label,
+    PH.label: PH.export_label,
+    ALKALINITY.label: ALKALINITY.export_label,
+    NITRATE.label: NITRATE.export_label,
+    PHOSPHATE.label: PHOSPHATE.export_label,
+    SILICATE.label: SILICATE.export_label,
+    AMMONIUM.label: AMMONIUM.export_label,
+
+    # Organic content
+    PARTICULATE_ORGANIC_CARBON.label: PARTICULATE_ORGANIC_CARBON.export_label,
+    TOTAL_ORGANIC_CARBON.label: TOTAL_ORGANIC_CARBON.export_label,
+    PARTICULATE_INORGANIC_CARBON.label: PARTICULATE_INORGANIC_CARBON.export_label,
+    DISSOLVED_INORGANIC_CARBON.label: DISSOLVED_INORGANIC_CARBON.export_label,
+
+    # Optical properties
+    SECCHI_DEPTH.label: SECCHI_DEPTH.export_label,
+    TURBIDITY.label: TURBIDITY.export_label,
+    CHLOROPHYLL.label: CHLOROPHYLL.export_label,
+    CHLOROPHYLL_FLUORESCENCE.label: CHLOROPHYLL_FLUORESCENCE.export_label,
+    PAR.label: PAR.export_label,  # Photosynthetically Active Radiation
+
+    # Other
+    ORP.label: ORP.export_label  # Oxidation-Reduction Potential
+}
+
 
 # ------------------------------------
 # Time string constants

@@ -22,14 +22,8 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
     null_value : str
         The value that will fill blank cells in the data.
     """
-
     def relabel_ctd_data(label: str) -> str:
-        for feature in ALL_SAMPLE_FEATURES:
-            if feature.label == label:
-                return feature.export_label
-            else:
-                return label
-
+        return RELABEL_DICT.get(label, label)
     # Rename columns
     renamed_data = data.rename(relabel_ctd_data)
 
@@ -43,10 +37,12 @@ def save_to_csv(data: pl.DataFrame, output_file: str, null_value: str | None):
     missing_columns = [
         col for col in renamed_data.columns if col not in present_columns
     ]
+
     if missing_columns:
         missing_data = renamed_data.select(missing_columns)
-        reordered_data = pl.concat([reordered_data, missing_data], how="diagonal_relaxed")
+        reordered_data = pl.concat([reordered_data, missing_data], how="horizontal")
 
+    print(reordered_data)
     # Create metadata
     if output_file == "ctdfjorder_data.csv":
         creation_date = datetime.now().strftime("%Y%m%d%H%M%S")

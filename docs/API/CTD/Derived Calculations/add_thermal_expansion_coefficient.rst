@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_thermal_expansion_coefficient
+.. autofunction:: ctdfjorder.CTD.CTD.add_thermal_expansion_coefficient

@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.clean
+.. autofunction:: ctdfjorder.CTD.CTD.clean

@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_meltwater_fraction
+.. autofunction:: ctdfjorder.CTD.CTD.add_meltwater_fraction

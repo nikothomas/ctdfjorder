@@ -10,40 +10,40 @@ Data Handling
 -------------
 Methods for loading, accessing, and ensuring data integrity.
 
-* :doc:`get_df <./Data Handling/get_df>`
-* :doc:`assert_data_not_empty <./Data Handling/assert_data_not_empty>`
-* :doc:`add_metadata <./Data Handling/add_metadata>`
-* :doc:`expand_date <./Data Handling/expand_date>`
+* :py:meth:`~ctdfjorder.CTD.CTD.get_df`
+* :py:meth:`~ctdfjorder.CTD.CTD.assert_data_not_empty`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_metadata`
+* :py:meth:`~ctdfjorder.CTD.CTD.expand_date`
 
 Data Cleaning
 -------------
 Methods to clean and prepare CTD data for analysis.
 
-* :doc:`filter_columns_by_range <./Data Cleaning/filter_columns_by_range>`
-* :doc:`remove_non_positive_samples <./Data Cleaning/remove_non_positive_samples>`
-* :doc:`remove_upcasts <./Data Cleaning/remove_upcasts>`
-* :doc:`clean <./Data Cleaning/clean>`
+* :py:meth:`~ctdfjorder.CTD.CTD.filter_columns_by_range`
+* :py:meth:`~ctdfjorder.CTD.CTD.remove_non_positive_samples`
+* :py:meth:`~ctdfjorder.CTD.CTD.remove_upcasts`
+* :py:meth:`~ctdfjorder.CTD.CTD.clean`
 
 Derived Calculations
 ---------------------
 Methods to calculate additional parameters and metrics from the raw CTD data.
 
-* :doc:`add_absolute_salinity <./Derived Calculations/add_absolute_salinity>`
-* :doc:`add_density <./Derived Calculations/add_density>`
-* :doc:`add_potential_density <./Derived Calculations/add_potential_density>`
-* :doc:`add_mean_surface_density <./Derived Calculations/add_mean_surface_density>`
-* :doc:`add_surface_salinity <./Derived Calculations/add_surface_salinity>`
-* :doc:`add_surface_temperature <./Derived Calculations/add_surface_temperature>`
-* :doc:`add_meltwater_fraction <./Derived Calculations/add_meltwater_fraction>`
-* :doc:`add_mld <./Derived Calculations/add_mld>`
-* :doc:`add_n_squared <./Derived Calculations/add_n_squared>`
-* :doc:`add_potential_temperature <./Derived Calculations/add_potential_temperature>`
-* :doc:`add_conservative_temperature <./Derived Calculations/add_conservative_temperature>`
-* :doc:`add_dynamic_height <./Derived Calculations/add_dynamic_height>`
-* :doc:`add_thermal_expansion_coefficient <./Derived Calculations/add_thermal_expansion_coefficient>`
-* :doc:`add_haline_contraction_coefficient <./Derived Calculations/add_haline_contraction_coefficient>`
-* :doc:`add_speed_of_sound <./Derived Calculations/add_speed_of_sound>`
-* :doc:`add_profile_classification <./Derived Calculations/add_profile_classification>`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_absolute_salinity`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_density`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_potential_density`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_mean_surface_density`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_surface_salinity`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_surface_temperature`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_meltwater_fraction`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_mld`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_n_squared`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_potential_temperature`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_conservative_temperature`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_dynamic_height`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_thermal_expansion_coefficient`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_haline_contraction_coefficient`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_speed_of_sound`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_profile_classification`
 
 Exporting Data
 --------------

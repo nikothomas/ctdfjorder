@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_conservative_temperature
+.. autofunction:: ctdfjorder.CTD.CTD.add_conservative_temperature

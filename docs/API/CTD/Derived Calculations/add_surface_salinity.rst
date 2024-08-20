@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_surface_salinity
+.. autofunction:: ctdfjorder.CTD.CTD.add_surface_salinity

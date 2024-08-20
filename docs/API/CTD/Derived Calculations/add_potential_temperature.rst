@@ -1,1 +1,1 @@
-.. automethod:: ctdfjorder.CTD.CTD.add_potential_temperature
+.. autofunction:: ctdfjorder.CTD.CTD.add_potential_temperature
