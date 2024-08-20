@@ -1607,8 +1607,6 @@ class CTD:
                 profile_up_to_mld_1dot5 = profile
             std_A1 = profile_up_to_mld.select(pl.col(POTENTIAL_DENSITY.label).std()).item()
             if std_A1 is None:
-                print(mld)
-                print(profile_up_to_mld)
                 # Reintegration of the updated profile into the main dataset
                 self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
                 self._data = self._data.vstack(profile)
