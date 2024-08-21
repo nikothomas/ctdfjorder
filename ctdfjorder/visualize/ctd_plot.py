@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 from ctdfjorder.constants.constants import *
-from statsmodels.api import nonparametric
+import statsmodels.api as sm
 import polars as pl
 from dash import dcc, html, dash
 from dash.dependencies import Input, Output, State
@@ -351,7 +351,7 @@ def plot_depth_vs(
             TEMPERATURE.label: "Temperature (°C)",
         }
         if plot_type == "line":
-            lowess = nonparametric.lowess
+            lowess = sm.nonparametric.lowess
             y, x = zip(
                 *lowess(
                     profile.select(pl.col(f"{measurement}")).to_numpy(),
