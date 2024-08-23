@@ -2,7 +2,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 from ctdfjorder.constants.constants import *
-import statsmodels.api as sm
 import polars as pl
 from dash import dcc, html, dash
 from dash.dependencies import Input, Output, State
@@ -310,7 +309,7 @@ def plot_depth_vs(
     plot_folder : str
         The path to the folder where plots will be saved.
     plot_type : str, optional
-        The type of plot to generate. Options are 'line' or 'scatter'. Defaults to 'scatter'.
+        The type of plot to generate. Options are 'scatter'. Defaults to 'scatter'.
 
     Notes
     -----
@@ -350,26 +349,12 @@ def plot_depth_vs(
             POTENTIAL_DENSITY.label: "Potential Density (kg/m^3)",
             TEMPERATURE.label: "Temperature (°C)",
         }
-        if plot_type == "line":
-            lowess = sm.nonparametric.lowess
-            y, x = zip(
-                *lowess(
-                    profile.select(pl.col(f"{measurement}")).to_numpy(),
-                    profile.select(pl.col(DEPTH.label)).to_numpy(),
-                    frac=0.1,
-                )
-            )
-        else:
-            x, y = (
-                profile.select(pl.col(f"{measurement}")).to_numpy(),
-                profile.select(pl.col(DEPTH.label)).to_numpy(),
-            )
-        (
-            ax1.plot(x, y, color=color_map[measurement], label=label_map[measurement])
-            if plot_type == "line"
-            else ax1.scatter(
-                x, y, color=color_map[measurement], label=label_map[measurement]
-            )
+        x, y = (
+            profile.select(pl.col(f"{measurement}")).to_numpy(),
+            profile.select(pl.col(DEPTH.label)).to_numpy(),
+        )
+        ax1.scatter(
+            x, y, color=color_map[measurement], label=label_map[measurement]
         )
         ax1.set_xlabel(label_map[measurement], color=color_map[measurement])
         ax1.set_ylabel("Depth (m)")
