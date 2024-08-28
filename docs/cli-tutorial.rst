@@ -76,16 +76,20 @@ Members of FjordPhyto can use this token :code:`pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiO
    (ctdfjorder) $ ctdcli default -r -m mastersheet.csv --token MY_TOKEN
 
 Here we are telling CTDFjorder the following:
+
 * :console:`-r` Reset our file environment (delete old plots and remake folders)
+
 * :console:`-m` The location of our mastersheet
-* :console: `--token` Our token to interact with MapBox and generate our map.
+
+* :console:`--token` Our token to interact with MapBox and generate our map.
+
 Interpret output
 ----------------
 If you see a spinning globe you did it! Once the files are done processing a table will print with pipeline information
 for each file. Green means the file passed a step and red means an error occurred such that the file could not continue to be processed.
 Once all files are completed, a map will open as well. The points are individual casts. The map can be filtered.
 
-* Plots are in the **ctdplots** folder next to our original data and were made with functions from the :doc:`./API/Visualize/index`
+* If you used the :console:`-p` option then plots are in the **ctdplots** folder next to our original data and were made with functions from the :doc:`./API/Visualize/index`
   module.
 * There you will also find a **ctdfjorder_data.csv** with our processed data.
 * To investigate files that did not pass the pipeline open the **ctdfjorder.log** file.
