@@ -137,7 +137,8 @@ def process_ctd_file(
         stage += 1
 
         # Add Metadata
-        data.add_metadata(master_sheet_path=master_sheet_path, master_sheet_polars=cached_master_sheet)
+        if type(master_sheet_path) is not type(None):
+            data.add_metadata(master_sheet_path=master_sheet_path, master_sheet_polars=cached_master_sheet)
         status.append("green")
         stage += 1
 
@@ -341,17 +342,18 @@ def run_default(
         spinner="earth",
         console=console,
     ) as status_master_sheet:
-        try:
-            status_master_sheet.start()
-            cached_master_sheet = (
-                MasterSheet(master_sheet_path, null_values=null_values) if master_sheet_path else None
-            )
-        except MissingMasterSheetError as e:
-            status_master_sheet.stop()
-            console.print(e, style="white on red")
-            continue_no_mastersheet = Confirm.ask("Continue without mastersheet?")
-            if not continue_no_mastersheet:
-                sys.exit()
+        if type(master_sheet_path) is not type(None):
+            try:
+                status_master_sheet.start()
+                cached_master_sheet = (
+                    MasterSheet(master_sheet_path, null_values=null_values) if master_sheet_path else None
+                )
+            except MissingMasterSheetError as e:
+                status_master_sheet.stop()
+                console.print(e, style="white on red")
+                continue_no_mastersheet = Confirm.ask("Continue without mastersheet?")
+                if not continue_no_mastersheet:
+                    sys.exit()
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         try:
             with Status(
@@ -450,15 +452,6 @@ def process_results(
                 subtitle=f"Errors/Total: {total_files - len(results)}/{total_files}",
             )
             pl.Config.set_tbl_rows(-1)
-            df_test = df.unique(
-                subset=["filename", PROFILE_ID.label], keep="first"
-            ).select(
-                pl.col("filename"),
-                pl.col("unique_id"),
-                pl.col(TIMESTAMP.label),
-                pl.col(PROFILE_ID.label),
-            )
-            df_test.write_csv(path.join(get_cwd(), "UniqueIDs"))
             richprint(panel)
             df = save_to_csv(df, output_file, None)
 
@@ -724,7 +717,7 @@ def add_arguments_default(parser):
     parser.add_argument(
         "-d", "--debug-run", action="store_true", help="Run 20 files for testing"
     )
-    parser.add_argument("-m", "--mastersheet", type=str, default="mastersheet.csv",  help="Path to mastersheet")
+    parser.add_argument("-m", "--mastersheet", type=str, default=None,  help="Path to mastersheet")
     parser.add_argument(
         "-w", "--workers", type=int, nargs="?", const=8, help="Max workers"
     )

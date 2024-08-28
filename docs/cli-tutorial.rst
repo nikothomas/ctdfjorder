@@ -73,8 +73,12 @@ Members of FjordPhyto can use this token :code:`pk.eyJ1Ijoibmlrb3Rob21hcyIsImEiO
 
 .. code-block:: console
 
-   (ctdfjorder) $ ctdcli default -r --token MY_TOKEN
+   (ctdfjorder) $ ctdcli default -r -m mastersheet.csv --token MY_TOKEN
 
+Here we are telling CTDFjorder the following:
+* :console:`-r` Reset our file environment (delete old plots and remake folders)
+* :console:`-m` The location of our mastersheet
+* :console: `--token` Our token to interact with MapBox and generate our map.
 Interpret output
 ----------------
 If you see a spinning globe you did it! Once the files are done processing a table will print with pipeline information
