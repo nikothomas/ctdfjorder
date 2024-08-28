@@ -32,6 +32,8 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
 
     lat_median = df.select(pl.col(LATITUDE.export_label).median().first()).item()
     long_median = df.select(pl.col(LONGITUDE.export_label).median().first()).item()
+    if UNIQUE_ID.export_label not in df.columns:
+        df = df.with_columns((pl.col(FILENAME.export_label).cast(UNIQUE_ID.pl_unit) + pl.col(PROFILE_ID.export_label).cast(UNIQUE_ID.pl_unit)).alias(UNIQUE_ID.export_label));
     pd_df = df.to_pandas()
 
     server = Flask(__name__)
