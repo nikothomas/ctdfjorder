@@ -123,7 +123,7 @@ Citation information for CTDFjorder can be found here `zenodo.13293665 <https://
 Acknowledgments
 ---------------
 
-CTDFjorder was developed for the Fjord Phyto project. The `GSW-Python <https://github.com/TEOS-10/GSW-Python>` library was used for certain derived calculations.
+CTDFjorder was developed for the Fjord Phyto project. The `GSW-Python <https://github.com/TEOS-10/GSW-Python>`__ library was used for certain derived calculations.
 
 References
 -----------

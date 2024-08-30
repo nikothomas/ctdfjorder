@@ -34,6 +34,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
     long_median = df.select(pl.col(LONGITUDE.export_label).median().first()).item()
     if UNIQUE_ID.export_label not in df.columns:
         df = df.with_columns((pl.col(FILENAME.export_label).cast(UNIQUE_ID.pl_unit) + pl.col(PROFILE_ID.export_label).cast(UNIQUE_ID.pl_unit)).alias(UNIQUE_ID.export_label));
+    df = df.filter(pl.col(YEAR.export_label) >= 2017)
     pd_df = df.to_pandas()
 
     server = Flask(__name__)
@@ -190,7 +191,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 & (filtered_df["timestamp"] <= end_date)
                 ]
 
-        total_profiles = len(filtered_df)
+        total_profiles = filtered_df["Unique_ID"].nunique()
         try:
             lat_median = filtered_df[LATITUDE.export_label].median()
             long_median = filtered_df[LONGITUDE.export_label].median()
@@ -207,7 +208,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 "latitude": True,
                 "longitude": True,
             },
-            mapbox_style="dark",
+            mapbox_style="light",
             zoom=5,
             center={"lat": lat_median, "lon": long_median},
         )
@@ -293,11 +294,11 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
         webbrowser.open_new("http://127.0.0.1:8050/")
 
     Timer(1, open_browser).start()
-    app.run_server(debug=False)
+    app.run_server(debug=False, host='10.70.204.98', port=8050)
 
 
 def plot_depth_vs(
-    df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
+        df: pl.DataFrame, measurement: str, plot_folder: str, plot_type: str = "scatter"
 ):
     """
     Generates a plot of depth vs. specified measurement (salinity, density, temperature).
@@ -322,7 +323,7 @@ def plot_depth_vs(
     plt.rcParams.update({"font.size": 16})
     os.makedirs(plot_folder, exist_ok=True)
     for profile_id in (
-        df.select(PROFILE_ID.label).unique(keep="first").to_series().to_list()
+            df.select(PROFILE_ID.label).unique(keep="first").to_series().to_list()
     ):
         profile = df.filter(pl.col(PROFILE_ID.label) == profile_id)
         # Calculate the standard deviation of the brunt_vaisala column if it exists
@@ -370,7 +371,7 @@ def plot_depth_vs(
             profile.select(pl.col(col).first()).item()
             for col in mld_columns.columns
             if profile.select(pl.col(col).first()).item() is not None
-            and not np.isnan(profile.select(pl.col(col).first()).item())
+               and not np.isnan(profile.select(pl.col(col).first()).item())
         ]
 
         if mld_values:  # Proceed only if there are valid MLD values
