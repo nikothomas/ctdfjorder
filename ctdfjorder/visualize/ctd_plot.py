@@ -208,7 +208,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
                 "latitude": True,
                 "longitude": True,
             },
-            mapbox_style="light",
+            #mapbox_style="light",
             zoom=5,
             center={"lat": lat_median, "lon": long_median},
         )
