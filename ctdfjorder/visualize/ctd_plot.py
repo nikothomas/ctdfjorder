@@ -117,7 +117,7 @@ def plot_map(df: pl.DataFrame, mapbox_access_token):
             ),
             html.Div(
                 [
-                    dcc.Graph(id="map", style={"height": "100vh", "width": "100vw"}),
+                    dcc.Graph(id="map", style={"height": "100vh", "width": "80vw"}),
                 ],
                 style={
                     "width": "80%",
