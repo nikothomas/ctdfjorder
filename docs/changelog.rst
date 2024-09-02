@@ -4,7 +4,6 @@
 
 .. towncrier release notes start
 
-
 CTDFjorder 0.8.0 (2024-08-11)
 =============================
 
