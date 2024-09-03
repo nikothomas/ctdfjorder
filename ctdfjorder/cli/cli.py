@@ -3,6 +3,7 @@ import shutil
 import sys
 from argparse import ArgumentParser
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from ctdfjorder.loadctd.aml import is_aml_file
 from os import path, listdir, remove, mkdir, getcwd
 import signal
 import polars as pl
@@ -112,6 +113,8 @@ def process_ctd_file(
         data = CTD(
             file,
         )
+        if is_aml_file(path.basename(file)):
+            data.add_practical_salinity()
         status.append("green")
         stage += 1
 

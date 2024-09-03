@@ -10,3 +10,8 @@ RBR
 ====
 .. automodule:: ctdfjorder.loadctd.rsk
     :members:
+
+AML
+====
+.. automodule:: ctdfjorder.loadctd.aml
+    :members:

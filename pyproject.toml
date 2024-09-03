@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 package-mode = true
 name = "ctdfjorder"
-version = "0.8.8"
+version = "0.8.9"
 description = "A package for processing and analyzing CTD data."
 homepage = "https://github.com/nikothomas/ctdfjorder"
 repository = "https://github.com/nikothomas/ctdfjorder"
@@ -75,7 +75,7 @@ name = "CTDFjorder"
 package = "ctdfjorder"
 package_dir = "."
 filename = "docs/changelog.rst"
-version = "0.8.8"
+version = "0.8.9"
 template = "docs/_templates/changelog.rst.jinja"
 underlines = ["=", "^", "-", "~"]
 
