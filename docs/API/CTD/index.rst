@@ -38,6 +38,7 @@ Methods to calculate additional parameters and metrics from the raw CTD data.
 * :py:meth:`~ctdfjorder.CTD.CTD.add_mld`
 * :py:meth:`~ctdfjorder.CTD.CTD.add_n_squared`
 * :py:meth:`~ctdfjorder.CTD.CTD.add_potential_temperature`
+* :py:meth:`~ctdfjorder.CTD.CTD.add_practical_salinity`
 * :py:meth:`~ctdfjorder.CTD.CTD.add_conservative_temperature`
 * :py:meth:`~ctdfjorder.CTD.CTD.add_dynamic_height`
 * :py:meth:`~ctdfjorder.CTD.CTD.add_thermal_expansion_coefficient`

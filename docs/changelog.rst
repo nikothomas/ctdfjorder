@@ -4,6 +4,14 @@
 
 .. towncrier release notes start
 
+CTDFjorder 0.8.9 (2024-09-02)
+=============================
+
+Features
+^^^^^^^^
+
+- Added support for AML files.
+
 
 CTDFjorder 0.8.0 (2024-08-11)
 =============================

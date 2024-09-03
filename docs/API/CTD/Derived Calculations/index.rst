@@ -14,6 +14,7 @@ Derived Calculations
    add_n_squared
    add_potential_density
    add_potential_temperature
+   add_practical_salinity
    add_profile_classification
    add_speed_of_sound
    add_surface_salinity

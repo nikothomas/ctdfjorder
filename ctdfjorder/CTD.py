@@ -7,6 +7,7 @@ from ctdfjorder.metadata.master_sheet import MasterSheet
 from ctdfjorder.constants.constants import *
 from ctdfjorder.loadctd.rsk import load_file_rsk
 from ctdfjorder.loadctd.castaway import load_file_castaway
+from ctdfjorder.loadctd.aml import load_file_aml, is_aml_file
 from ctdfjorder.utils import utils
 from ctdfjorder.ai import ai
 import pandas as pd
@@ -72,6 +73,11 @@ class CTD:
             except pl.exceptions.ComputeError:
                 raise CTDCorruptError(filename=self._filename)
         # Processing Castaway Files
+        elif AML_FILE_MARKER in ctd_file_path and is_aml_file(self._filename):
+            try:
+                self._data = load_file_aml(ctd_file_path)
+            except pl.exceptions.ComputeError:
+                raise CTDCorruptError(filename=self._filename)
         elif CASTAWAY_FILE_MARKER in ctd_file_path:
             try:
                 self._data = load_file_castaway(ctd_file_path)
@@ -615,6 +621,61 @@ class CTD:
                 raise ValueError(f"Invalid method {method}.")
             self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id)
             self._data = pl.concat([self._data, profile], how=CONCAT_HOW, rechunk=True)
+
+    def add_practical_salinity(self) -> None:
+        """
+        Calculates and adds practical salinity to the CTD data using the TEOS-10 SP_from_C function.
+
+        This method computes the practical salinity from conductivity, temperature, and pressure
+        using the TEOS-10 standard. If conductivity is not present in mS/cm, it attempts to convert
+        from μS/cm.
+
+        Raises
+        ------
+        NoSamplesError
+            When the function is called on a CTD object with no data.
+
+        Notes
+        -----
+        The gsw.SP_from_C function from the Gibbs SeaWater (GSW) Oceanographic Toolbox is utilized
+        for this calculation. More information about this function can be found at the
+        TEOS-10 website: https://www.teos-10.org/pubs/gsw/html/gsw_SP_from_C.html
+
+        This method adds a new column for practical salinity in the dataset.
+
+        Examples
+        --------
+        >>> ctd_data = CTD('example.csv')
+        >>> ctd_data.add_practical_salinity()
+        # This will add a new column with practical salinity values to the dataset.
+        """
+        self.assert_data_not_empty(CTD.add_practical_salinity.__name__)
+
+        # Check if conductivity is in mS/cm, if not, convert from μS/cm
+        if CONDUCTIVITY.label in self._data.columns:
+            if self._data[CONDUCTIVITY.label].max() > 100:  # Assuming it's in μS/cm
+                self._data = self._data.with_columns([
+                    (pl.col(CONDUCTIVITY.label) / 1000).alias(CONDUCTIVITY.label)
+                ])
+
+        # Initialize new column for practical salinity
+        self._data = self._data.with_columns([
+            pl.lit(None, dtype=pl.Float64).alias(SALINITY.label)
+        ])
+
+        for profile_id in self._data.select(PROFILE_ID.label).unique().to_series():
+            profile = self._data.filter(pl.col(PROFILE_ID.label) == profile_id)
+
+            C = profile.select(pl.col(CONDUCTIVITY.label)).to_numpy().flatten()  # mS/cm
+            T = profile.select(pl.col(TEMPERATURE.label)).to_numpy().flatten()  # °C
+            P = profile.select(pl.col(SEA_PRESSURE.label)).to_numpy().flatten()  # dbar
+
+            SP = gsw.SP_from_C(C, T, P)
+
+            practical_salinity = pl.Series(SP, dtype=pl.Float64).to_frame(SALINITY.label)
+            profile = profile.with_columns(practical_salinity)
+
+            self._data = self._data.filter(pl.col(PROFILE_ID.label) != profile_id).vstack(profile)
 
     def add_absolute_salinity(self) -> None:
         r"""

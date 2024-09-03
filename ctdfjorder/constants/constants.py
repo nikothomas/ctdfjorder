@@ -245,6 +245,9 @@ RSK_FILE_MARKER: str = ".rsk"
 CASTAWAY_FILE_MARKER: str = ".csv"
 """str: Marker for Castaway file."""
 
+AML_FILE_MARKER: str = ".csv"
+"""str: Marker for Castaway file."""
+
 SEABIRD_FILE_MARKER: str = ".cnv"
 """str: Marker for Seabird file."""
 
