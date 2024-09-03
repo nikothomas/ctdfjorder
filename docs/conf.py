@@ -23,7 +23,7 @@ print(font_manager.findSystemFonts(fontpaths=font_dirs))
 project = 'CTDFjorder'
 copyright = '2024, Nikolas Yanek-Chrones'
 author = 'Nikolas Yanek-Chrones'
-release = '0.8.9'
+release = '0.8.91'
 
 
 # -- General configuration ---------------------------------------------------
