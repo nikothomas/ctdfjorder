@@ -37,7 +37,7 @@ designed to process and analyze CTD (Conductivity, Temperature, Depth) data effi
 
        |fa-globe| Agnostic Inputs
        ^^^
-       Supports `RBR <https://rbr-global.com>`_ and `SonTek Castaway <https://www.xylem.com/en-us/products--services/analytical-instruments-and-equipment/data-collection-mapping-profiling-survey-systems/ctds/castaway-ctd/>`_ files with broader support coming soon.
+       Supports `RBR <https://rbr-global.com>`_, `AML <https://amloceanographic.com>`_ and `SonTek Castaway <https://www.xylem.com/en-us/products--services/analytical-instruments-and-equipment/data-collection-mapping-profiling-survey-systems/ctds/castaway-ctd/>`_ files with broader support coming soon.
 
 
     .. grid-item-card::
