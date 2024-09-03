@@ -36,40 +36,70 @@ def load_file_aml(aml_file_path):
 
             # Parse header
             for line in file:
-                if line.strip() == '[MeasurementMetadata]':
+                line = line.strip().rstrip(',')
+                if line == '[MeasurementMetadata]':
                     break
                 if '=' in line:
-                    key, value = line.strip().split('=', 1)
-                    header[key] = value
+                    key, value = line.split('=', 1)
+                    header[key.strip()] = value.strip()
 
             # Parse measurement metadata
             for line in file:
-                if line.strip() == '[MeasurementData]':
+                line = line.strip().rstrip(',')
+                if line == '[MeasurementData]':
                     break
                 if '=' in line:
-                    key, value = line.strip().split('=', 1)
-                    measurement_metadata[key] = value.split(',')
+                    key, value = line.split('=', 1)
+                    measurement_metadata[key.strip()] = [v.strip() for v in value.split(',')]
 
             # Parse data
             for line in file:
-                data.append(line.strip().split(','))
+                line = line.strip().rstrip(',')
+                data.append([v.strip() for v in line.split(',')])
 
     except Exception as e:
         raise CTDCorruptError(filename=filename) from e
 
-    # Create DataFrame
-    df = pl.DataFrame(data, schema=measurement_metadata['Columns'], orient='row')
+    # Define the columns to keep
+    desired_columns = ['Date', 'Time', 'Conductivity', 'Temperature', 'Pressure', 'Sound Velocity', 'Depth']
 
-    # Convert types and rename columns
+    # Check if the measurement metadata columns include the desired columns
+    columns = measurement_metadata.get('Columns', [])
+    valid_columns = [col for col in columns if col in desired_columns]
+    valid_indices = [i for i, col in enumerate(columns) if col in valid_columns]
+
+    # Filter out undesired columns from data
+    filtered_data = [[row[i] for i in valid_indices] for row in data]
+
+    # Create DataFrame with valid columns only
+    df = pl.DataFrame(filtered_data, schema=valid_columns, orient='row')
+
+    # Detect date format and parse accordingly
+    if df['Date'].str.contains(r'^\d{1,2}/\d{1,2}/\d{4}$').all():
+        df = df.with_columns(
+            pl.col('Date').str.strptime(pl.Date, "%m/%d/%Y")
+        )
+    else:
+        df = df.with_columns(
+            pl.col('Date').str.strptime(pl.Date, "%Y-%m-%d")
+        )
+
+    # Check if 'Time' column is in 'mm:ss.s' format
+    if df['Time'].str.contains(r'^\d{1,2}:\d{2}\.\d$').all():
+        # Convert 'mm:ss.s' to 'hh:mm:ss.s'
+        df = df.with_columns(
+            (pl.lit("00:") + pl.col('Time')).alias('Time')
+        )
+
+    # Convert time and other columns
     df = df.with_columns([
-        pl.col('Date').str.strptime(pl.Date, "%Y-%m-%d"),
         pl.col('Time').str.strptime(pl.Time, "%H:%M:%S.%f"),
-        pl.col('Conductivity').cast(pl.Float64).alias(CONDUCTIVITY.label),
-        pl.col('Temperature').cast(pl.Float64).alias(TEMPERATURE.label),
-        pl.col('Pressure').cast(pl.Float64).alias(PRESSURE.label),
-        pl.col('Sound Velocity').cast(pl.Float64).alias(SPEED_OF_SOUND.label),
-        pl.col('Depth').cast(pl.Float64).alias(DEPTH.label)
-    ])
+        pl.col('Conductivity').alias(CONDUCTIVITY.label).cast(pl.Float64),
+        pl.col('Temperature').alias(TEMPERATURE.label).cast(pl.Float64),
+        pl.col('Pressure').alias(PRESSURE.label).cast(pl.Float64),
+        pl.col('Sound Velocity').alias(SPEED_OF_SOUND.label).cast(pl.Float64),
+        pl.col('Depth').alias(DEPTH.label).cast(pl.Float64)
+    ]).drop(['Conductivity', 'Temperature', 'Pressure', 'Sound Velocity', 'Depth'])
 
     # Combine Date and Time into a single Timestamp column
     df = df.with_columns([
@@ -83,16 +113,21 @@ def load_file_aml(aml_file_path):
 
     # Add sea pressure column (assuming atmospheric pressure of 10.1325 dbar)
     df = df.with_columns([
-        (pl.col(PRESSURE.label) - 10.1325).alias(SEA_PRESSURE.label)
+        (pl.col(PRESSURE.label).alias(SEA_PRESSURE.label))
     ])
+    df = df.with_columns((pl.col(SEA_PRESSURE.label) + 10.1325).alias(PRESSURE.label))
+
+    # Handle missing latitude and longitude
+    latitude = pl.lit(float(header['Latitude'])) if 'Latitude' in header else pl.lit(None)
+    longitude = pl.lit(float(header['Longitude'])) if 'Longitude' in header else pl.lit(None)
 
     # Add metadata columns
     start_time = datetime.strptime(header['Time'], "%d/%m/%Y %H:%M:%S")
     df = df.with_columns([
         pl.lit(filename).alias(FILENAME.label),
         pl.lit(0).alias(PROFILE_ID.label),
-        pl.lit(float(header['Latitude'])).alias(LATITUDE.label),
-        pl.lit(float(header['Longitude'])).alias(LONGITUDE.label),
+        latitude.alias(LATITUDE.label),
+        longitude.alias(LONGITUDE.label),
     ])
 
     return df
